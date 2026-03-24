@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cscm-gold: #D4AF37;
+  --color-cscm-green: #3D6B2C;
+  --color-cscm-dark: #1A2F14;
+  --color-cscm-light: #F5F2ED;
+}
+
+body {
+  @apply bg-cscm-dark text-white font-sans;
+  background: radial-gradient(circle at center, #2D4F23 0%, #1A2F14 100%);
+  min-height: 100vh;
+}
+
+.glass-card {
+  @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl shadow-2xl;
+}
+
+.input-field {
+  @apply w-full bg-transparent border-b border-cscm-gold/50 py-2 outline-none focus:border-cscm-gold transition-colors text-white placeholder:text-white/50;
+}
+
+.btn-primary {
+  @apply bg-cscm-green hover:bg-cscm-green/80 text-white px-8 py-3 rounded-full font-medium transition-all transform hover:scale-105 active:scale-95 shadow-lg;
+}
