@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, Pencil, LogOut, UserCircle2, Camera, Save, X } from 'lucide-react';
+import { ChevronLeft, Camera, X, CheckSquare } from 'lucide-react';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface ProfileModalProps {
@@ -12,16 +12,20 @@ interface ProfileModalProps {
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onLogout }) => {
   useBodyScrollLock(isOpen);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const user = JSON.parse(localStorage.getItem('user') || '{"nom": "Utilisateur", "prenom": "Démo", "email": "demo@example.com"}');
+  const user = JSON.parse(localStorage.getItem('user') || '{"nom": "Admin", "prenom": "System", "email": "admin@ccaism.com"}');
   
   const [formData, setFormData] = useState({
-    nom: user.nom,
-    prenom: user.prenom,
-    email: user.email
+    nom: user.nom || 'Admin',
+    prenom: user.prenom || 'System',
+    email: user.email || 'admin@ccaism.com',
+    langue: 'Français',
+    apparence: 'Clair'
+  });
+
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(() => {
+    return localStorage.getItem('profile_photo');
   });
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,17 +33,29 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfilePhoto(reader.result as string);
+        const result = reader.result as string;
+        setProfilePhoto(result);
+        localStorage.setItem('profile_photo', result);
+        window.dispatchEvent(new Event('user_profile_updated'));
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleSave = () => {
-    // In a real app, we would send this to the backend
-    const updatedUser = { ...user, ...formData };
+    const updatedUser = { 
+      ...user, 
+      nom: formData.nom, 
+      prenom: formData.prenom, 
+      email: formData.email 
+    };
     localStorage.setItem('user', JSON.stringify(updatedUser));
-    setIsEditing(false);
+    // Save appearance preference
+    localStorage.setItem('appearance_theme', formData.apparence);
+    
+    // Notify application
+    window.dispatchEvent(new Event('user_profile_updated'));
+    onClose();
   };
 
   return (
@@ -52,52 +68,63 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[80]"
           />
           
           {/* Modal Container */}
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none">
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-[90] pointer-events-none">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#E5E5E5] w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden pointer-events-auto relative flex flex-col max-h-[90vh]"
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              className="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden pointer-events-auto relative flex flex-col max-h-[92vh] border border-[#a69371]/20 font-sans"
             >
-              {/* Back Button */}
+              {/* Back Button (Left Arrow) */}
               <button 
-                onClick={isEditing ? () => setIsEditing(false) : onClose}
-                className="absolute top-6 left-6 p-2 hover:bg-black/5 rounded-full transition-colors z-10"
+                onClick={onClose}
+                className="absolute top-6 left-6 p-2 hover:bg-gray-100 rounded-full transition-colors z-10 cursor-pointer"
+                aria-label="Retour"
               >
-                <ChevronLeft className="w-8 h-8 text-black" />
+                <ChevronLeft className="w-6 h-6 text-gray-700" />
               </button>
 
-              {isEditing && (
-                <button 
-                  onClick={() => setIsEditing(false)}
-                  className="absolute top-6 right-6 p-2 hover:bg-black/5 rounded-full transition-colors z-10"
-                >
-                  <X className="w-6 h-6 text-black" />
-                </button>
-              )}
+              {/* Close Button (X) */}
+              <button 
+                onClick={onClose}
+                className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors z-10 cursor-pointer"
+                aria-label="Fermer"
+              >
+                <X className="w-5 h-5 text-gray-700" />
+              </button>
 
-              <div className="p-8 md:p-12 flex flex-col items-center overflow-y-auto">
-                {/* Large Avatar / Photo Upload */}
-                <div className="relative mb-12">
-                  <div className="w-64 h-64 bg-[#5E7D6A] rounded-full flex items-center justify-center shadow-inner overflow-hidden border-4 border-white">
+              <div className="p-8 md:p-10 flex flex-col items-center overflow-y-auto">
+                {/* Large Circle Avatar with TriKeys layout */}
+                <div className="relative mb-8 mt-4">
+                  <div className="w-48 h-48 bg-[#5E7D6A] rounded-full flex items-center justify-center shadow-md overflow-hidden border-2 border-[#a69371]/50 bg-radial from-[#496554] to-[#2B4033]">
                     {profilePhoto ? (
-                      <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={profilePhoto} alt="Crest Lion" className="w-full h-full object-cover" />
                     ) : (
-                      <UserCircle2 className="w-48 h-48 text-white/90" />
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 text-white relative">
+                        {/* Senegal Star in Green, Morocco Star in Red on dark crest */}
+                        <div className="flex gap-2 mb-2">
+                          <span className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-black border border-white/20 shadow-sm">★</span>
+                          <span className="w-6 h-6 rounded-full bg-rose-600 flex items-center justify-center text-[10px] font-black border border-white/20 shadow-sm">★</span>
+                        </div>
+                        <div className="font-serif font-black text-xs text-[#ebd078] tracking-wider">CSCM</div>
+                        <div className="text-[6px] text-white/80 font-mono mt-1 font-black w-32 leading-tight">CHAMBRE SÉNÉGALAISE DE COMMERCE</div>
+                      </div>
                     )}
                   </div>
-                  {isEditing && (
-                    <button 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-4 right-4 bg-cscm-gold p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
-                    >
-                      <Camera className="w-8 h-8 text-white" />
-                    </button>
-                  )}
+                  
+                  {/* Camera Float Action Icon */}
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-2 right-2 bg-[#ebd078] hover:bg-amber-400 p-3.5 rounded-full shadow-lg transition-transform hover:scale-105 cursor-pointer border-2 border-white flex items-center justify-center text-cscm-dark shrink-0"
+                    title="Changer de photo"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </button>
+
                   <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -107,74 +134,83 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                   />
                 </div>
 
-                {!isEditing ? (
-                  <>
-                    <div className="text-center mb-12">
-                      <h2 className="text-3xl font-serif font-bold text-cscm-dark">{user.prenom} {user.nom}</h2>
-                      <p className="text-gray-600">{user.email}</p>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-6 w-full max-w-lg">
-                      <button 
-                        onClick={() => setIsEditing(true)}
-                        className="flex-1 bg-[#A69371] hover:bg-[#968361] text-black font-serif text-xl py-4 px-6 rounded-lg flex items-center justify-center gap-3 shadow-md transition-all active:scale-95"
-                      >
-                        <Pencil className="w-6 h-6" />
-                        Modifier les informations
-                      </button>
-                      
-                      <button 
-                        onClick={onLogout}
-                        className="flex-1 bg-[#C85250] hover:bg-[#B84240] text-black font-serif text-xl py-4 px-6 rounded-lg flex items-center justify-center gap-3 shadow-md transition-all active:scale-95"
-                      >
-                        <LogOut className="w-6 h-6" />
-                        Déconnexion
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="w-full max-w-lg space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Prénom</label>
-                        <input 
-                          type="text" 
-                          value={formData.prenom}
-                          onChange={(e) => setFormData({...formData, prenom: e.target.value})}
-                          className="w-full bg-white border rounded-lg p-3 outline-none focus:ring-2 focus:ring-cscm-green"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nom</label>
-                        <input 
-                          type="text" 
-                          value={formData.nom}
-                          onChange={(e) => setFormData({...formData, nom: e.target.value})}
-                          className="w-full bg-white border rounded-lg p-3 outline-none focus:ring-2 focus:ring-cscm-green"
-                        />
-                      </div>
-                    </div>
+                {/* Form Inputs based on Screenshot */}
+                <div className="w-full space-y-5 text-left">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                      <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">PRÉNOM</label>
                       <input 
-                        type="email" 
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full bg-white border rounded-lg p-3 outline-none focus:ring-2 focus:ring-cscm-green"
+                        type="text" 
+                        value={formData.prenom}
+                        onChange={(e) => setFormData({...formData, prenom: e.target.value})}
+                        className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
                       />
                     </div>
-                    <div className="pt-6">
-                      <button 
-                        onClick={handleSave}
-                        className="w-full bg-cscm-green hover:bg-cscm-green/90 text-white font-serif text-xl py-4 px-6 rounded-lg flex items-center justify-center gap-3 shadow-md transition-all active:scale-95"
-                      >
-                        <Save className="w-6 h-6" />
-                        Enregistrer les modifications
-                      </button>
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">NOM</label>
+                      <input 
+                        type="text" 
+                        value={formData.nom}
+                        onChange={(e) => setFormData({...formData, nom: e.target.value})}
+                        className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                      />
                     </div>
                   </div>
-                )}
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">EMAIL</label>
+                    <input 
+                      type="email" 
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">LANGUE</label>
+                    <select
+                      value={formData.langue}
+                      onChange={(e) => setFormData({...formData, langue: e.target.value})}
+                      className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                    >
+                      <option value="Français">Français</option>
+                      <option value="Anglais">English</option>
+                      <option value="Arabe">العربية (Arabe)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">APPARENCE</label>
+                    <select
+                      value={formData.apparence}
+                      onChange={(e) => setFormData({...formData, apparence: e.target.value})}
+                      className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                    >
+                      <option value="Clair">Clair</option>
+                      <option value="Sombre">Sombre (Bêta)</option>
+                    </select>
+                  </div>
+
+                  {/* Save button matching exact dark green in Screenshot 4 */}
+                  <div className="pt-4">
+                    <button 
+                      onClick={handleSave}
+                      className="w-full bg-[#1b381c] hover:bg-[#122613] text-white py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-950/20 transition-all font-bold text-sm cursor-pointer"
+                    >
+                      {/* Floppy disk style verification icon */}
+                      <CheckSquare className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <span>Enregistrer les modifications</span>
+                    </button>
+                    
+                    <button
+                      onClick={onLogout}
+                      className="w-full mt-3 bg-rose-50 hover:bg-rose-100/50 text-rose-600 py-3 px-6 rounded-2xl transition-all font-bold text-xs cursor-pointer flex items-center justify-center"
+                    >
+                      Déconnexion administrative
+                    </button>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </div>

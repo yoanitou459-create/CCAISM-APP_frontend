@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Download, FileText, Printer, Share2 } from 'lucide-react';
+import { X, Download, Shield, MapPin, Phone, Mail, Award, CheckCircle2, Star, FileText, AlertCircle } from 'lucide-react';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface EnterpriseSummaryModalProps {
@@ -15,161 +15,275 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
   if (!isOpen || !enterprise) return null;
 
   const handleDownloadPDF = () => {
-    alert(`Téléchargement de la fiche technique pour ${enterprise.name}...`);
+    alert(`Téléchargement de la fiche technique officielle de ${enterprise.name} au format PDF...`);
   };
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto selection:bg-[#132e15] selection:text-[#ebd078]">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/70 backdrop-blur-md"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm"
         />
         
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-white w-full max-w-4xl rounded-sm shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[95vh] border-[12px] border-[#1A3F23]"
+          className="bg-[#FAF9F5] w-full max-w-4xl rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[95vh] border-2 border-[#132e15] font-sans text-[#132e15]"
         >
-          {/* Technical Sheet Header */}
-          <div className="p-6 border-b-2 border-[#1A3F23] flex justify-between items-start bg-white">
-            <div className="flex gap-6 items-center">
-              <div className="w-24 h-24 border-2 border-[#1A3F23] flex items-center justify-center font-bold text-[#1A3F23] bg-gray-50 overflow-hidden">
+          {/* 1. Header with Dark Green Top Bar */}
+          <div className="p-6 bg-[#132e15] text-white flex justify-between items-center relative overflow-hidden shrink-0">
+            {/* Ambient luxury light overlay */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+            
+            <div className="flex gap-4 items-center relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-[#0c1e0e] border-2 border-[#ebd078]/80 flex items-center justify-center font-black text-xs text-[#ebd078] overflow-hidden shadow-inner">
                 {enterprise.logo ? (
                   <img src={enterprise.logo} alt={enterprise.name} className="w-full h-full object-cover" />
                 ) : (
-                  "LOGO"
+                  <span className="text-center font-mono text-[10px] uppercase font-black tracking-tighter">CSCM</span>
                 )}
               </div>
               <div>
-                <h1 className="text-3xl font-serif font-bold text-[#1A3F23] uppercase tracking-tighter">Fiche Technique Entreprise</h1>
-                <p className="text-[#D4AF37] font-bold tracking-widest text-sm">RÉFÉRENCE : {enterprise.memberNo}</p>
-                <div className="h-1 w-20 bg-[#D4AF37] mt-1" />
+                <h1 className="text-xl md:text-2xl font-serif font-black text-white tracking-wide uppercase leading-none">
+                  Fiche Technique
+                </h1>
+                <p className="text-sm font-bold text-[#ebd078] mt-1">{enterprise.name}</p>
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className="text-[9px] bg-white/10 text-[#ebd078] border border-white/15 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                    Référence : {enterprise.memberNo || 'M001'}
+                  </span>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wide ${
+                    enterprise.statutMembre === 'Actif' ? 'bg-[#51a351] text-white' : 'bg-red-600 text-white'
+                  }`}>
+                    {enterprise.statutMembre || 'Actif'}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={handleDownloadPDF} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-[#1A3F23]">
-                <Printer className="w-6 h-6" />
+
+            <div className="flex items-center gap-3 relative z-10">
+              <button 
+                onClick={handleDownloadPDF} 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#ebd078]/20 transition-all flex items-center justify-center text-[#ebd078] cursor-pointer"
+                title="Télécharger la fiche"
+              >
+                <Download className="w-5 h-5" />
               </button>
-              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-red-600">
-                <X className="w-6 h-6" />
+              <button 
+                onClick={onClose} 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Technical Sheet Body */}
-          <div className="p-10 overflow-y-auto bg-white font-sans">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              {/* Left Column - Identity */}
-              <div className="md:col-span-2 space-y-8">
-                <section>
-                  <h2 className="text-lg font-bold bg-[#1A3F23] text-white px-4 py-1 mb-4 inline-block">IDENTITÉ DE L'ENTREPRISE</h2>
-                  <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                    <div>
-                      <p className="text-gray-500 uppercase text-[10px] font-bold">Dénomination</p>
-                      <p className="font-bold text-lg border-b border-gray-200 pb-1">{enterprise.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 uppercase text-[10px] font-bold">Raison Sociale</p>
-                      <p className="font-bold text-lg border-b border-gray-200 pb-1">{enterprise.raisonSociale}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 uppercase text-[10px] font-bold">Forme Juridique</p>
-                      <p className="font-medium">{enterprise.formeJuridique || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 uppercase text-[10px] font-bold">Date de Création</p>
-                      <p className="font-medium">{enterprise.dateCreation || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 uppercase text-[10px] font-bold">N° Registre Commerce</p>
-                      <p className="font-medium">{enterprise.numRC || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 uppercase text-[10px] font-bold">NINEA / ICE</p>
-                      <p className="font-medium">{enterprise.ninea || 'N/A'}</p>
-                    </div>
-                  </div>
-                </section>
-
-                <section>
-                  <h2 className="text-lg font-bold bg-[#1A3F23] text-white px-4 py-1 mb-4 inline-block">ACTIVITÉ & EXPERTISE</h2>
-                  <div className="bg-gray-50 p-6 border-l-4 border-[#D4AF37] space-y-4">
-                    <div>
-                      <p className="text-gray-500 uppercase text-[10px] font-bold mb-1">Secteur d'activité principal</p>
-                      <p className="font-bold text-[#1A3F23]">{enterprise.secteur}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 uppercase text-[10px] font-bold mb-1">Description technique</p>
-                      <p className="text-sm leading-relaxed text-gray-700 italic">
-                        {enterprise.description || "Détails techniques non renseignés."}
-                      </p>
-                    </div>
-                  </div>
-                </section>
+          {/* 2. Scrollable Body Content */}
+          <div className="p-6 md:p-8 overflow-y-auto space-y-6">
+            
+            {/* Section: IDENTITÉ DE L'ENTREPRISE */}
+            <div className="space-y-3">
+              <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+                <span className="w-5 h-5 rounded-lg bg-[#ebd078]/20 text-[#ebd078] flex items-center justify-center text-[10px] font-black tracking-tighter">ID</span>
+                <h2 className="text-xs font-black uppercase tracking-wider">Identité de l'entreprise</h2>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Dénomination info card (soft blue) */}
+                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Dénomination</span>
+                  <span className="text-sm font-black text-[#132e15] mt-1.5 leading-tight">{enterprise.name}</span>
+                </div>
 
-              {/* Right Column - Status & Contact */}
-              <div className="space-y-8 border-l border-gray-100 pl-8">
-                <section>
-                  <h2 className="text-lg font-bold text-[#1A3F23] border-b-2 border-[#1A3F23] mb-4">STATUT</h2>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500 uppercase">État Membre</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        enterprise.statutMembre === 'Actif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {enterprise.statutMembre}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500 uppercase">Effectif</span>
-                      <span className="font-bold">{enterprise.effectif} pers.</span>
-                    </div>
-                  </div>
-                </section>
+                {/* Raison Sociale card (soft green) */}
+                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Raison Sociale</span>
+                  <span className="text-sm font-black text-[#132e15] mt-1.5 leading-tight">{enterprise.raisonSociale || enterprise.name}</span>
+                </div>
 
-                <section>
-                  <h2 className="text-lg font-bold text-[#1A3F23] border-b-2 border-[#1A3F23] mb-4">COORDONNÉES</h2>
-                  <div className="space-y-4 text-sm">
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 bg-gray-100 flex items-center justify-center rounded">📍</div>
-                      <div>
-                        <p className="font-bold">{enterprise.ville}</p>
-                        <p className="text-xs text-gray-500">{enterprise.pays}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 bg-gray-100 flex items-center justify-center rounded">📞</div>
-                      <p className="font-medium">{enterprise.telephone}</p>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 bg-gray-100 flex items-center justify-center rounded">✉️</div>
-                      <p className="font-medium break-all">{enterprise.email}</p>
-                    </div>
-                  </div>
-                </section>
+                {/* Forme Juridique card (soft purple) */}
+                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Forme Juridique</span>
+                  <span className="text-xs font-bold text-[#132e15] mt-1.5 leading-tight">{enterprise.formeJuridique || 'Société à Responsabilité Limitée'}</span>
+                </div>
+
+                {/* Date de création card (soft yellow) */}
+                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Date de création</span>
+                  <span className="text-xs font-mono font-bold text-[#132e15] mt-1.5 leading-tight">{enterprise.dateCreation || 'N/A'}</span>
+                </div>
+
+                {/* RC Card (soft red/pink) */}
+                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">N° Registre Commerce</span>
+                  <span className="text-xs font-mono font-bold text-[#132e15] mt-1.5 leading-tight">{enterprise.numRC || 'Non Spécifié'}</span>
+                </div>
+
+                {/* Ninea/ICE card (soft blue-gray) */}
+                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Ninea / ICE</span>
+                  <span className="text-xs font-mono font-bold text-[#132e15] mt-1.5 leading-tight">{enterprise.ninea || 'Non disponible'}</span>
+                </div>
               </div>
             </div>
+
+            {/* Split row: Coordonnées & Statut/Effectif */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              
+              {/* Coordonnées */}
+              <div className="space-y-3">
+                <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+                  <MapPin className="w-4 h-4 text-[#ebd078]" />
+                  <h2 className="text-xs font-black uppercase tracking-wider">Coordonnées</h2>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-[#132e15]/15 space-y-4 shadow-sm">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block">Adresse</span>
+                      <span className="text-xs font-bold text-[#132e15]">{enterprise.ville}, {enterprise.pays}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block">Téléphone</span>
+                      <span className="text-xs font-mono font-bold text-[#132e15]">{enterprise.telephone || 'Non disponible'}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block">E-mail de contact</span>
+                      <span className="text-xs font-mono font-bold text-[#132e15] break-all">{enterprise.email || 'Non disponible'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statut & Effectif */}
+              <div className="space-y-3">
+                <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+                  <Shield className="w-4 h-4 text-[#ebd078]" />
+                  <h2 className="text-xs font-black uppercase tracking-wider">Statut & Effectif</h2>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-[#132e15]/15 flex flex-col justify-between h-[210px] shadow-sm">
+                  <div className="flex justify-center">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#132e15]/10 text-[#132e15] border border-[#132e15]/20">
+                      <span className="w-2 h-2 rounded-full bg-[#132e15] animate-pulse" />
+                      Actif
+                    </span>
+                  </div>
+
+                  <div className="bg-[#132e15] border border-[#132e15] rounded-xl p-4 text-center space-y-1">
+                    <span className="text-2xl md:text-3xl font-serif font-black text-white tracking-tight block">
+                      {enterprise.effectif || 'N/A'}
+                    </span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white/80 block">
+                      Personnes enregistrées
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Activité & Expertise */}
+            <div className="space-y-3">
+              <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+                <Award className="w-4 h-4 text-[#ebd078]" />
+                <h2 className="text-xs font-black uppercase tracking-wider">Activité & Expertise</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Sector Card */}
+                <div className="bg-white border border-[#132e15]/15 p-5 rounded-2xl shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block mb-1">Secteur d'activité</span>
+                  <span className="text-sm font-black text-[#132e15] leading-tight block">{enterprise.secteur}</span>
+                </div>
+
+                {/* Tech Desc Card */}
+                <div className="bg-white border border-[#132e15]/15 p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block mb-1">Description Technique</span>
+                  <span className="text-xs font-medium text-[#132e15] italic leading-relaxed block">
+                    "{enterprise.description || "Nous faisons du conseil et accompagnement technique dans le secteur correspondant."}"
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Licences & Certificats techniques */}
+            <div className="space-y-3">
+              <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+                <FileText className="w-4 h-4 text-[#ebd078]" />
+                <h2 className="text-xs font-black uppercase tracking-wider">Certificats & Documents Techniques</h2>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-[#132e15]/15 overflow-hidden divide-y divide-[#132e15]/10 shadow-sm">
+                <div className="p-4 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15">
+                      <Star className="w-4 h-4 text-emerald-700 fill-emerald-700" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#132e15]">Agrément National d'exercice bilatéral</p>
+                      <p className="text-[9px] text-[#132e15]/70 font-black uppercase tracking-wider">Certifié CSCM</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-[#132e15] text-white font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Disponible
+                  </span>
+                </div>
+
+                <div className="p-4 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500 shrink-0 border border-red-100">
+                      <AlertCircle className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-red-700">Certification de Conformité ISO 27001</p>
+                      <p className="text-[9px] text-red-500 font-black uppercase tracking-wider">Optionnel</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-red-600 text-white font-bold px-2.5 py-1 rounded">
+                    Document non disponible
+                  </span>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          {/* Technical Sheet Footer */}
-          <div className="p-6 bg-[#F8F9FA] border-t border-gray-200 flex justify-between items-center">
-            <div className="text-[10px] text-gray-400 uppercase tracking-widest">
-              Généré le {new Date().toLocaleDateString()} • CCAISM Technical Database
-            </div>
-            <button
-              onClick={handleDownloadPDF}
-              className="bg-[#1A3F23] text-[#D4AF37] px-10 py-3 rounded-sm flex items-center gap-3 hover:bg-[#14321B] transition-all shadow-lg font-bold uppercase tracking-widest text-sm"
-            >
-              <Download className="w-5 h-5" />
-              Exporter Fiche
-            </button>
+          {/* 3. Footer Banner with Fine Print */}
+          <div className="p-6 bg-[#132e15] border-t border-white/5 shrink-0 text-center space-y-1.5 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#ebd078]/30 to-transparent" />
+            
+            <p className="text-[9px] font-black tracking-widest text-[#ebd078] uppercase flex justify-center items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ebd078]" />
+              Document officiel généré le {new Date().toLocaleDateString()}
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ebd078]" />
+              CCAISM Technical Database
+            </p>
+            <p className="text-[8px] font-bold text-white/50 tracking-wide uppercase">
+              Ce document est strictement confidentiel et destiné aux vérifications administratives des membres de la CSCM.
+            </p>
           </div>
+          
         </motion.div>
       </div>
     </AnimatePresence>

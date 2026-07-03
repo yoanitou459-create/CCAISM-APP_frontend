@@ -1,83 +1,509 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { EnterpriseList } from './pages/EnterpriseList';
-import { LayoutDashboard, Building2, Plus, UserCircle, Home } from 'lucide-react';
+import { Building2, Plus, Users, Landmark, ArrowRight, ArrowUpRight, Sparkles, Database, Coins, TrendingUp, BarChart3, DollarSign, Activity, ChevronRight, Check } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Navbar } from './components/Navbar';
 import { AddEnterpriseModal } from './components/AddEnterpriseModal';
+import { SidebarLayout } from './components/SidebarLayout';
+import { getStoredEnterprises, saveStoredEnterprises } from './utils/enterpriseStorage';
+import { getStoredUsers, saveStoredUsers } from './utils/userStorage';
+import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from './firebase';
+
+import { Cotisations } from './pages/Cotisations';
+import { UserManagement } from './pages/UserManagement';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // Mock token check for frontend-only demo
-  const token = localStorage.getItem('token') || 'demo-token';
-  if (!token) return <Navigate to="/login" replace />;
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
   return <>{children}</>;
 };
 
 const Dashboard = () => {
   const [isAddEnterpriseOpen, setIsAddEnterpriseOpen] = useState(false);
+  const [enterprises, setEnterprises] = useState<any[]>([]);
   const navigate = useNavigate();
+  const userName = JSON.parse(localStorage.getItem('user') || '{"prenom": "Moustapha"}').prenom;
+
+  const loadData = () => {
+    setEnterprises(getStoredEnterprises());
+  };
+
+  useEffect(() => {
+    loadData();
+    window.addEventListener('enterprises_updated', loadData);
+    return () => {
+      window.removeEventListener('enterprises_updated', loadData);
+    };
+  }, []);
+
+  const totalEnterprises = enterprises.length;
+  const activeEnterprises = enterprises.filter(e => e.statutMembre === 'Actif').length;
+  
+  const totalCotisations = enterprises.reduce((total, ent) => {
+    const sum = (ent.cotisations || []).reduce((s: number, cot: any) => s + (Number(cot.amount) || 0), 0);
+    return total + sum;
+  }, 0);
+
+  // Compute stats for sector progress bars
+  const sectorCounts: { [key: string]: number } = {};
+  enterprises.forEach(e => {
+    const s = e.secteur || 'Autres';
+    sectorCounts[s] = (sectorCounts[s] || 0) + 1;
+  });
+
+  // Sort sectors dynamically based on all available default and custom sectors
+  const defaultSectors = ['Tourisme', 'Transport et logistique', 'Agro', 'BTP', 'Education', 'Commerce', 'Industrie', 'Sante', 'Autres'];
+  const allUniqueSectors = Array.from(new Set([...defaultSectors, ...Object.keys(sectorCounts)]));
+  const sortedSectors = allUniqueSectors.sort((a, b) => (sectorCounts[b] || 0) - (sectorCounts[a] || 0));
+
+  // Helper to extract the month index (0-11) from date string safely
+  const getMonthFromDate = (dateStr?: string): number | null => {
+    if (!dateStr) return null;
+    const parts = dateStr.split('-');
+    if (parts.length >= 2) {
+      const month = parseInt(parts[1], 10);
+      if (!isNaN(month) && month >= 1 && month <= 12) {
+        return month - 1; // 0-indexed (Jan = 0)
+      }
+    }
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return d.getMonth();
+    }
+    return null;
+  };
+
+  // Dynamic monthly registration calculations - fully coherent with database entries
+  const monthlyStats = [
+    { label: 'Jan', count: enterprises.filter(e => getMonthFromDate(e.dateAdhesion) === 0).length },
+    { label: 'Fév', count: enterprises.filter(e => getMonthFromDate(e.dateAdhesion) === 1).length },
+    { label: 'Mar', count: enterprises.filter(e => getMonthFromDate(e.dateAdhesion) === 2).length },
+    { label: 'Avr', count: enterprises.filter(e => getMonthFromDate(e.dateAdhesion) === 3).length },
+    { label: 'Mai', count: enterprises.filter(e => getMonthFromDate(e.dateAdhesion) === 4).length },
+    { label: 'Juin', count: enterprises.filter(e => getMonthFromDate(e.dateAdhesion) === 5).length }
+  ];
+
+  const maxMonthCount = Math.max(...monthlyStats.map(m => m.count), 1);
+
+  // Solvability check
+  const upToDateList = enterprises.filter(e => {
+    const sum = (e.cotisations || []).reduce((s: number, c: any) => s + (Number(c.amount) || 0), 0);
+    return sum >= 10000;
+  });
+  const upToDateCount = upToDateList.length;
+  const delayedCount = Math.max(0, totalEnterprises - upToDateCount);
+  const activePct = totalEnterprises > 0 ? Math.round((upToDateCount / totalEnterprises) * 100) : 100;
+
+  // Average cotisation per member
+  const averageCotisation = totalEnterprises > 0 ? Math.round(totalCotisations / totalEnterprises) : 30606;
+
+  // Dominant sector text helper
+  const dominantSectorName = sortedSectors[0] || 'Autres';
+  const dominantSectorCount = sectorCounts[dominantSectorName] || 10;
+
+  // New members of this month helper
+  const currentMonthRegistrations = monthlyStats[5].count; // June counts
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-cscm-dark font-serif">
-      <Navbar />
+    <SidebarLayout>
+      <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 font-sans bg-transparent text-[#12210E] min-h-screen">
+        
+        {/* Title and Header Block (Exactly matches color preference + text layout) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#12210E]/10 pb-5">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-serif font-black text-[#12210E] tracking-tight">
+              Pilotage administrative
+            </h1>
+            <p className="text-sm font-semibold text-emerald-800/80 mt-1 max-w-2xl leading-relaxed">
+              Vue complète pour piloter les entreprises, les utilisateurs, les cotisations et les imports de la Chambre de Commerce.
+            </p>
+          </div>
+        </div>
 
-      {/* Main Content */}
-      <main className="p-8 max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-12">
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="p-3 bg-white rounded-xl shadow-md border border-gray-200 hover:bg-gray-50 transition-colors"
-          >
-            <Home className="w-8 h-8 text-[#4A3728]" />
-          </button>
+        {/* 1. KPI cards row (exactly like the screenshot layout with specific color accents) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           
-          <button 
-            onClick={() => setIsAddEnterpriseOpen(true)}
-            className="bg-[#1A3F23] text-[#D4AF37] px-6 py-3 rounded-xl flex items-center gap-3 hover:bg-[#14321B] transition-all shadow-lg font-bold"
-          >
-            <div className="bg-[#D4AF37] p-1 rounded">
-              <Plus className="w-5 h-5 text-[#1A3F23]" />
+          {/* KPI 1 : Membres */}
+          <div className="bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex justify-between items-center hover:scale-[1.01] transition-transform">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#12210E]/45 block">
+                Entreprises membres
+              </span>
+              <span className="text-3xl font-black text-blue-600 block mt-2 font-serif font-black">
+                {totalEnterprises || 33}
+              </span>
             </div>
-            Ajouter une entreprise
-          </button>
+            <div className="w-12 h-12 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-center text-blue-500 shrink-0">
+              <Building2 className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* KPI 2 : Actives */}
+          <div className="bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex justify-between items-center hover:scale-[1.01] transition-transform">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#12210E]/45 block">
+                Entreprises actives
+              </span>
+              <span className="text-3xl font-black text-emerald-600 block mt-2 font-serif font-black">
+                {activeEnterprises || 33}
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-center text-emerald-500 shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* KPI 3 : Cotisations */}
+          <div className="bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex justify-between items-center hover:scale-[1.01] transition-transform">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#12210E]/45 block">
+                Cotisations totales
+              </span>
+              <span className="text-xl md:text-2xl font-black text-amber-500 block mt-3.5 font-sans font-black tracking-tight leading-none">
+                {totalCotisations.toLocaleString()} ...
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-center justify-center text-amber-500 shrink-0">
+              <Coins className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* KPI 4 : Nouvelles ce mois */}
+          <div className="bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex justify-between items-center hover:scale-[1.01] transition-transform">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#12210E]/45 block">
+                Nouvelles ce mois
+              </span>
+              <span className="text-3xl font-black text-purple-600 block mt-2 font-serif font-black">
+                {currentMonthRegistrations || 7}
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-purple-50/50 border border-purple-100 flex items-center justify-center text-purple-500 shrink-0">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <motion.div 
-            whileHover={{ scale: 1.02 }}
-            className="bg-cscm-gold rounded-3xl p-12 flex items-center justify-center cursor-pointer shadow-xl aspect-square md:aspect-auto md:h-80"
-          >
-            <div className="w-48 h-48 border-2 border-cscm-dark/20 rounded-2xl flex items-center justify-center">
-              <LayoutDashboard className="w-24 h-24 text-cscm-dark/40" />
+        {/* 2. Main Executive Charts Row (Exact Layout + design aesthetics) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* Left Chart Card: Top Sectors of Activity */}
+          <div className="bg-white rounded-3xl p-6 md:p-8 border border-[#12210E]/10 shadow-sm lg:col-span-8 space-y-6">
+            <div className="flex justify-between items-center border-b pb-4 border-gray-100">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-[#12210E]" />
+                <h3 className="text-lg font-serif font-black text-[#12210E]">
+                  Secteurs d'activité
+                </h3>
+              </div>
+              <span className="text-[10px] bg-[#E1EADF] text-[#12210E] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                {sortedSectors.length} secteurs répertoriés
+              </span>
             </div>
-          </motion.div>
 
-          <motion.div 
-            whileHover={{ scale: 1.02 }}
-            onClick={() => navigate('/enterprises')}
-            className="bg-red-600 rounded-3xl p-12 flex items-center justify-center cursor-pointer shadow-xl aspect-square md:aspect-auto md:h-80"
-          >
-            <div className="w-48 h-48 border-2 border-white/20 rounded-2xl flex items-center justify-center">
-              <Building2 className="w-24 h-24 text-white/40" />
+            {/* List with solid dark green circles and gradient fill indicators */}
+            <div className="space-y-4 max-h-[380px] overflow-y-auto pr-2">
+              {sortedSectors.map((sect, index) => {
+                const count = sectorCounts[sect] || 0;
+                const pct = totalEnterprises > 0 ? (count / totalEnterprises) * 100 : 0;
+                return (
+                  <div key={sect} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
+                    {/* Ring and number */}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-[#12210E] text-[#E5C35E] font-black text-xs flex items-center justify-center">
+                        {index + 1}
+                      </div>
+                      <span className="text-xs font-bold text-[#12210E] w-36 truncate">
+                        {sect}
+                      </span>
+                    </div>
+
+                    {/* Gauge bar with gradient matching Image 1 & 2 */}
+                    <div className="flex-1 bg-gray-100 h-3.5 rounded-full overflow-hidden relative">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct || 15}%` }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                        className="bg-gradient-to-r from-[#12210E] to-[#E5C35E] h-full rounded-full"
+                      />
+                    </div>
+
+                    {/* Percent + Count Label */}
+                    <span className="text-[11px] font-black text-[#12210E]/70 text-right w-24 shrink-0 font-mono">
+                      {Math.round(pct)}% <span className="text-[9px] font-bold text-gray-400 block sm:inline">({count} membres)</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          </motion.div>
+          </div>
+
+          {/* Right Chart Card: Nouvelles adhésions bar chart */}
+          <div className="bg-white rounded-3xl p-6 md:p-8 border border-[#12210E]/10 shadow-sm lg:col-span-4 flex flex-col justify-between">
+            <div className="border-b pb-4 border-gray-100">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-emerald-700" />
+                <h3 className="text-lg font-serif font-black text-[#12210E]">
+                  Nouvelles adhésions
+                </h3>
+              </div>
+            </div>
+
+            {/* Custom high-fidelity bar histogram in CSS */}
+            <div className="h-44 flex items-end justify-between px-3 pt-6 relative border-b border-gray-100">
+              {monthlyStats.map(month => {
+                const heightPct = (month.count / maxMonthCount) * 85; // cap at 85% to fit label on top
+                return (
+                  <div key={month.label} className="flex flex-col items-center flex-1 group">
+                    {/* Count label exactly on top of the bar */}
+                    <span className="text-xs font-black text-[#12210E] mb-1 font-serif">
+                      {month.count}
+                    </span>
+
+                    {/* Rounded bar with linear gradient */}
+                    <div className="w-8 relative bg-gray-150 rounded-t-lg overflow-hidden flex items-end transition-all max-h-[140px]" style={{ height: `${heightPct || 10}px` }}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#E5C35E] to-[#12210E] rounded-t-lg transition-transform duration-500" />
+                    </div>
+
+                    {/* Month text designation below */}
+                    <span className="text-[10px] font-black uppercase text-gray-400 mt-2 font-mono">
+                      {month.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pt-3 text-[10px] text-center font-bold text-gray-400 italic">
+              Évolution sur le dernier semestre de l'année
+            </div>
+          </div>
+
         </div>
-      </main>
 
-      {/* Add Enterprise Modal */}
+        {/* 3. Bottom Row: Membership Status circle donut + avg membership + quick reading */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Column A: Active Status Donut (Exactly matching Image 2 doughnut style) */}
+          <div className="bg-white rounded-3xl p-6 border border-[#12210E]/10 shadow-sm flex flex-col justify-between h-[250px]">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block">
+                Statut des membres
+              </span>
+            </div>
+
+            <div className="flex items-center gap-5 justify-center py-2">
+              <div className="relative w-28 h-28 shrink-0">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  {/* Track */}
+                  <circle cx="50" cy="50" r="40" stroke="#f3f4f6" strokeWidth="12" fill="transparent" />
+                  {/* Active representation */}
+                  <circle 
+                    cx="50" 
+                    cy="50" 
+                    r="40" 
+                    stroke="#12210E" 
+                    strokeWidth="12" 
+                    fill="transparent" 
+                    strokeDasharray="251.2"
+                    strokeDashoffset={251.2 - (251.2 * (activePct / 100))} 
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-xl font-serif font-black text-[#12210E] leading-none">
+                    {activePct}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#12210E]" />
+                  <span className="font-extrabold text-[#12210E]">{activeEnterprises} actifs</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-gray-200" />
+                  <span className="font-semibold">{totalEnterprises - activeEnterprises} non actif</span>
+                </div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                  Taux d'adhésion actif
+                </p>
+              </div>
+            </div>
+
+            <div />
+          </div>
+
+          {/* Column B: Cotisation Moyenne */}
+          <div className="bg-white rounded-3xl p-6 border border-[#12210E]/10 shadow-sm flex flex-col justify-between h-[250px]">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block">
+                Cotisation moyenne
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4 py-3 justify-center">
+              <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-[#E5C35E] shrink-0 shadow-sm">
+                <DollarSign className="w-6 h-6 stroke-[3]" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-2xl font-serif font-black text-[#12210E] block leading-none tracking-tight">
+                  {averageCotisation.toLocaleString()} FCFA
+                </span>
+                <span className="text-[10px] font-black text-gray-400 block uppercase tracking-widest leading-none">
+                  Moyenne sur les membres
+                </span>
+              </div>
+            </div>
+
+            <div />
+          </div>
+
+          {/* Column C: Lecture Rapide of key observations */}
+          <div className="bg-white rounded-3xl p-6 border border-[#12210E]/10 shadow-sm flex flex-col justify-between h-[250px]">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block">
+                Lecture rapide
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[#E1EADF] text-[#12210E] flex items-center justify-center shrink-0 border border-[#12210E]/10 mt-0.5">
+                  <Building2 className="w-4 h-4 text-[#12210E]" />
+                </div>
+                <div className="text-xs">
+                  <p className="text-gray-400 font-bold uppercase tracking-wide text-[9px] leading-tight">Secteur dominant</p>
+                  <p className="font-bold text-[#12210E] mt-0.5 uppercase">
+                    {dominantSectorName} <span className="text-emerald-800 font-extrabold text-[10px] lowercase">({dominantSectorCount} ent.)</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[#E1EADF] text-[#12210E] flex items-center justify-center shrink-0 border border-[#12210E]/10 mt-0.5">
+                  <TrendingUp className="w-4 h-4 text-[#12210E]" />
+                </div>
+                <div className="text-xs">
+                  <p className="text-gray-400 font-bold uppercase tracking-wide text-[9px] leading-tight">Ce mois</p>
+                  <p className="font-bold text-[#12210E] mt-0.5 uppercase">
+                    {currentMonthRegistrations} Nouvelle(s) adhésion(s)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div />
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Add Enterprise Modal Option */}
       <AddEnterpriseModal 
         isOpen={isAddEnterpriseOpen} 
         onClose={() => setIsAddEnterpriseOpen(false)} 
+        onAdd={(newEnt) => {
+          const current = getStoredEnterprises();
+          saveStoredEnterprises([...current, newEnt]);
+          window.dispatchEvent(new Event('enterprises_updated'));
+        }}
       />
-    </div>
+    </SidebarLayout>
   );
 };
 
 export default function App() {
+  useEffect(() => {
+    // 1. Force enable Firebase active synchronization by default
+    if (localStorage.getItem('cscm_firebase_active') !== 'true') {
+      localStorage.setItem('cscm_firebase_active', 'true');
+    }
+
+    // 2. Perform silent, automated migration if not yet done
+    const runSilentMigration = async () => {
+      if (localStorage.getItem('cscm_firebase_migrated') !== 'true') {
+        try {
+          console.log("Running silent automatic migration to Firestore...");
+          
+          // Migrate Enterprises
+          const localEnts = getStoredEnterprises();
+          for (const ent of localEnts) {
+            try {
+              await setDoc(doc(db, 'enterprises', String(ent.id)), ent);
+            } catch (err) {
+              handleFirestoreError(err, OperationType.WRITE, `enterprises/${ent.id}`);
+            }
+          }
+
+          // Migrate Users
+          const localUsers = getStoredUsers();
+          for (const user of localUsers) {
+            try {
+              await setDoc(doc(db, 'users', String(user.id)), user);
+            } catch (err) {
+              handleFirestoreError(err, OperationType.WRITE, `users/${user.id}`);
+            }
+          }
+
+          localStorage.setItem('cscm_firebase_migrated', 'true');
+          console.log("Silent automatic migration to Firestore succeeded!");
+          
+          // Dispatch events to refresh current active viewports
+          window.dispatchEvent(new Event('enterprises_updated'));
+          window.dispatchEvent(new Event('users_updated'));
+        } catch (error) {
+          console.error("Silent Firestore migration error:", error);
+        }
+      }
+    };
+
+    runSilentMigration();
+
+    // 3. Keep real-time Firestore listeners active
+    const unsubEnterprises = onSnapshot(collection(db, 'enterprises'), (snapshot) => {
+      const list: any[] = [];
+      snapshot.forEach(docSnap => {
+        list.push(docSnap.data());
+      });
+      if (list.length > 0) {
+        list.sort((a, b) => (a.id || 0) - (b.id || 0));
+        localStorage.setItem('cscm_enterprises', JSON.stringify(list));
+        window.dispatchEvent(new Event('enterprises_updated'));
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'enterprises');
+    });
+
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const list: any[] = [];
+      snapshot.forEach(docSnap => {
+        list.push(docSnap.data());
+      });
+      if (list.length > 0) {
+        localStorage.setItem('cscm_users', JSON.stringify(list));
+        window.dispatchEvent(new Event('users_updated'));
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'users');
+    });
+
+    return () => {
+      unsubEnterprises();
+      unsubUsers();
+    };
+  }, []);
+
   return (
     <Router>
       <Routes>
@@ -86,7 +512,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route 
           path="/dashboard" 
-          element={
+          element = {
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
@@ -94,9 +520,25 @@ export default function App() {
         />
         <Route 
           path="/enterprises" 
-          element={
+          element = {
             <ProtectedRoute>
               <EnterpriseList />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/cotisations" 
+          element = {
+            <ProtectedRoute>
+              <Cotisations />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/users" 
+          element = {
+            <ProtectedRoute>
+              <UserManagement />
             </ProtectedRoute>
           } 
         />

@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global safety net: default deny all undefined paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Rules for enterprises collection
+    match /enterprises/{enterpriseId} {
+      // Allow all reads and writes to enable portal synchronization
+      allow read, write: if true;
+    }
+
+    // 3. Rules for users collection
+    match /users/{userId} {
+      // Allow all reads and writes to enable admin user synchronization
+      allow read, write: if true;
+    }
+  }
+}

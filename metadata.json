@@ -1,5 +1,6 @@
 {
-  "name": "CCAISM - Portail Entreprises",
-  "description": "Portail de la Chambre de Commerce, d'Industrie et de Services de Marrakech-Safi pour la gestion des entreprises.",
-  "requestFramePermissions": []
+  "name": "CSCM - Portail Entreprises",
+  "description": "Portail d'administration de la Chambre Sénégalaise de Commerce au Maroc pour le suivi des cotisations et la gestion des membres.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

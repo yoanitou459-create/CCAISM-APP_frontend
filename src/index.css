@@ -1,26 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-cscm-gold: #D4AF37;
-  --color-cscm-green: #3D6B2C;
-  --color-cscm-dark: #1A2F14;
-  --color-cscm-light: #F5F2ED;
+  --color-cscm-gold: #E5C35E;
+  --color-cscm-green: #37662B;
+  --color-cscm-dark: #12210E;
+  --color-cscm-light: #FAF9F5;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Outfit", ui-serif, sans-serif;
 }
 
 body {
   @apply bg-cscm-dark text-white font-sans;
-  background: radial-gradient(circle at center, #2D4F23 0%, #1A2F14 100%);
+  background: radial-gradient(circle at top left, #294A1E 0%, #12210E 100%);
   min-height: 100vh;
 }
 
 .glass-card {
-  @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl shadow-2xl;
+  @apply bg-white/[0.08] backdrop-blur-xl border border-white/15 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)];
 }
 
 .input-field {
-  @apply w-full bg-transparent border-b border-cscm-gold/50 py-2 outline-none focus:border-cscm-gold transition-colors text-white placeholder:text-white/50;
+  @apply w-full bg-white/5 border border-white/20 rounded-2xl px-4 py-3 outline-none focus:border-cscm-gold focus:ring-2 focus:ring-cscm-gold/30 transition-all text-white placeholder:text-white/40;
 }
 
 .btn-primary {
-  @apply bg-cscm-green hover:bg-cscm-green/80 text-white px-8 py-3 rounded-full font-medium transition-all transform hover:scale-105 active:scale-95 shadow-lg;
+  @apply bg-cscm-green hover:bg-[#437A35] text-white px-8 py-3.5 rounded-2xl font-semibold transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-black/15;
 }
