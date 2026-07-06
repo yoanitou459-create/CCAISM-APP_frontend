@@ -337,8 +337,7 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
         {/* Top Header Bar for Desktop - Elegant & High Contrast */}
         <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200/85 shadow-xs sticky top-0 z-20">
           <div>
-            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Espace de Pilotage</span>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse border border-white" />
               <p className="text-xs font-semibold text-gray-600 bg-gray-55 bg-gray-100 px-3 py-1 rounded-full border border-gray-150">
                 Bienvenue <b className="text-[#132e15]">{user.prenom} {user.nom}</b> | {user.role === 'ADMIN' ? 'Administrateur CSCM' : user.role === 'MODERATEUR' ? 'Modérateur CSCM' : 'Membre CSCM'}
@@ -348,7 +347,6 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
           
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-100/60">
-              <Sparkles className="w-3 h-3 text-cscm-gold" />
               Chambre Active
             </span>
 
