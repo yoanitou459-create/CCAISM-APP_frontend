@@ -14,10 +14,14 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  // Make sure users exist in storage
+  // Make sure users exist in storage and redirect if already logged in
   useEffect(() => {
     getStoredUsers();
-  }, []);
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,12 +93,11 @@ export const Login: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
       const gUser = result.user;
       if (gUser && gUser.email) {
-        const email = gUser.email;
+        const userEmail = gUser.email;
         const users = getStoredUsers();
-        let matchedUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        let matchedUser = users.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
         
         if (!matchedUser) {
-          // If not found, register them as a new MEMBRE
           const names = gUser.displayName ? gUser.displayName.split(' ') : ['Google', 'User'];
           const prenom = names[0] || 'Utilisateur';
           const nom = names.slice(1).join(' ') || 'Google';
@@ -102,7 +105,7 @@ export const Login: React.FC = () => {
             id: 'u_' + Date.now(),
             nom,
             prenom,
-            email,
+            email: userEmail,
             role: 'MEMBRE',
             status: 'Actif',
             dateCreation: new Date().toISOString().split('T')[0]
@@ -110,13 +113,12 @@ export const Login: React.FC = () => {
           const updatedUsers = [...users, matchedUser];
           saveStoredUsers(updatedUsers);
         }
-        
-        // Validate active status
+
         if (matchedUser.status === 'Inactif') {
           setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
           return;
         }
-        
+
         localStorage.setItem('token', `google-token-${matchedUser.id}`);
         localStorage.setItem('user', JSON.stringify({
           id: matchedUser.id,
@@ -153,36 +155,19 @@ export const Login: React.FC = () => {
         className="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl border border-gray-200/65 flex flex-col lg:flex-row overflow-hidden relative z-10"
       >
         {/* Left Side: Elegant Portal Introduction with Logo */}
-        <div className="w-full lg:w-5/12 bg-gradient-to-br from-[#122410] via-[#0c180b] to-[#040804] p-8 md:p-12 flex flex-col justify-between text-white relative">
-          {/* Subtle logo design */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cscm-gold/10 rounded-full translate-x-20 -translate-y-20 blur-2xl pointer-events-none" />
+        <div className="w-full lg:w-5/12 bg-gradient-to-br from-[#122410] via-[#0c180b] to-[#040804] p-8 md:p-12 flex flex-col items-center justify-center text-white relative min-h-[350px] lg:min-h-full">
+          {/* Subtle background blurs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[2.5rem_0_0_2.5rem]">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cscm-gold/10 rounded-full blur-3xl" />
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl" />
+          </div>
           
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cscm-green to-emerald-900 border border-white/20 flex items-center justify-center">
-              <Building2 className="w-4.5 h-4.5 text-cscm-gold" />
+          <div className="relative z-10 flex flex-col items-center justify-center space-y-6 text-center w-full">
+            {/* Elegant outer design ring around the logo */}
+            <div className="relative p-10 rounded-[2.5rem] bg-white/5 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md transition-all duration-300 hover:border-cscm-gold/30">
+              <div className="absolute -inset-1 rounded-[2.7rem] bg-gradient-to-tr from-cscm-gold/20 via-transparent to-emerald-500/20 blur opacity-40 transition duration-500" />
+              <Logo className="scale-110 text-white" />
             </div>
-            <div>
-              <span className="text-xs font-serif font-bold text-cscm-gold tracking-wide block leading-none">CSCM</span>
-              <span className="text-[7px] text-white/50 uppercase font-black tracking-widest leading-none mt-0.5 block">Portail Institutionnel</span>
-            </div>
-          </div>
-
-          <div className="my-10 space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-white/10 text-cscm-gold border border-white/5">
-              <Sparkles className="w-3 h-3 text-cscm-gold" />
-              Pilotage & Trésorerie
-            </div>
-            <h2 className="text-2xl md:text-3xl font-serif font-black tracking-tight leading-snug">
-              Chambre Sénégalaise de Commerce au Maroc
-            </h2>
-            <p className="text-white/70 text-xs md:text-sm leading-relaxed">
-              Votre espace d'administration de l'annuaire bilatéral, de comptabilisation des cotisations annuelles, et de pilotage des comptes accrédités.
-            </p>
-          </div>
-
-          {/* Graphic interactive element representing our Logo */}
-          <div className="flex items-center justify-center p-6 bg-white/5 rounded-2xl border border-white/5">
-            <Logo className="scale-95 text-white/90" />
           </div>
         </div>
 
@@ -193,21 +178,20 @@ export const Login: React.FC = () => {
               <h1 className="text-2xl md:text-3xl font-serif font-black text-[#1b381c]">
                 Espace de Connexion
               </h1>
-              <p className="text-gray-400 text-xs font-semibold mt-1">
-                Authentifiez-vous pour accéder à vos droits réglementaires
-              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 pt-1">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-cscm-gold" />
-                  Adresse Email Pro
+                  Adresse Email
                 </label>
                 <input 
                   type="email" 
+                  name="email"
+                  autoComplete="username"
                   required
-                  placeholder="nom@cscm.com"
+                  placeholder="Entrer email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
@@ -228,6 +212,8 @@ export const Login: React.FC = () => {
                 <div className="relative">
                   <input 
                     type={showPassword ? 'text' : 'password'} 
+                    name="password"
+                    autoComplete="current-password"
                     required
                     placeholder="Saisissez votre mot de passe"
                     value={password}
@@ -289,7 +275,7 @@ export const Login: React.FC = () => {
                   d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.62-2.81c-1.1.74-2.51 1.18-4.34 1.18-3.36 0-5.88-1.79-6.78-4.49L1.39 16.94C3.37 20.33 7.35 23 12 23z"
                 />
               </svg>
-              Continuer avec Google
+              Se connecter avec Google
             </button>
           </div>
 

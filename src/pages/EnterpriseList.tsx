@@ -308,7 +308,7 @@ export const EnterpriseList = () => {
         {/* Grid-style list layout / Table */}
         <div className="bg-white rounded-[2rem] shadow-sm border border-[#132e15]/20 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-[#132e15] border-b border-[#132e15]/20 text-white text-[11px] uppercase font-black tracking-widest">
                   <th className="p-6">Nom de l'entreprise</th>

@@ -33,7 +33,9 @@ export const Navbar = () => {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex flex-col text-right">
             <span className="text-xs font-bold text-cscm-dark leading-tight">{user.prenom} {user.nom}</span>
-            <span className="text-[10px] text-cscm-green font-medium">Membre Privilégié</span>
+            <span className="text-[10px] text-cscm-green font-medium">
+              {user.role === 'ADMIN' ? 'Administrateur' : user.role === 'MODERATEUR' ? 'Modérateur' : 'Membre Privilégié'}
+            </span>
           </div>
           
           <button 

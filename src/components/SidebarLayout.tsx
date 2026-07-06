@@ -341,7 +341,7 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
             <div className="flex items-center gap-2 mt-1">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse border border-white" />
               <p className="text-xs font-semibold text-gray-600 bg-gray-55 bg-gray-100 px-3 py-1 rounded-full border border-gray-150">
-                Bienvenue <b className="text-[#132e15]">{user.prenom} {user.nom}</b> | Administrateur CSCM
+                Bienvenue <b className="text-[#132e15]">{user.prenom} {user.nom}</b> | {user.role === 'ADMIN' ? 'Administrateur CSCM' : user.role === 'MODERATEUR' ? 'Modérateur CSCM' : 'Membre CSCM'}
               </p>
             </div>
           </div>
@@ -547,7 +547,18 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
 
         {/* Dynamic page main container */}
         <div className="flex-grow">
-          {children}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full h-full"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 

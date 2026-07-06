@@ -342,7 +342,7 @@ export const UserManagement: React.FC = () => {
         {/* Users list as high contrast table */}
         <div className="bg-white rounded-3xl border border-[#132e15]/20 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[850px]">
               <thead>
                 <tr className="bg-[#132e15] text-[11px] font-black uppercase text-white tracking-wider">
                   <th className="p-5 border-b border-[#132e15]/20">Identité</th>

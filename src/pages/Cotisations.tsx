@@ -789,7 +789,7 @@ export const Cotisations: React.FC = () => {
               <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 border-b border-gray-100 pb-4">
                 
                 {/* Tab select group */}
-                <div className="inline-flex items-center gap-1.5 bg-gray-100 p-1 rounded-2xl border border-gray-200">
+                <div className="flex flex-wrap sm:inline-flex items-center gap-1.5 bg-gray-100 p-1 rounded-2xl border border-gray-200">
                   <button
                     onClick={() => setStatusFilter('delayed')}
                     className={`px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${

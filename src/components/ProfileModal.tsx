@@ -77,7 +77,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden pointer-events-auto relative flex flex-col max-h-[92vh] border border-[#a69371]/20 font-sans"
+              className="bg-white text-cscm-dark w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden pointer-events-auto relative flex flex-col max-h-[92vh] border border-[#a69371]/20 font-sans"
             >
               {/* Back Button (Left Arrow) */}
               <button 
@@ -138,57 +138,57 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                 <div className="w-full space-y-5 text-left">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">PRÉNOM</label>
+                      <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">PRÉNOM</label>
                       <input 
                         type="text" 
                         value={formData.prenom}
                         onChange={(e) => setFormData({...formData, prenom: e.target.value})}
-                        className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">NOM</label>
+                      <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">NOM</label>
                       <input 
                         type="text" 
                         value={formData.nom}
                         onChange={(e) => setFormData({...formData, nom: e.target.value})}
-                        className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                        className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">EMAIL</label>
+                    <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">EMAIL</label>
                     <input 
                       type="email" 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                      className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">LANGUE</label>
+                    <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">LANGUE</label>
                     <select
                       value={formData.langue}
                       onChange={(e) => setFormData({...formData, langue: e.target.value})}
-                      className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                      className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all cursor-pointer"
                     >
-                      <option value="Français">Français</option>
-                      <option value="Anglais">English</option>
-                      <option value="Arabe">العربية (Arabe)</option>
+                      <option value="Français" className="text-gray-950 bg-white">Français</option>
+                      <option value="Anglais" className="text-gray-950 bg-white">English</option>
+                      <option value="Arabe" className="text-gray-950 bg-white">العربية (Arabe)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">APPARENCE</label>
+                    <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">APPARENCE</label>
                     <select
                       value={formData.apparence}
                       onChange={(e) => setFormData({...formData, apparence: e.target.value})}
-                      className="w-full bg-[#FAF9F5]/40 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-600 transition-colors"
+                      className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all cursor-pointer"
                     >
-                      <option value="Clair">Clair</option>
-                      <option value="Sombre">Sombre (Bêta)</option>
+                      <option value="Clair" className="text-gray-950 bg-white">Clair</option>
+                      <option value="Sombre" className="text-gray-950 bg-white">Sombre (Bêta)</option>
                     </select>
                   </div>
 

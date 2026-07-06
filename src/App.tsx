@@ -167,7 +167,7 @@ const Dashboard = () => {
                 Cotisations totales
               </span>
               <span className="text-xl md:text-2xl font-black text-amber-500 block mt-3.5 font-sans font-black tracking-tight leading-none">
-                {totalCotisations.toLocaleString()} ...
+                {totalCotisations.toLocaleString()} FCFA
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-center justify-center text-amber-500 shrink-0">
@@ -543,6 +543,7 @@ export default function App() {
           } 
         />
         <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );

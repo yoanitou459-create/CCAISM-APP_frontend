@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Logo } from '../components/Logo';
-import { Building2, Sparkles, User, Lock, Mail } from 'lucide-react';
+import { Building2, Sparkles, User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { getStoredUsers, saveStoredUsers } from '../utils/userStorage';
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
@@ -15,7 +15,16 @@ export const Signup: React.FC = () => {
     password: '',
   });
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,36 +128,19 @@ export const Signup: React.FC = () => {
         className="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl border border-gray-200/65 flex flex-col lg:flex-row overflow-hidden relative z-10"
       >
         {/* Left Side: Elegant Portal Introduction with Logo */}
-        <div className="w-full lg:w-5/12 bg-gradient-to-br from-[#122410] via-[#0c180b] to-[#040804] p-8 md:p-12 flex flex-col justify-between text-white relative">
-          {/* Subtle logo design */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cscm-gold/10 rounded-full translate-x-20 -translate-y-20 blur-2xl pointer-events-none" />
+        <div className="w-full lg:w-5/12 bg-gradient-to-br from-[#122410] via-[#0c180b] to-[#040804] p-8 md:p-12 flex flex-col items-center justify-center text-white relative min-h-[350px] lg:min-h-full">
+          {/* Subtle background blurs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[2.5rem_0_0_2.5rem]">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cscm-gold/10 rounded-full blur-3xl" />
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl" />
+          </div>
           
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cscm-green to-emerald-900 border border-white/20 flex items-center justify-center">
-              <Building2 className="w-4.5 h-4.5 text-cscm-gold" />
+          <div className="relative z-10 flex flex-col items-center justify-center space-y-6 text-center w-full">
+            {/* Elegant outer design ring around the logo */}
+            <div className="relative p-10 rounded-[2.5rem] bg-white/5 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md transition-all duration-300 hover:border-cscm-gold/30">
+              <div className="absolute -inset-1 rounded-[2.7rem] bg-gradient-to-tr from-cscm-gold/20 via-transparent to-emerald-500/20 blur opacity-40 transition duration-500" />
+              <Logo className="scale-110 text-white" />
             </div>
-            <div>
-              <span className="text-xs font-serif font-bold text-cscm-gold tracking-wide block leading-none">CSCM</span>
-              <span className="text-[7px] text-white/50 uppercase font-black tracking-widest leading-none mt-0.5 block">Portail Institutionnel</span>
-            </div>
-          </div>
-
-          <div className="my-10 space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-white/10 text-cscm-gold border border-white/5">
-              <Sparkles className="w-3 h-3 text-cscm-gold" />
-              Pilotage & Trésorerie
-            </div>
-            <h2 className="text-2xl md:text-3xl font-serif font-black tracking-tight leading-snug">
-              Chambre Sénégalaise de Commerce au Maroc
-            </h2>
-            <p className="text-white/70 text-xs md:text-sm leading-relaxed">
-              Votre espace d'administration de l'annuaire bilatéral, de comptabilisation des cotisations annuelles, et de pilotage des comptes accrédités.
-            </p>
-          </div>
-
-          {/* Graphic interactive element representing our Logo */}
-          <div className="flex items-center justify-center p-6 bg-white/5 rounded-2xl border border-white/5">
-            <Logo className="scale-95 text-white/90" />
           </div>
         </div>
 
@@ -173,8 +165,10 @@ export const Signup: React.FC = () => {
                   </label>
                   <input 
                     type="text" 
+                    name="given-name"
+                    autoComplete="given-name"
                     required
-                    placeholder="Jean"
+                    placeholder="Entrer prénom"
                     value={formData.prenom}
                     onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
@@ -188,8 +182,10 @@ export const Signup: React.FC = () => {
                   </label>
                   <input 
                     type="text" 
+                    name="family-name"
+                    autoComplete="family-name"
                     required
-                    placeholder="Dupont"
+                    placeholder="Entrer nom"
                     value={formData.nom}
                     onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
@@ -200,12 +196,14 @@ export const Signup: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5 text-cscm-gold" />
-                  Adresse Email Pro
+                  Adresse Email
                 </label>
                 <input 
                   type="email" 
+                  name="email"
+                  autoComplete="username"
                   required
-                  placeholder="nom@cscm.com"
+                  placeholder="Entrer email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
@@ -217,14 +215,26 @@ export const Signup: React.FC = () => {
                   <Lock className="w-3.5 h-3.5 text-cscm-gold" />
                   Mot de passe
                 </label>
-                <input 
-                  type="password" 
-                  required
-                  placeholder="••••••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    name="password"
+                    autoComplete="new-password"
+                    required
+                    placeholder="Saisissez votre mot de passe"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full pl-4 pr-10 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cscm-green transition-all cursor-pointer outline-none"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                  </button>
+                </div>
               </div>
 
               {error && (
