@@ -59,30 +59,7 @@ export const Login: React.FC = () => {
       window.dispatchEvent(new Event('user_profile_updated'));
       navigate('/dashboard');
     } else {
-      // If user not found, we'll create them as standard MEMBRE to make the app friendly
-      const newUser = {
-        id: 'u_' + Date.now(),
-        nom: 'Nouveau',
-        prenom: 'Membre',
-        email: email,
-        role: 'MEMBRE' as const,
-        status: 'Actif' as const,
-        password: password,
-        dateCreation: new Date().toISOString().split('T')[0]
-      };
-      saveStoredUsers([...users, newUser]);
-      
-      localStorage.setItem('token', `mock-token-${newUser.id}`);
-      localStorage.setItem('user', JSON.stringify({
-        id: newUser.id,
-        nom: newUser.nom,
-        prenom: newUser.prenom,
-        email: newUser.email,
-        role: newUser.role
-      }));
-      
-      window.dispatchEvent(new Event('user_profile_updated'));
-      navigate('/dashboard');
+      setError("Cet utilisateur n'existe pas dans la base de données. Veuillez créer un compte en vous inscrivant d'abord.");
     }
   };
 
@@ -98,20 +75,8 @@ export const Login: React.FC = () => {
         let matchedUser = users.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
         
         if (!matchedUser) {
-          const names = gUser.displayName ? gUser.displayName.split(' ') : ['Google', 'User'];
-          const prenom = names[0] || 'Utilisateur';
-          const nom = names.slice(1).join(' ') || 'Google';
-          matchedUser = {
-            id: 'u_' + Date.now(),
-            nom,
-            prenom,
-            email: userEmail,
-            role: 'MEMBRE',
-            status: 'Actif',
-            dateCreation: new Date().toISOString().split('T')[0]
-          };
-          const updatedUsers = [...users, matchedUser];
-          saveStoredUsers(updatedUsers);
+          setError("Ce compte Google n'est pas enregistré dans notre base de données. Veuillez d'abord vous inscrire sur la plateforme.");
+          return;
         }
 
         if (matchedUser.status === 'Inactif') {
