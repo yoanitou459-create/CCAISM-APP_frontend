@@ -632,7 +632,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         // Sort unified records by year (descending)
         unifiedFinancials.sort((a, b) => Number(b.year) - Number(a.year));
 
-        const renderExerciseCard = (item: any) => {
+        const renderExerciseCard = (item: any, idx: number) => {
           const year = item.year;
           const fullDevise = item.devise || 'XOF - Franc CFA Ouest Africain';
           const currencySymbol = fullDevise.split(' ')[0] || 'FCFA';
@@ -661,7 +661,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
           const levierVal = capitauxPropres > 0 ? (totalActif / capitauxPropres).toFixed(2) : '0.00';
 
           return (
-            <div key={year} className="bg-white border text-left border-gray-150 rounded-3xl p-6 shadow-xs space-y-6">
+            <div key={`${year}-${idx}`} className="bg-white border text-left border-gray-150 rounded-3xl p-6 shadow-xs space-y-6">
               {/* Card Header */}
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <div className="space-y-1">
@@ -794,7 +794,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
 
             {unifiedFinancials.length > 0 ? (
               <div className="space-y-8">
-                {unifiedFinancials.map((item: any) => renderExerciseCard(item))}
+                {unifiedFinancials.map((item: any, idx: number) => renderExerciseCard(item, idx))}
               </div>
             ) : (
               <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-amber-100/40 text-gray-400 text-sm font-semibold max-w-3xl mx-auto">
@@ -1001,7 +1001,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                       
                       return (
                         <tr 
-                          key={pay.id}
+                          key={`${pay.id || index}-${index}`}
                           onClick={() => {
                             if (isCustom) {
                               setSelectedItemIndex(customIndex);

@@ -361,10 +361,10 @@ export const UserManagement: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map(u => {
+                  filteredUsers.map((u, idx) => {
                     const isSelf = currentUser && currentUser.email.toLowerCase() === u.email.toLowerCase();
                     return (
-                      <tr key={u.id} className="hover:bg-[#FAF9F5]/50 transition-colors">
+                      <tr key={`${u.id || idx}-${idx}`} className="hover:bg-[#FAF9F5]/50 transition-colors">
                         <td className="p-5">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-cscm-green/10 text-cscm-green flex items-center justify-center font-bold text-xs border border-cscm-green/20">

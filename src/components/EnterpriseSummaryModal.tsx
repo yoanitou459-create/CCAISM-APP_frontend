@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Download, Shield, MapPin, Phone, Mail, Award, CheckCircle2, Star, FileText, AlertCircle } from 'lucide-react';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { jsPDF } from 'jspdf';
 
 interface EnterpriseSummaryModalProps {
   isOpen: boolean;
@@ -15,7 +16,124 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
   if (!isOpen || !enterprise) return null;
 
   const handleDownloadPDF = () => {
-    alert(`Téléchargement de la fiche technique officielle de ${enterprise.name} au format PDF...`);
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Border decoration
+    doc.setDrawColor(19, 46, 21); // #132e15
+    doc.setLineWidth(1);
+    doc.rect(8, 8, 194, 281); // outer margin
+    doc.setDrawColor(235, 208, 120); // #ebd078 gold border
+    doc.setLineWidth(0.5);
+    doc.rect(10, 10, 190, 277);
+
+    // Header bar
+    doc.setFillColor(19, 46, 21); // #132e15
+    doc.rect(12, 12, 186, 32, 'F');
+
+    // Header Title
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text("FICHE TECHNIQUE OFFICIELLE", 20, 28);
+    
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(235, 208, 120); // gold
+    doc.text("Chambre de Commerce, d'Industrie et de Services (CCIM)", 20, 36);
+
+    // Section 1: IDENTITÉ DE L'ENTREPRISE
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 55, 180, 10, 'F');
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text("1. IDENTITÉ DE L'ENTREPRISE", 20, 61);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+
+    const details = [
+      { label: "Nom de l'entreprise :", val: enterprise.name },
+      { label: "Raison Sociale :", val: enterprise.raisonSociale || enterprise.name },
+      { label: "Forme Juridique :", val: enterprise.formeJuridique || 'Société à Responsabilité Limitée' },
+      { label: "Date de création :", val: enterprise.dateCreation || 'N/A' },
+      { label: "N° Registre Commerce :", val: enterprise.numRC || 'Non Spécifié' },
+      { label: "Ninea / ICE :", val: enterprise.ninea || 'Non disponible' },
+      { label: "Secteur d'activité :", val: enterprise.secteur || 'Non disponible' },
+      { label: "Effectif :", val: `${enterprise.effectif || 'N/A'} personnes` }
+    ];
+
+    let y = 72;
+    details.forEach(item => {
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      doc.text(item.label, 20, y);
+
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(19, 46, 21);
+      doc.text(String(item.val), 70, y);
+      y += 8;
+    });
+
+    // Section 2: COORDONNÉES DE CONTACT
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, y + 5, 180, 10, 'F');
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.text("2. COORDONNÉES DE CONTACT", 20, y + 11);
+
+    y += 22;
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Adresse :", 20, y);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(`${enterprise.ville}, ${enterprise.pays}`, 70, y);
+
+    y += 8;
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Téléphone :", 20, y);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(enterprise.telephone || 'Non disponible', 70, y);
+
+    y += 8;
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("E-mail de contact :", 20, y);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(enterprise.email || 'Non disponible', 70, y);
+
+    // Section 3: DESCRIPTION DE L'ACTIVITÉ
+    y += 12;
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, y, 180, 10, 'F');
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.text("3. DESCRIPTION DE L'ACTIVITÉ", 20, y + 6);
+
+    y += 17;
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    const desc = enterprise.description || "Nous faisons du conseil et accompagnement technique dans le secteur correspondant.";
+    const splitDesc = doc.splitTextToSize(desc, 170);
+    doc.text(splitDesc, 20, y);
+
+    // Footer signature and seal
+    doc.setTextColor(120, 120, 120);
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text("Document officiel généré depuis la base de données administrative de la Chambre.", 15, 260);
+    doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 15, 264);
+
+    doc.save(`Fiche_${enterprise.name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
   };
 
   return (

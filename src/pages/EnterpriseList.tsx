@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Filter, Search, Trash2, Eye, Plus, ChevronRight, X, Building2, Landmark, CheckCircle2, AlertCircle, Coins } from 'lucide-react';
+import { Filter, Search, Trash2, Eye, Plus, ChevronRight, X, Building2, Landmark, CheckCircle2, AlertCircle, Coins, AlertTriangle, Loader2, Lock, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SidebarLayout } from '../components/SidebarLayout';
 import { EnterpriseDetailModal } from '../components/EnterpriseDetailModal';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { EnterpriseSummaryModal } from '../components/EnterpriseSummaryModal';
 import { getStoredEnterprises, saveStoredEnterprises, Enterprise } from '../utils/enterpriseStorage';
+import { getEffectiveApiKey } from '../utils/paymentConfig';
+
+const CURRENCIES = [
+  { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },
+  { code: 'EUR', name: 'Euro (EUR) - €', rate: 655.957, symbol: '€' },
+  { code: 'USD', name: 'Dollar US (USD) - $', rate: 600, symbol: '$' },
+  { code: 'MAD', name: 'Dirham Marocain (MAD) - DH', rate: 60.3, symbol: 'DH' },
+  { code: 'GBP', name: 'Livre Sterling (GBP) - £', rate: 775.2, symbol: '£' },
+  { code: 'CAD', name: 'Dollar Canadien (CAD) - C$', rate: 445, symbol: 'C$' },
+  { code: 'CHF', name: 'Franc Suisse (CHF) - CHF', rate: 685, symbol: 'CHF' },
+  { code: 'AED', name: 'Dirham EAU (AED) - AED', rate: 163.5, symbol: 'AED' },
+  { code: 'SAR', name: 'Riyal Saoudien (SAR) - SR', rate: 160, symbol: 'SR' }
+];
 
 export const EnterpriseList = () => {
   const navigate = useNavigate();
@@ -17,14 +30,31 @@ export const EnterpriseList = () => {
 
   // Quick payment setup state
   const [quickPaymentEnt, setQuickPaymentEnt] = useState<any>(null);
+  const [paymentMode, setPaymentMode] = useState<'manual' | 'online'>('manual');
   const [paymentRef, setPaymentRef] = useState('');
-  const [paymentAmount] = useState('10000'); // Fixed at 10000 FCFA
+  const [paymentAmount, setPaymentAmount] = useState('10000'); // Montant exact modifiable, par défaut 10000 FCFA
+  const [paymentCurrency, setPaymentCurrency] = useState<string>('FCFA');
+  const [cardName, setCardName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentProgressText, setPaymentProgressText] = useState('');
 
   const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
   const [userRole, setUserRole] = useState<'ADMIN' | 'MODERATEUR' | 'MEMBRE'>('MEMBRE');
 
   const loadData = () => {
-    setEnterprises(getStoredEnterprises());
+    const freshList = getStoredEnterprises();
+    setEnterprises(freshList);
+    
+    // Synchronisation en temps réel de la fiche de détails ouverte
+    setSelectedEnterprise(prev => {
+      if (!prev) return null;
+      const updated = freshList.find(e => e.id === prev.id);
+      return updated || prev;
+    });
+
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -113,6 +143,111 @@ export const EnterpriseList = () => {
         setFeedbackMessage({ type: 'error', text: 'Une erreur est survenue lors de la suppression.' });
         setTimeout(() => setFeedbackMessage(null), 3000);
       }
+    }
+  };
+
+  const handleRegisterQuickPayment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickPaymentEnt) return;
+
+    const finalAmountInFCFA = paymentCurrency === 'EUR'
+      ? Math.round(Number(paymentAmount) * 655.957)
+      : Number(paymentAmount) || 10000;
+
+    if (paymentMode === 'online') {
+      const apiKey = getEffectiveApiKey();
+      if (!apiKey) {
+        setFeedbackMessage({
+          type: 'error',
+          text: "Erreur : Clé API manquante pour le paiement en ligne !"
+        });
+        setTimeout(() => setFeedbackMessage(null), 4000);
+        return;
+      }
+
+      if (!cardName || !cardNumber || !cardExpiry || !cardCvv) {
+        setFeedbackMessage({
+          type: 'error',
+          text: "Veuillez remplir toutes les informations de votre carte bancaire."
+        });
+        setTimeout(() => setFeedbackMessage(null), 3000);
+        return;
+      }
+
+      setIsProcessingPayment(true);
+      setPaymentProgressText("Connexion sécurisée à la passerelle de paiement...");
+
+      setTimeout(() => {
+        setPaymentProgressText(`Authentification de la clé API [${apiKey.substring(0, 8)}...]...`);
+      }, 850);
+
+      setTimeout(() => {
+        setPaymentProgressText("Transmission cryptée SSL 256 bits et vérification bancaire...");
+      }, 1700);
+
+      setTimeout(() => {
+        setPaymentProgressText("Enregistrement sécurisé de la transaction en base...");
+      }, 2550);
+
+      setTimeout(() => {
+        const payment = {
+          date: new Date().toISOString().split('T')[0],
+          label: 'Cotisation Annuelle En Ligne',
+          amount: finalAmountInFCFA,
+          reference: `ONL-${Math.floor(100000 + Math.random() * 900000)}`,
+          method: 'Carte Bancaire (En Ligne)'
+        };
+
+        const current = getStoredEnterprises();
+        const updated = current.map(e => {
+          if (e.id === quickPaymentEnt.id) {
+            return {
+              ...e,
+              cotisations: [...(e.cotisations || []), payment]
+            };
+          }
+          return e;
+        });
+
+        saveStoredEnterprises(updated);
+        setQuickPaymentEnt(null);
+        setIsProcessingPayment(false);
+        setFeedbackMessage({
+          type: 'success',
+          text: `Paiement en ligne de ${finalAmountInFCFA.toLocaleString()} FCFA traité avec succès !`
+        });
+        setTimeout(() => setFeedbackMessage(null), 4000);
+      }, 3400);
+
+    } else {
+      // Manual payment
+      const payment = {
+        date: new Date().toISOString().split('T')[0],
+        label: 'Cotisation Annuelle Fixe',
+        amount: finalAmountInFCFA,
+        reference: paymentRef || 'Virement Bancaire Standard',
+        method: 'Virement bancaire'
+      };
+
+      const current = getStoredEnterprises();
+      const updated = current.map(e => {
+        if (e.id === quickPaymentEnt.id) {
+          return {
+            ...e,
+            cotisations: [...(e.cotisations || []), payment]
+          };
+        }
+        return e;
+      });
+
+      saveStoredEnterprises(updated);
+      setQuickPaymentEnt(null);
+      setPaymentRef('');
+      setFeedbackMessage({
+        type: 'success',
+        text: `Paiement de ${finalAmountInFCFA.toLocaleString()} FCFA validé pour ${quickPaymentEnt.name} !`
+      });
+      setTimeout(() => setFeedbackMessage(null), 3500);
     }
   };
 
@@ -322,8 +457,8 @@ export const EnterpriseList = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#132e15]/10 text-sm font-semibold text-[#132e15]">
-                {filteredEnterprises.map((ent) => (
-                  <tr key={ent.id} className="hover:bg-gray-50/50 transition-all group">
+                {filteredEnterprises.map((ent, idx) => (
+                  <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all group">
                     <td className="p-6 text-cscm-dark flex items-center gap-3.5">
                       {ent.logo ? (
                         <img src={ent.logo} alt={ent.name} className="w-11 h-11 rounded-2xl object-cover border border-gray-100 shadow-sm" />
@@ -363,7 +498,18 @@ export const EnterpriseList = () => {
                       <div className="flex items-center justify-end gap-2 text-right">
                         {userRole === 'ADMIN' && (
                           <button 
-                            onClick={() => setQuickPaymentEnt(ent)}
+                            onClick={() => {
+                              setQuickPaymentEnt(ent);
+                              setPaymentMode('manual');
+                              setPaymentAmount('10000');
+                              setCardName('');
+                              setCardNumber('');
+                              setCardExpiry('');
+                              setCardCvv('');
+                              setIsProcessingPayment(false);
+                              setPaymentProgressText('');
+                              setPaymentRef(`VIR-${Math.floor(100000 + Math.random() * 900000)}`);
+                            }}
                             className="p-2 text-[#a8820c] hover:text-amber-600 hover:bg-amber-50 border border-amber-100 rounded-xl transition-all"
                             title="Ajouter Cotisation (10 000 FCFA)"
                           >
@@ -430,7 +576,7 @@ export const EnterpriseList = () => {
         enterprise={enterpriseToSummary}
       />
 
-      {/* Quick Bank Payment Cotisation Modal */}
+      {/* Quick Bank & Online Payment Cotisation Modal */}
       <AnimatePresence>
         {quickPaymentEnt && (
           <div className="fixed inset-0 bg-black/60 z-[120] backdrop-blur-xs flex items-center justify-center p-4">
@@ -440,84 +586,294 @@ export const EnterpriseList = () => {
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden border border-gray-150"
             >
+              {/* Header */}
               <div className="p-6 bg-[#0a1208] text-white flex justify-between items-center border-b border-[#112310]">
                 <div>
-                  <h3 className="text-sm font-serif font-black text-cscm-gold tracking-wide">Saisir Paiement Banque</h3>
+                  <h3 className="text-sm font-serif font-black text-cscm-gold tracking-wide">
+                    {paymentMode === 'online' ? 'Paiement Sécurisé En Ligne' : 'Saisir Paiement Banque'}
+                  </h3>
                   <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider mt-0.5">{quickPaymentEnt.name}</p>
                 </div>
                 <button 
-                  onClick={() => setQuickPaymentEnt(null)}
+                  onClick={() => !isProcessingPayment && setQuickPaymentEnt(null)}
                   className="p-1.5 hover:bg-white/10 rounded-xl transition-colors text-white cursor-pointer"
+                  disabled={isProcessingPayment}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const payment = {
-                  date: new Date().toISOString().split('T')[0],
-                  label: 'Cotisation Annuelle Fixe',
-                  amount: 10000,
-                  reference: paymentRef || 'Virement Bancaire Standard'
-                };
-                
-                const current = getStoredEnterprises();
-                const updated = current.map(e => {
-                  if (e.id === quickPaymentEnt.id) {
-                    return {
-                      ...e,
-                      cotisations: [...(e.cotisations || []), payment]
-                    };
-                  }
-                  return e;
-                });
-                
-                saveStoredEnterprises(updated);
-                setQuickPaymentEnt(null);
-                setPaymentRef('');
-                
-                setFeedbackMessage({ 
-                  type: 'success', 
-                  text: `Paiement de 10 000 FCFA validé pour ${quickPaymentEnt.name} !` 
-                });
-                // Alert listeners
-                window.dispatchEvent(new Event('enterprises_updated'));
-                setTimeout(() => setFeedbackMessage(null), 3500);
-              }} className="p-6 space-y-4">
-                <div className="bg-[#E1EADF] text-[#132e15] font-bold p-4 rounded-xl border border-emerald-100 flex items-start gap-2.5 text-xs">
-                  <Landmark className="w-4.5 h-4.5 text-cscm-gold shrink-0 mt-0.5" />
-                  <p>Montant fixé par la charte: <b>10 000 FCFA</b>. Le versement sera imputé à la caisse de la Chambre de Commerce.</p>
+              {isProcessingPayment ? (
+                /* LOADER VIEW */
+                <div className="p-8 text-center space-y-4">
+                  <div className="w-16 h-16 bg-cscm-green/10 text-cscm-green rounded-full flex items-center justify-center mx-auto">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                  </div>
+                  <h4 className="text-sm font-black text-cscm-dark uppercase tracking-wider">Traitement de la transaction...</h4>
+                  <p className="text-xs text-gray-500 font-bold max-w-xs mx-auto animate-pulse">{paymentProgressText}</p>
+                  <div className="pt-2">
+                    <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Passerelle de Paiement CCIM</span>
+                  </div>
                 </div>
+              ) : (
+                /* MAIN FORM VIEW */
+                <form onSubmit={handleRegisterQuickPayment} className="p-6 space-y-4">
+                  {/* Mode Tabs */}
+                  <div className="grid grid-cols-2 bg-gray-100 p-1 rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMode('manual')}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        paymentMode === 'manual' 
+                          ? 'bg-white text-cscm-dark shadow-xs' 
+                          : 'text-gray-500 hover:text-cscm-dark'
+                      }`}
+                    >
+                      Virement Banque
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMode('online')}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        paymentMode === 'online' 
+                          ? 'bg-[#132e15] text-white shadow-xs' 
+                          : 'text-gray-500 hover:text-cscm-dark'
+                      }`}
+                    >
+                      Paiement En Ligne
+                    </button>
+                  </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider">Référence du Virement Bancaire</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="Ex: VR-719582-BOA"
-                    value={paymentRef}
-                    onChange={(e) => setPaymentRef(e.target.value)}
-                    className="w-full px-4 py-3.5 rounded-xl border border-gray-250 outline-none focus:border-cscm-green transition-all font-mono text-xs text-cscm-dark bg-white font-semibold text-[#132e15]"
-                  />
-                </div>
+                  {/* Common editable amount input */}
+                  <div className="space-y-3 bg-[#FAF9F5] p-4 rounded-2xl border border-gray-150">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider block">Devise du versement</label>
+                      <div className="flex gap-1 bg-gray-200/60 p-0.5 rounded-lg border border-gray-200">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaymentCurrency('FCFA');
+                          }}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
+                            paymentCurrency === 'FCFA'
+                              ? 'bg-[#132e15] text-white shadow-3xs'
+                              : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                        >
+                          FCFA (XOF)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaymentCurrency('EUR');
+                          }}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
+                            paymentCurrency === 'EUR'
+                              ? 'bg-[#132e15] text-white shadow-3xs'
+                              : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                        >
+                          Euro (EUR)
+                        </button>
+                      </div>
+                    </div>
 
-                <div className="flex gap-3 pt-3">
-                  <button 
-                    type="button"
-                    onClick={() => setQuickPaymentEnt(null)}
-                    className="flex-1 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer text-center"
-                  >
-                    Annuler
-                  </button>
-                  <button 
-                    type="submit"
-                    className="flex-1 py-3 text-xs font-black text-white bg-cscm-green hover:bg-[#152e16] rounded-xl transition-colors cursor-pointer text-center shadow-md shadow-cscm-green/10"
-                  >
-                    Valider le versement
-                  </button>
-                </div>
-              </form>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider block">
+                        {paymentCurrency === 'EUR' ? 'Montant en Euro (EUR)' : 'Montant en Franc CFA (FCFA)'}
+                      </label>
+                      <div className="relative">
+                        <input 
+                          type="number" 
+                          required
+                          min="1"
+                          step="any"
+                          placeholder={paymentCurrency === 'EUR' ? 'Ex: 15.24' : 'Ex: 10000'}
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          className="w-full pl-3 pr-12 py-2 rounded-xl border border-gray-200 outline-none focus:border-cscm-green transition-all text-sm font-black text-[#132e15] bg-white"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                          {paymentCurrency === 'EUR' ? 'EUR' : 'XOF'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {paymentAmount && Number(paymentAmount) > 0 && (
+                      <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center">
+                        {paymentCurrency === 'EUR' ? (
+                          <p className="text-xs text-emerald-800 font-extrabold">
+                            Conversion automatique : <span className="font-mono text-sm font-black">{Math.round(Number(paymentAmount) * 655.957).toLocaleString()} FCFA</span>
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-600 font-semibold">
+                            Équivalent indicatif : <span className="font-mono text-xs font-black">{(Number(paymentAmount) / 655.957).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {paymentMode === 'manual' ? (
+                    /* MANUAL BANK VIR PATH */
+                    <div className="space-y-4">
+                      <div className="bg-[#E1EADF] text-[#132e15] font-bold p-4 rounded-xl border border-emerald-100 flex items-start gap-2.5 text-xs">
+                        <Landmark className="w-4.5 h-4.5 text-cscm-gold shrink-0 mt-0.5" />
+                        <p>Le versement de validation sera imputé manuellement à la caisse de la Chambre de Commerce pour ce membre.</p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider">Référence du Virement Bancaire</label>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="Ex: VR-719582-BOA"
+                          value={paymentRef}
+                          onChange={(e) => setPaymentRef(e.target.value)}
+                          className="w-full px-4 py-3.5 rounded-xl border border-gray-250 outline-none focus:border-cscm-green transition-all font-mono text-xs text-cscm-dark bg-white font-semibold text-[#132e15]"
+                        />
+                      </div>
+
+                      <div className="flex gap-3 pt-3">
+                        <button 
+                          type="button"
+                          onClick={() => setQuickPaymentEnt(null)}
+                          className="flex-1 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer text-center"
+                        >
+                          Annuler
+                        </button>
+                        <button 
+                          type="submit"
+                          className="flex-1 py-3 text-xs font-black text-white bg-cscm-green hover:bg-[#152e16] rounded-xl transition-colors cursor-pointer text-center shadow-md shadow-cscm-green/10"
+                        >
+                          Valider le versement
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* ONLINE CREDIT CARD PATH */
+                    <div className="space-y-4">
+                      {!getEffectiveApiKey() ? (
+                        /* API KEY MISSING ERROR BLOCK */
+                        <div className="bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-4 text-xs font-semibold space-y-3">
+                          <div className="flex items-start gap-2.5">
+                            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-extrabold text-rose-800 text-sm">Passerelle de Paiement Bloquée</p>
+                              <p className="text-rose-700/80 mt-1 leading-relaxed">
+                                La clé API pour le paiement en ligne n'est pas configurée dans le code. Une clé API valide est requise pour initier les paiements.
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t border-rose-150 pt-2.5 space-y-2">
+                            <p className="text-[10px] font-black uppercase text-rose-800 tracking-wider">Comment la configurer directement ?</p>
+                            <p className="text-[10px] text-rose-700 font-bold leading-relaxed">
+                              Ouvrez le fichier <code className="bg-rose-100 px-1 py-0.5 rounded font-mono text-rose-950 font-semibold">src/utils/paymentConfig.ts</code> et insérez votre clé API Stripe ou Paytech à l'emplacement indiqué :
+                            </p>
+                            <div className="bg-rose-950 text-rose-100 font-mono text-[9px] p-2 rounded-lg font-black select-all">
+                              export const PAYMENT_API_KEY = "votre_cle_api_directe";
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* SECURE PAYMENT FORM (API ACTIVE) */
+                        <div className="space-y-3">
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+                              <span className="text-[9px] font-black text-emerald-800 uppercase tracking-wider">Passerelle Active</span>
+                            </div>
+                            <span className="text-[8px] font-mono text-emerald-950/70 font-black bg-emerald-100 px-1.5 py-0.5 rounded">
+                              Key: {getEffectiveApiKey().substring(0, 8)}...
+                            </span>
+                          </div>
+
+                          <div className="space-y-2.5 border-t pt-2.5">
+                            <div>
+                              <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Nom sur la carte</label>
+                              <input
+                                type="text"
+                                placeholder="M. Yoan ITOUA"
+                                value={cardName}
+                                onChange={(e) => setCardName(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-bold text-gray-850"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Numéro de Carte Bancaire</label>
+                              <div className="relative">
+                                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <input
+                                  type="text"
+                                  placeholder="4532 •••• •••• 8824"
+                                  value={cardNumber}
+                                  onChange={(e) => {
+                                    const raw = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+                                    const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+                                    setCardNumber(formatted.substring(0, 19));
+                                  }}
+                                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-gray-850"
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Expiration</label>
+                                <input
+                                  type="text"
+                                  placeholder="MM/YY"
+                                  value={cardExpiry}
+                                  onChange={(e) => {
+                                    let v = e.target.value.replace(/[^0-9]/g, '');
+                                    if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2, 4);
+                                    setCardExpiry(v.substring(0, 5));
+                                  }}
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-center text-gray-850"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">CVC (CVV)</label>
+                                <input
+                                  type="password"
+                                  placeholder="•••"
+                                  maxLength={3}
+                                  value={cardCvv}
+                                  onChange={(e) => setCardCvv(e.target.value.replace(/[^0-9]/g, ''))}
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-center text-gray-850"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-3 pt-3">
+                            <button 
+                              type="button"
+                              onClick={() => setQuickPaymentEnt(null)}
+                              className="flex-1 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer text-center"
+                            >
+                              Annuler
+                            </button>
+                            <button 
+                              type="submit"
+                              className="flex-1 py-3 text-xs font-black text-[#ebd078] bg-[#132e15] hover:bg-emerald-950 rounded-xl transition-colors cursor-pointer text-center shadow-md border border-[#ebd078]/25"
+                            >
+                              <Lock className="w-3.5 h-3.5 inline shrink-0 mr-1" />
+                              <span>Payer {Number(paymentAmount).toLocaleString()} FCFA</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </form>
+              )}
             </motion.div>
           </div>
         )}

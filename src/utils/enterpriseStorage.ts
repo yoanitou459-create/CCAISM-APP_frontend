@@ -27,6 +27,7 @@ export interface Enterprise {
     label: string;
     amount: number;
     reference?: string;
+    method?: string;
   }>;
   [key: string]: any;
 }

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { SidebarLayout } from '../components/SidebarLayout';
+import { jsPDF } from 'jspdf';
 import { 
   getStoredEnterprises, 
   saveStoredEnterprises 
 } from '../utils/enterpriseStorage';
+import { getEffectiveApiKey } from '../utils/paymentConfig';
 import { 
   Coins, 
   Search, 
@@ -21,9 +23,27 @@ import {
   X,
   FileText,
   Download,
-  Eye
+  Eye,
+  Lock,
+  Settings,
+  AlertTriangle,
+  Loader2,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+const CURRENCIES = [
+  { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },
+  { code: 'EUR', name: 'Euro (EUR) - €', rate: 655.957, symbol: '€' },
+  { code: 'USD', name: 'Dollar US (USD) - $', rate: 600, symbol: '$' },
+  { code: 'MAD', name: 'Dirham Marocain (MAD) - DH', rate: 60.3, symbol: 'DH' },
+  { code: 'GBP', name: 'Livre Sterling (GBP) - £', rate: 775.2, symbol: '£' },
+  { code: 'CAD', name: 'Dollar Canadien (CAD) - C$', rate: 445, symbol: 'C$' },
+  { code: 'CHF', name: 'Franc Suisse (CHF) - CHF', rate: 685, symbol: 'CHF' },
+  { code: 'AED', name: 'Dirham EAU (AED) - AED', rate: 163.5, symbol: 'AED' },
+  { code: 'SAR', name: 'Riyal Saoudien (SAR) - SR', rate: 160, symbol: 'SR' }
+];
 
 export const Cotisations: React.FC = () => {
   const [enterprises, setEnterprises] = useState<any[]>([]);
@@ -36,6 +56,7 @@ export const Cotisations: React.FC = () => {
   
   // New Payment Form State
   const [paymentAmount, setPaymentAmount] = useState('10000');
+  const [paymentCurrency, setPaymentCurrency] = useState<string>('FCFA');
   const [paymentLabel, setPaymentLabel] = useState('Cotisation Annuelle 2025');
   const [paymentRef, setPaymentRef] = useState('');
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -43,9 +64,31 @@ export const Cotisations: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastText, setToastText] = useState('');
 
+  // Online Payment System States
+  const [paymentMode, setPaymentMode] = useState<'manual' | 'online'>('manual');
+  const [apiKeyInput, setApiKeyInput] = useState(() => localStorage.getItem('CCIM_PAYMENT_API_KEY') || '');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentProgressText, setPaymentProgressText] = useState('');
+  
+  // Card Details Form State
+  const [cardName, setCardName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+
   // Receipt and Currency conversion states
   const [receiptModalEnt, setReceiptModalEnt] = useState<any | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);
+  
+  // Cotisation Editing States
+  const [editingPayment, setEditingPayment] = useState<any | null>(null); // { ent: any, payment: any }
+  const [editLabel, setEditLabel] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const [editCurrency, setEditCurrency] = useState<string>('FCFA');
+  const [editDate, setEditDate] = useState('');
+  const [editRef, setEditRef] = useState('');
+  const [editMethod, setEditMethod] = useState('Virement bancaire');
+
   const [displayCurrency, setDisplayCurrency] = useState<'FCFA' | 'EUR' | 'MAD' | 'AED' | 'GBP' | 'QAR'>('FCFA');
 
   // Custom Interactive Currency Converter state
@@ -144,241 +187,280 @@ export const Cotisations: React.FC = () => {
         amountStr = `${rawAmount.toLocaleString('fr-FR')} FCFA`;
     }
 
-    const htmlContent = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Reçu officiel - ${ent.name} - ${payment.reference}</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 40px;
-      background-color: #FAF9F5;
-      color: #132E15;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .receipt-card {
-      background: #FFFFFF;
-      border: 2px solid #EBD078;
-      border-radius: 24px;
-      padding: 40px;
-      width: 100%;
-      max-width: 600px;
-      box-shadow: 0 10px 30px rgba(18, 33, 14, 0.05);
-      box-sizing: border-box;
-    }
-    .header-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2px solid #F3F4F6;
-      padding-bottom: 24px;
-      margin-bottom: 24px;
-    }
-    .header-left h1 {
-      font-size: 20px;
-      font-weight: 800;
-      color: #132E15;
-      margin: 0 0 4px 0;
-      letter-spacing: -0.5px;
-    }
-    .header-left p {
-      font-size: 11px;
-      font-weight: 500;
-      color: #707070;
-      margin: 0;
-    }
-    .header-right {
-      text-align: right;
-    }
-    .header-right .label {
-      font-size: 9px;
-      font-weight: 850;
-      letter-spacing: 1px;
-      color: #707070;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .header-right .value {
-      font-size: 15px;
-      font-weight: 800;
-      color: #132E15;
-    }
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-    .info-box {
-      background: #FFFFFF;
-      border: 1px solid #E5E7EB;
-      border-radius: 16px;
-      padding: 16px;
-      text-align: left;
-    }
-    .info-box .box-label {
-      font-size: 9px;
-      font-weight: 800;
-      color: #9CA3AF;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
-    }
-    .info-box .box-value {
-      font-size: 13px;
-      font-weight: 700;
-      color: #132E15;
-      margin: 0;
-      word-break: break-all;
-    }
-    .amount-pill {
-      background-color: #EDFCF4;
-      border-radius: 100px;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .amount-pill span {
-      font-size: 24px;
-      font-weight: 900;
-      color: #132E15;
-    }
-    .footer-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 40px;
-    }
-    .footer-left {
-      font-size: 10px;
-      color: #808080;
-      max-width: 250px;
-      text-align: left;
-      line-height: 1.4;
-    }
-    .footer-right {
-      text-align: center;
-      min-width: 150px;
-    }
-    .footer-right .sig-line {
-      border-top: 1px solid #132E15;
-      margin-bottom: 6px;
-    }
-    .footer-right span {
-      font-size: 10px;
-      font-weight: bold;
-      color: #707070;
-    }
-    .no-print {
-      margin-top: 30px;
-      text-align: center;
-    }
-    .btn-print {
-      background: #132E15;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(18, 33, 14, 0.15);
-      transition: all 0.2s ease;
-    }
-    .btn-print:hover {
-      background: #1f4222;
-    }
-    @media print {
-      body {
-        padding: 0;
-        background-color: white;
-      }
-      .receipt-card {
-        border: none;
-        box-shadow: none;
-        padding: 0;
-      }
-      .no-print {
-        display: none;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div style="display: flex; flex-direction: column; align-items: center;">
-    <div class="receipt-card">
-      <div class="header-section">
-        <div class="header-left">
-          <h1>Reçu de paiement</h1>
-          <p>Chambre de Commerce, d'Industrie et de Services (CCIM)</p>
-        </div>
-        <div class="header-right">
-          <div class="label">Numéro de reçu</div>
-          <div class="value">REC-${ent.memberNo || 'MEM'}-${payment.reference || payment.id}</div>
-        </div>
-      </div>
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-      <div class="info-grid">
-        <div class="info-box">
-          <div class="box-label">Entreprise</div>
-          <div class="box-value">${ent.name}</div>
-        </div>
-        <div class="info-box">
-          <div class="box-label">Numéro membre</div>
-          <div class="box-value">${ent.memberNo || '-'}</div>
-        </div>
-        <div class="info-box">
-          <div class="box-label">Date paiement</div>
-          <div class="box-value">${payment.date}</div>
-        </div>
-        <div class="info-box">
-          <div class="box-label">Libellé</div>
-          <div class="box-value">${payment.label || 'Cotisation'}</div>
-        </div>
-      </div>
+    // Outer border decoration
+    doc.setDrawColor(19, 46, 21); // #132e15
+    doc.setLineWidth(1);
+    doc.rect(8, 8, 194, 281); // full page margin border
+    doc.setDrawColor(235, 208, 120); // gold border
+    doc.setLineWidth(0.5);
+    doc.rect(10, 10, 190, 277);
 
-      <div class="amount-pill">
-        <span>${amountStr}</span>
-      </div>
+    // Title Header Block
+    doc.setFillColor(19, 46, 21); // #132e15
+    doc.rect(12, 12, 186, 32, 'F');
 
-      <div class="footer-section">
-        <div class="footer-left">
-          Reçu généré automatiquement depuis la plateforme administrative CCIM.
-        </div>
-        <div class="footer-right">
-          <div class="sig-line"></div>
-          <span>La Trésorerie Générale</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="no-print">
-      <button class="btn-print" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
-    </div>
-  </div>
-</body>
-</html>
-    `;
+    // Title text
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text("RECU DE PAIEMENT OFFICIEL", 20, 28);
     
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Recu_${ent.name.replace(/[^a-zA-Z0-9]/g, '_')}_${payment.reference}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(235, 208, 120); // Gold
+    doc.text("Chambre de Commerce, d'Industrie et de Services (CCIM)", 20, 36);
+
+    // Receipt Number badge
+    doc.setFillColor(235, 208, 120);
+    doc.rect(130, 20, 60, 12, 'F');
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(`N° RECU :`, 134, 25);
+    doc.setFontSize(9);
+    doc.text(`REC-${ent.memberNo || 'MEM'}-${payment.reference || payment.id}`, 134, 29);
+
+    // Member and payment information blocks
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.5);
+    
+    // Grid - Section 1: Membre Émetteur
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 55, 180, 10, 'F');
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text("1. INFORMATIONS DU MEMBRE ADHERENT", 20, 61);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text("Nom de l'entreprise :", 20, 72);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(ent.name, 65, 72);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Raison Sociale :", 20, 79);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(ent.raisonSociale || ent.name, 65, 79);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Numéro d'adhérent :", 20, 86);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(ent.memberNo || '-', 65, 86);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Secteur d'activité :", 20, 93);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(ent.secteur || 'PME', 65, 93);
+
+    // Section 2: Détails de la transaction
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 105, 180, 10, 'F');
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.text("2. DETAILS DE LA TRANSACTION", 20, 111);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Libellé du versement :", 20, 122);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(payment.label || 'Cotisation', 65, 122);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Date du paiement :", 20, 129);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(payment.date, 65, 129);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Mode de règlement :", 20, 136);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(payment.method || 'Virement bancaire', 65, 136);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Référence transaction :", 20, 143);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(payment.reference || '-', 65, 143);
+
+    // Amount box
+    doc.setFillColor(237, 252, 244); // light emerald background
+    doc.setDrawColor(19, 46, 21);
+    doc.setLineWidth(1);
+    doc.rect(15, 160, 180, 24, 'FD');
+
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text("MONTANT ENCAISSÉ", 20, 167);
+    
+    doc.setFontSize(20);
+    doc.text(amountStr, 20, 178);
+
+    // Footer signature and seal
+    doc.setTextColor(120, 120, 120);
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text("Reçu généré automatiquement depuis la plateforme administrative sécurisée CCIM.", 15, 220);
+    doc.text(`Date de génération : ${new Date().toLocaleString('fr-FR')}`, 15, 224);
+
+    // Signature box
+    doc.setDrawColor(19, 46, 21);
+    doc.setLineWidth(0.5);
+    doc.line(130, 245, 185, 245);
+    
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text("La Trésorerie Générale CSCM", 136, 250);
+    doc.setFont('Helvetica', 'oblique');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Signé électroniquement", 143, 255);
+
+    doc.save(`Recu_${ent.name.replace(/[^a-zA-Z0-9]/g, '_')}_${payment.reference}.pdf`);
   };
 
   const loadData = () => {
-    setEnterprises(getStoredEnterprises());
+    const list = getStoredEnterprises();
+    setEnterprises(list);
+    
+    // Synchro temps réel des modaux ouverts
+    setSelectedEnt(prev => {
+      if (!prev) return null;
+      const updated = list.find(e => e.id === prev.id);
+      return updated || prev;
+    });
+
+    setReceiptModalEnt(prev => {
+      if (!prev) return null;
+      const updated = list.find(e => e.id === prev.id);
+      return updated || prev;
+    });
+  };
+
+  const handleStartEdit = (ent: any, payment: any) => {
+    setEditingPayment({ ent, payment });
+    setEditLabel(payment.label);
+    setEditAmount(String(payment.amount));
+    setEditDate(payment.date);
+    setEditRef(payment.reference);
+    setEditMethod(payment.method || 'Virement bancaire');
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPayment) return;
+
+    const { ent, payment } = editingPayment;
+    const amountNum = editCurrency === 'EUR'
+      ? Math.round(Number(editAmount) * 655.957)
+      : Number(editAmount) || 0;
+
+    const list = getStoredEnterprises();
+    const updated = list.map(item => {
+      if (item.id === ent.id) {
+        if (payment.id === '2023') {
+          return { ...item, cotisation_2023: amountNum };
+        } else if (payment.id === '2024') {
+          return { ...item, cotisation_2024: amountNum };
+        } else if (payment.id === '2025') {
+          return { ...item, cotisation_2025: amountNum };
+        } else if (payment.id.startsWith('custom-')) {
+          const index = parseInt(payment.id.replace('custom-', ''), 10);
+          const cots = [...(item.cotisations || [])];
+          if (cots[index]) {
+            cots[index] = {
+              ...cots[index],
+              label: editLabel,
+              amount: amountNum,
+              date: editDate,
+              reference: editRef,
+              method: editMethod
+            };
+          }
+          return { ...item, cotisations: cots };
+        }
+      }
+      return item;
+    });
+
+    saveStoredEnterprises(updated);
+    setEnterprises(updated);
+
+    // Sync state for modals
+    setReceiptModalEnt((prev: any) => {
+      if (!prev) return null;
+      const refreshed = updated.find((i: any) => i.id === prev.id);
+      return refreshed || prev;
+    });
+
+    setEditingPayment(null);
+    setToastText("Cotisation modifiée avec succès.");
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+    
+    // Trigger update event across other components
+    window.dispatchEvent(new Event('enterprises_updated'));
+  };
+
+  const handleDeleteCotisation = (ent: any, payment: any) => {
+    const confirmDelete = window.confirm(`Voulez-vous vraiment supprimer cette cotisation de ${payment.amount.toLocaleString()} FCFA ?`);
+    if (!confirmDelete) return;
+
+    const list = getStoredEnterprises();
+    const updated = list.map(item => {
+      if (item.id === ent.id) {
+        if (payment.id === '2023') {
+          return { ...item, cotisation_2023: 0 };
+        } else if (payment.id === '2024') {
+          return { ...item, cotisation_2024: 0 };
+        } else if (payment.id === '2025') {
+          return { ...item, cotisation_2025: 0 };
+        } else if (payment.id.startsWith('custom-')) {
+          const index = parseInt(payment.id.replace('custom-', ''), 10);
+          const cots = (item.cotisations || []).filter((_: any, idx: number) => idx !== index);
+          return { ...item, cotisations: cots };
+        }
+      }
+      return item;
+    });
+
+    saveStoredEnterprises(updated);
+    setEnterprises(updated);
+
+    // Sync state for modals
+    setReceiptModalEnt((prev: any) => {
+      if (!prev) return null;
+      const refreshed = updated.find((i: any) => i.id === prev.id);
+      return refreshed || prev;
+    });
+
+    setToastText("Cotisation supprimée avec succès.");
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+    
+    // Trigger update event across other components
+    window.dispatchEvent(new Event('enterprises_updated'));
   };
 
   useEffect(() => {
@@ -412,89 +494,161 @@ export const Cotisations: React.FC = () => {
     const aedVal = (totalTreasury * 0.00603).toFixed(2);
     const gbpVal = (totalTreasury * 0.00129).toFixed(2);
     const qarVal = (totalTreasury * 0.00597).toFixed(2);
-    
-    let reportText = `========================================================================\n`;
-    reportText += `       BILAN GENERAL ET CONVERSION DE LA TRESORERIE (CAISSE)\n`;
-    reportText += `           CHAMBRE DE COMMERCE ET D'INDUSTRIE (CCIM)\n`;
-    reportText += `========================================================================\n`;
-    reportText += `Date de generation : ${new Date().toLocaleString('fr-FR')}\n\n`;
-    
-    reportText += `------------------------------------------------------------------------\n`;
-    reportText += `1. SOLDE DE LA CAISSE EN DEVISE UNIQUE OU CONVERTIE\n`;
-    reportText += `------------------------------------------------------------------------\n`;
-    reportText += ` Solde Principal (FCFA) : ${totalTreasury.toLocaleString()} FCFA\n`;
-    reportText += ` Conversion Euro (EUR)   : ${Number(eurVal).toLocaleString('fr-FR')} EUR  (Taux: 1 EUR = 655.957 FCFA)\n`;
-    reportText += ` Dirham Marocain (MAD)   : ${Number(madVal).toLocaleString('fr-FR')} MAD  (Taux: 1 MAD = 60.30 FCFA)\n`;
-    reportText += ` Dirham des EAU (AED)    : ${Number(aedVal).toLocaleString('fr-FR')} AED  (Taux: 1 AED = 165.70 FCFA)\n`;
-    reportText += ` Livre Sterling (GBP)    : ${Number(gbpVal).toLocaleString('fr-FR')} GBP  (Taux: 1 GBP = 775.20 FCFA)\n`;
-    reportText += ` Dirham du Qatar (QAR)   : ${Number(qarVal).toLocaleString('fr-FR')} QAR  (Taux: 1 QAR = 167.50 FCFA)\n\n`;
-    
-    reportText += `------------------------------------------------------------------------\n`;
-    reportText += `2. DETAILS PAR MEMBRE ET EQUIVALENCES MULTI-DEVISES\n`;
-    reportText += `------------------------------------------------------------------------\n`;
-    reportText += `${'Societe'.padEnd(25)} | ${'N° Membre'.padEnd(10)} | ${'Statut'.padEnd(10)} | ${'Solde (FCFA)'.padEnd(14)} | ${'Euro (EUR)'.padEnd(12)} | ${'Dirham (MAD)'.padEnd(12)} | ${'Dirham (Qatar)'.padEnd(14)}\n`;
-    reportText += `-`.repeat(110) + `\n`;
-    
-    enterprises.forEach(ent => {
-      const stats = getEnterpriseStats(ent);
-      const mEur = (stats.sumPaid / 655.957).toFixed(2);
-      const mMad = (stats.sumPaid * 0.0165).toFixed(2);
-      const mQar = (stats.sumPaid * 0.00597).toFixed(2);
-      const statusLabel = stats.isUpToDate ? 'A Jour' : 'Retard';
-      const cleanName = ent.name.substring(0, 24);
-      
-      reportText += `${cleanName.padEnd(25)} | ${ent.memberNo.padEnd(10)} | ${statusLabel.padEnd(10)} | ${(stats.sumPaid.toString() + ' FCFA').padEnd(14)} | ${(mEur + ' EUR').padEnd(12)} | ${(mMad + ' MAD').padEnd(12)} | ${(mQar + ' QAR').padEnd(14)}\n`;
+
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
     });
+
+    // Outer border decoration
+    doc.setDrawColor(19, 46, 21); // #132e15
+    doc.setLineWidth(1);
+    doc.rect(8, 8, 194, 281); // full page margin border
+    doc.setDrawColor(235, 208, 120); // gold border
+    doc.setLineWidth(0.5);
+    doc.rect(10, 10, 190, 277);
+
+    // Title Header Block
+    doc.setFillColor(19, 46, 21); // #132e15
+    doc.rect(12, 12, 186, 32, 'F');
+
+    // Title text
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text("BILAN DE TRESORERIE GENERAL", 20, 28);
     
-    reportText += `\n========================================================================\n`;
-    reportText += `                     FIN DU RAPPORT DE TRESORERIE\n`;
-    reportText += `========================================================================\n`;
-    
-    const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `CCIM_Bilan_Caisse_Converti_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(235, 208, 120); // Gold
+    doc.text("Chambre de Commerce, d'Industrie et de Services (CCIM)", 20, 36);
+
+    // Date de generation
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(`Date de génération : ${new Date().toLocaleString('fr-FR')}`, 15, 55);
+
+    // 1. SOLDE DE LA CAISSE EN DEVISE UNIQUE OU CONVERTIE
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 62, 180, 10, 'F');
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text("1. SOLDE GLOBAL DE LA CAISSE (EQUIVALENCES)", 20, 68);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+
+    const devises = [
+      { name: "Franc CFA (XOF)", val: `${totalTreasury.toLocaleString()} FCFA`, taux: "Devise Pivot" },
+      { name: "Euro (EUR)", val: `${Number(eurVal).toLocaleString('fr-FR')} EUR`, taux: "1 EUR = 655.957 FCFA" },
+      { name: "Dirham Marocain (MAD)", val: `${Number(madVal).toLocaleString('fr-FR')} MAD`, taux: "1 MAD = 60.30 FCFA" },
+      { name: "Dirham des EAU (AED)", val: `${Number(aedVal).toLocaleString('fr-FR')} AED`, taux: "1 AED = 165.70 FCFA" },
+      { name: "Livre Sterling (GBP)", val: `${Number(gbpVal).toLocaleString('fr-FR')} GBP`, taux: "1 GBP = 775.20 FCFA" },
+      { name: "Rial du Qatar (QAR)", val: `${Number(qarVal).toLocaleString('fr-FR')} QAR`, taux: "1 QAR = 167.50 FCFA" }
+    ];
+
+    let y = 80;
+    devises.forEach(dev => {
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      doc.text(dev.name, 20, y);
+      
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(19, 46, 21);
+      doc.text(dev.val, 80, y);
+
+      doc.setFont('Helvetica', 'italic');
+      doc.setTextColor(120, 120, 120);
+      doc.setFontSize(8);
+      doc.text(`(Taux: ${dev.taux})`, 140, y);
+      doc.setFontSize(10);
+
+      y += 8;
+    });
+
+    // 2. DETAILS PAR MEMBRE ET EQUIVALENCES MULTI-DEVISES
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, y + 5, 180, 10, 'F');
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text("2. STATUT DE COTISATION DES MEMBRES", 20, y + 11);
+
+    y += 24;
+    // Table Headers
+    doc.setFontSize(9);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text("Société", 18, y);
+    doc.text("N° Membre", 65, y);
+    doc.text("Statut", 95, y);
+    doc.text("Montant Payé", 125, y);
+    doc.text("Reste à payer", 160, y);
+
+    doc.setDrawColor(19, 46, 21);
+    doc.setLineWidth(0.3);
+    doc.line(15, y + 3, 195, y + 3);
+
+    y += 9;
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+
+    enterprises.forEach((ent) => {
+      const stats = getEnterpriseStats(ent);
+      const rest = Math.max(0, 10000 - stats.sumPaid);
+      const statusLabel = stats.isUpToDate ? 'A Jour' : 'Retard';
+
+      if (y > 260) {
+        doc.addPage();
+        // Border for new page
+        doc.setDrawColor(19, 46, 21);
+        doc.setLineWidth(1);
+        doc.rect(8, 8, 194, 281);
+        doc.setDrawColor(235, 208, 120);
+        doc.setLineWidth(0.5);
+        doc.rect(10, 10, 190, 277);
+        y = 30;
+
+        // Table headers on new page
+        doc.setFontSize(9);
+        doc.setFont('Helvetica', 'bold');
+        doc.setTextColor(19, 46, 21);
+        doc.text("Société", 18, y);
+        doc.text("N° Membre", 65, y);
+        doc.text("Statut", 95, y);
+        doc.text("Montant Payé", 125, y);
+        doc.text("Reste à payer", 160, y);
+        doc.line(15, y + 3, 195, y + 3);
+        y += 9;
+        doc.setFont('Helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+      }
+
+      doc.text(ent.name.substring(0, 24), 18, y);
+      doc.text(ent.memberNo || 'CCIM-00', 65, y);
+      
+      if (stats.isUpToDate) {
+        doc.setTextColor(20, 100, 20);
+        doc.text(statusLabel, 95, y);
+      } else {
+        doc.setTextColor(180, 20, 20);
+        doc.text(statusLabel, 95, y);
+      }
+      doc.setTextColor(60, 60, 60);
+
+      doc.text(`${stats.sumPaid.toLocaleString()} XOF`, 125, y);
+      doc.text(`${rest.toLocaleString()} XOF`, 160, y);
+
+      y += 8;
+    });
+
+    doc.save(`CCIM_Bilan_Caisse_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const downloadCustomConversionReport = () => {
-    const val = conversionInput === '' ? totalTreasury : (Number(conversionInput) || 0);
-    const eurVal = (val / 655.957).toFixed(2);
-    const madVal = (val * 0.0165).toFixed(2);
-    const aedVal = (val * 0.00603).toFixed(2);
-    const gbpVal = (val * 0.00129).toFixed(2);
-    const qarVal = (val * 0.00597).toFixed(2);
-    
-    let text = `========================================================================\n`;
-    text += `             FICHE DE CONVERSION DE CHANGE PERSONNALISÉE\n`;
-    text += `              CHAMBRE DE COMMERCE ET D'INDUSTRIE (CCIM)\n`;
-    text += `========================================================================\n`;
-    text += `Généré le : ${new Date().toLocaleString('fr-FR')}\n\n`;
-    text += `Montant à Convertir Saisi : ${val.toLocaleString()} FCFA\n\n`;
-    text += `FICHES DES DEVISES CONVERTIES :\n`;
-    text += `------------------------------------------------------------------------\n`;
-    text += ` - Euro (EUR)           : ${eurVal} €  (Taux fixe: 655.957 FCFA)\n`;
-    text += ` - Dirham Maroc (MAD)   : ${madVal} MAD (Taux estimé: 0.0165)\n`;
-    text += ` - Émirats Arabes (AED) : ${aedVal} AED (Taux estimé: 0.00603)\n`;
-    text += ` - Livre Sterling (GBP) : ${gbpVal} £   (Taux estimé: 0.00129)\n`;
-    text += ` - Qatar Rial (QAR)     : ${qarVal} QAR (Taux estimé: 0.00597)\n\n`;
-    text += `------------------------------------------------------------------------\n`;
-    text += `             Document de simulation administrative.\n`;
-    text += `========================================================================\n`;
-    
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `CCIM_Conversion_Simulee_${val}_FCFA.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Left empty since custom conversion is removed
   };
 
   const formattedEnterprises = enterprises.map(ent => {
@@ -522,6 +676,13 @@ export const Cotisations: React.FC = () => {
 
   const handleOpenPayment = (ent: any) => {
     setSelectedEnt(ent);
+    setPaymentMode('manual');
+    setCardName('');
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCvv('');
+    setIsProcessingPayment(false);
+    setPaymentProgressText('');
     // Suggest standard reference
     setPaymentRef(`VIR-${Math.floor(100000 + Math.random() * 900000)}`);
   };
@@ -530,30 +691,101 @@ export const Cotisations: React.FC = () => {
     e.preventDefault();
     if (!selectedEnt) return;
 
-    const data = {
-      date: paymentDate,
-      label: paymentLabel,
-      amount: Number(paymentAmount) || 10000,
-      reference: paymentRef || 'Virement bancaire'
-    };
+    const finalAmountInFCFA = paymentCurrency === 'EUR'
+      ? Math.round(Number(paymentAmount) * 655.957)
+      : Number(paymentAmount) || 10000;
 
-    const updated = enterprises.map(ent => {
-      if (ent.id === selectedEnt.id) {
-        const cots = [...(ent.cotisations || [])];
-        cots.push(data);
-        return {
-          ...ent,
-          cotisations: cots
-        };
+    if (paymentMode === 'online') {
+      const apiKey = getEffectiveApiKey();
+      if (!apiKey) {
+        setToastText("Erreur : Clé API manquante pour le paiement en ligne !");
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        return;
       }
-      return ent;
-    });
+      
+      // Card details validation (simple simulation check)
+      if (!cardName || !cardNumber || !cardExpiry || !cardCvv) {
+        setToastText("Veuillez remplir toutes les informations de votre carte bancaire.");
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        return;
+      }
 
-    saveStoredEnterprises(updated);
-    setSelectedEnt(null);
-    setToastText(`Cotisation pour "${selectedEnt.name}" enregistrée avec succès !`);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+      setIsProcessingPayment(true);
+      setPaymentProgressText("Connexion sécurisée à la passerelle de paiement...");
+
+      // Staged simulation
+      setTimeout(() => {
+        setPaymentProgressText(`Authentification de la clé API [${apiKey.substring(0, 8)}...]...`);
+      }, 850);
+
+      setTimeout(() => {
+        setPaymentProgressText("Transmission cryptée SSL 256 bits et vérification bancaire...");
+      }, 1700);
+
+      setTimeout(() => {
+        setPaymentProgressText(`Montant de ${finalAmountInFCFA.toLocaleString()} XOF approuvé par l'API ! Finalisation...`);
+      }, 2550);
+
+      setTimeout(() => {
+        const ref = `PAY-${Math.floor(100000 + Math.random() * 900000)}`;
+        const data = {
+          date: paymentDate,
+          label: paymentLabel || 'Cotisation en ligne (API)',
+          amount: finalAmountInFCFA,
+          reference: ref,
+          method: 'Paiement en ligne'
+        };
+
+        const updated = enterprises.map(ent => {
+          if (ent.id === selectedEnt.id) {
+            const cots = [...(ent.cotisations || [])];
+            cots.push(data);
+            return {
+              ...ent,
+              cotisations: cots
+            };
+          }
+          return ent;
+        });
+
+        saveStoredEnterprises(updated);
+        setSelectedEnt(null);
+        setIsProcessingPayment(false);
+        setToastText(`Paiement en ligne de ${data.amount.toLocaleString()} FCFA traité avec succès !`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4000);
+      }, 3400);
+
+    } else {
+      // Manual Mode
+      const data = {
+        date: paymentDate,
+        label: paymentLabel,
+        amount: finalAmountInFCFA,
+        reference: paymentRef || 'Virement bancaire',
+        method: 'Virement bancaire'
+      };
+
+      const updated = enterprises.map(ent => {
+        if (ent.id === selectedEnt.id) {
+          const cots = [...(ent.cotisations || [])];
+          cots.push(data);
+          return {
+            ...ent,
+            cotisations: cots
+          };
+        }
+        return ent;
+      });
+
+      saveStoredEnterprises(updated);
+      setSelectedEnt(null);
+      setToastText(`Cotisation pour "${selectedEnt.name}" enregistrée avec succès !`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
   };
 
   return (
@@ -640,8 +872,8 @@ export const Cotisations: React.FC = () => {
           </div>
         </div>
 
-        {/* Dashboard 3 KPI Cards Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Dashboard 4 KPI Cards Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: En Retard Code Block */}
           <div className="bg-rose-50/65 border-2 border-rose-100 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
             <div className="space-y-1">
@@ -677,113 +909,23 @@ export const Cotisations: React.FC = () => {
               <Calendar className="w-8 h-8" />
             </div>
           </div>
-        </div>
 
-        {/* Double-Column Grid for Cashier Change Simulator and Members list */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-          
-          {/* Column Left: Beautiful Cashier Change Simulator (1 block width) */}
-          <div className="xl:col-span-1 space-y-6">
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-150 flex flex-col justify-between gap-5 h-full">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-emerald-100 text-emerald-800 rounded-xl">
-                    <Coins className="w-5 h-5" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-gray-400 text-[9px] font-black uppercase tracking-wider">Total de la Caisse</p>
-                    <h3 className="text-xl font-serif font-black text-emerald-900 leading-tight">
-                      {formatAmount(totalTreasury)}
-                    </h3>
-                  </div>
-                </div>
-
-                {/* Custom Converter Engine Widget */}
-                <div className="bg-emerald-50/50 border border-emerald-100/80 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[8px] font-black uppercase text-emerald-950/70 tracking-wider">
-                      🎛️ Change multi-devises
-                    </p>
-                    {conversionInput !== '' && (
-                      <button 
-                        onClick={() => setConversionInput('')}
-                        className="text-[8px] font-black text-rose-700 underline cursor-pointer"
-                      >
-                        Effacer
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder={`${totalTreasury.toLocaleString()} FCFA`}
-                        value={conversionInput}
-                        onChange={(e) => setConversionInput(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="w-full pl-3 pr-12 py-2 rounded-xl border border-emerald-200 bg-white text-xs font-bold outline-none focus:border-emerald-700 text-emerald-950 placeholder:text-gray-400 font-mono"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-gray-450 font-mono">
-                        FCFA
-                      </span>
-                    </div>
-
-                    {/* Selector Buttons */}
-                    <div className="flex flex-wrap gap-1">
-                      {(['EUR', 'MAD', 'AED', 'GBP', 'QAR'] as const).map(curr => {
-                        const icon = curr === 'EUR' ? '🇪🇺' : curr === 'MAD' ? '🇲🇦' : curr === 'AED' ? '🇦🇪' : curr === 'GBP' ? '🇬🇧' : '🇶🇦';
-                        return (
-                          <button
-                            key={curr}
-                            onClick={() => setConversionTarget(curr)}
-                            className={`px-2 py-1 rounded text-[9px] font-black border transition-all cursor-pointer ${
-                              conversionTarget === curr
-                              ? 'bg-[#132e15] border-[#132e15] text-[#ebd078]'
-                              : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-500'
-                            }`}
-                          >
-                            {icon} {curr}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Result panel */}
-                    <div className="bg-slate-900 text-white rounded-xl p-3 text-center relative overflow-hidden">
-                      <span className="text-[8px] font-black uppercase text-[#ebd078] tracking-widest block mb-0.5">Simulation de change</span>
-                      <span className="text-xs font-mono font-black">
-                        {(() => {
-                          const base = conversionInput === '' ? totalTreasury : (Number(conversionInput) || 0);
-                          let result = 0;
-                          let s = '€';
-                          if (conversionTarget === 'EUR') { result = base / 655.957; s = '€'; }
-                          else if (conversionTarget === 'MAD') { result = base * 0.0165; s = 'DH'; }
-                          else if (conversionTarget === 'AED') { result = base * 0.00603; s = 'AED'; }
-                          else if (conversionTarget === 'GBP') { result = base * 0.00129; s = '£'; }
-                          else if (conversionTarget === 'QAR') { result = base * 0.00597; s = 'QAR'; }
-                          return `${result.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${s}`;
-                        })()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Conversion print-out action */}
-              <button
-                onClick={downloadCustomConversionReport}
-                className="bg-[#132e15] hover:bg-emerald-900 text-[#ebd078] hover:text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 w-full transition-all border border-emerald-950/20 cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Télécharger Simulation
-              </button>
+          {/* Card 4: Total de la Caisse dynamically formatted in selected currency */}
+          <div className="bg-emerald-50 border-2 border-emerald-100 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">Total de la Caisse</span>
+              <h3 className="text-2xl font-serif font-black text-emerald-950 truncate">{formatAmount(totalTreasury)}</h3>
+              <p className="text-xs text-emerald-900/70 font-semibold">Devise courante : {displayCurrency}</p>
+            </div>
+            <div className="p-4 bg-emerald-100/50 rounded-2xl text-emerald-800 border border-emerald-200">
+              <Coins className="w-8 h-8" />
             </div>
           </div>
+        </div>
 
-          {/* Column Right: Interactive workspace - styled like the official tab container (3 blocks width) */}
-          <div className="xl:col-span-3 space-y-6">
-            <div className="bg-white rounded-3xl p-6 border border-gray-150 shadow-xs space-y-6 text-left">
+        {/* Interactive workspace - full width */}
+        <div className="w-full space-y-6">
+          <div className="bg-white rounded-3xl p-6 border border-gray-150 shadow-xs space-y-6 text-left">
               
               {/* Header inside table workspace: containing Search Input, Currency display selector, and tabs */}
               <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 border-b border-gray-100 pb-4">
@@ -872,10 +1014,10 @@ export const Cotisations: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-xs font-semibold text-gray-700">
-                    {filtered.map(ent => {
+                    {filtered.map((ent, idx) => {
                       const restToPay = Math.max(0, 10000 - ent.sumPaid);
                       return (
-                        <tr key={ent.id} className="hover:bg-gray-50/50 transition-all font-semibold">
+                        <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all font-semibold">
                           {/* Member ID */}
                           <td className="p-4 font-mono font-black text-gray-400">
                             {ent.memberNo || 'CCIM-00'}
@@ -965,7 +1107,6 @@ export const Cotisations: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Add Direct Payment Modal Dialog */}
       <AnimatePresence>
@@ -974,9 +1115,10 @@ export const Cotisations: React.FC = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
-              bg-black=""
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedEnt(null)}
+              onClick={() => {
+                if (!isProcessingPayment) setSelectedEnt(null);
+              }}
               className="fixed inset-0 bg-black/60 backdrop-blur-xs"
             />
             
@@ -984,14 +1126,33 @@ export const Cotisations: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-lg p-6 md:p-8 relative z-10 shadow-2xl border border-[#a69371]/20 font-sans"
+              className="bg-white rounded-3xl w-full max-w-lg p-6 md:p-8 relative z-10 shadow-2xl border border-[#a69371]/20 font-sans overflow-hidden"
             >
-              <button 
-                onClick={() => setSelectedEnt(null)}
-                className="absolute top-5 right-5 p-2 hover:bg-gray-150 rounded-lg cursor-pointer transition-colors"
-              >
-                <X className="w-5 h-5 text-[#132e15]" />
-              </button>
+              {!isProcessingPayment && (
+                <button 
+                  onClick={() => setSelectedEnt(null)}
+                  className="absolute top-5 right-5 p-2 hover:bg-gray-150 rounded-lg cursor-pointer transition-colors"
+                >
+                  <X className="w-5 h-5 text-[#132e15]" />
+                </button>
+              )}
+
+              {/* Loader Overlay */}
+              {isProcessingPayment && (
+                <div className="absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                  <div className="w-16 h-16 bg-emerald-50 text-emerald-800 rounded-full flex items-center justify-center border border-emerald-100 shadow-sm">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                  </div>
+                  <h4 className="text-lg font-serif font-black text-cscm-dark">Traitement en cours...</h4>
+                  <p className="text-xs text-emerald-800/80 font-mono font-bold bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 max-w-xs leading-relaxed">
+                    {paymentProgressText}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                    <Lock className="w-3.5 h-3.5" />
+                    Paiement crypté SSL de bout en bout
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-6">
                 <div className="text-left border-b pb-4">
@@ -1002,24 +1163,100 @@ export const Cotisations: React.FC = () => {
                   <p className="text-[#132e15]/80 text-xs mt-1 font-bold">Créditer le compte de <b>{selectedEnt.name}</b></p>
                 </div>
 
+                {/* Tabs Selector */}
+                <div className="grid grid-cols-2 p-1 bg-gray-100 rounded-2xl border border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode('manual')}
+                    className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      paymentMode === 'manual'
+                        ? 'bg-[#132e15] text-[#ebd078] shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    Saisie Manuelle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode('online')}
+                    className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      paymentMode === 'online'
+                        ? 'bg-[#132e15] text-[#ebd078] shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    Paiement en Ligne (API)
+                  </button>
+                </div>
+
                 <form onSubmit={handleRegisterPayment} className="space-y-4 text-left">
-                  <div>
-                    <label className="block text-[10px] font-black text-[#132e15] uppercase tracking-wider mb-2">MONTANT FIXÉ (FCFA)</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#132e15] text-xs font-bold font-semibold">FCFA</span>
-                      <input
-                        type="number"
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(e.target.value)}
-                        className="w-full pl-14 pr-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-sm font-black text-[#132e15]"
-                        required
-                      />
+                  {/* Common Fields */}
+                  <div className="space-y-3 bg-[#FAF9F5] p-4 rounded-2xl border border-gray-150">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider block">Devise du versement</label>
+                      <div className="flex gap-1 bg-gray-200/60 p-0.5 rounded-lg border border-gray-200">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentCurrency('FCFA')}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
+                            paymentCurrency === 'FCFA'
+                              ? 'bg-[#132e15] text-[#ebd078] shadow-3xs'
+                              : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                        >
+                          FCFA (XOF)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPaymentCurrency('EUR')}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
+                            paymentCurrency === 'EUR'
+                              ? 'bg-[#132e15] text-[#ebd078] shadow-3xs'
+                              : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                        >
+                          Euro (EUR)
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-[10px] text-emerald-800 font-extrabold mt-1 bg-emerald-50 px-2 py-0.5 rounded inline-block">Conformément aux statuts de la Chambre (10,000 FCFA)</p>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider block">
+                        {paymentCurrency === 'EUR' ? 'Montant exact (EUR)' : 'Montant exact (FCFA)'}
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#132e15] text-xs font-black">
+                          {paymentCurrency === 'EUR' ? 'EUR' : 'FCFA'}
+                        </span>
+                        <input
+                          type="number"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          className="w-full pl-14 pr-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-sm font-black text-[#132e15]"
+                          required
+                          min="1"
+                          step="any"
+                        />
+                      </div>
+                    </div>
+
+                    {paymentAmount && Number(paymentAmount) > 0 && (
+                      <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
+                        {paymentCurrency === 'EUR' ? (
+                          <p className="text-xs text-emerald-800 font-extrabold">
+                            Conversion automatique : <span className="font-mono text-sm font-black">{Math.round(Number(paymentAmount) * 655.957).toLocaleString()} FCFA</span>
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-600 font-semibold">
+                            Équivalent indicatif : <span className="font-mono text-xs font-black">{(Number(paymentAmount) / 655.957).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black text-[#132e15] uppercase tracking-wider mb-2">LIBELLÉ DU PAIEMENT</label>
+                    <label className="block text-[10px] font-black text-[#132e15] uppercase tracking-wider mb-2">LIBELLÉ DE LA TRANSACTION</label>
                     <input
                       type="text"
                       value={paymentLabel}
@@ -1029,46 +1266,212 @@ export const Cotisations: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-black text-[#132e15] uppercase tracking-wider mb-2">DATE DE TRANSACTION</label>
-                      <input
-                        type="date"
-                        value={paymentDate}
-                        onChange={(e) => setPaymentDate(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-black text-[#132e15]"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-[#132e15] uppercase tracking-wider mb-2">RÉFÉRENCE BANCAIRE</label>
-                      <input
-                        type="text"
-                        value={paymentRef}
-                        onChange={(e) => setPaymentRef(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-[#132e15]"
-                        placeholder="Ex: VIR-102941"
-                        required
-                      />
-                    </div>
-                  </div>
+                  {paymentMode === 'manual' ? (
+                    /* MANUAL STATE VIEW */
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-black text-[#132e15] uppercase tracking-wider mb-2">DATE DE TRANSACTION</label>
+                          <input
+                            type="date"
+                            value={paymentDate}
+                            onChange={(e) => setPaymentDate(e.target.value)}
+                            className="w-full px-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-black text-[#132e15]"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black text-[#132e15] uppercase tracking-wider mb-2">RÉFÉRENCE DE TRANSFERT</label>
+                          <input
+                            type="text"
+                            value={paymentRef}
+                            onChange={(e) => setPaymentRef(e.target.value)}
+                            className="w-full px-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-[#132e15]"
+                            placeholder="Ex: VIR-102941"
+                            required
+                          />
+                        </div>
+                      </div>
 
-                  <div className="pt-4 flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedEnt(null)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      type="submit"
-                      className="flex-1 bg-cscm-green hover:bg-[#1a3814] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center"
-                    >
-                      <CheckCircle2 className="w-4 h-4 text-cscm-gold shrink-0" />
-                      <span>Confirmer le versement</span>
-                    </button>
-                  </div>
+                      <div className="pt-4 flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedEnt(null)}
+                          className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex-1 bg-cscm-green hover:bg-[#1a3814] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-cscm-gold shrink-0" />
+                          <span>Confirmer le versement</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* ONLINE PAYMENT GATEWAY */
+                    <div className="space-y-4">
+                      {!getEffectiveApiKey() ? (
+                        /* API KEY MISSING ERROR BLOCK */
+                        <div className="bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-4 text-xs font-semibold space-y-3">
+                          <div className="flex items-start gap-2.5">
+                            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-extrabold text-rose-800 text-sm">Passerelle de Paiement Bloquée</p>
+                              <p className="text-rose-700/80 mt-1 leading-relaxed">
+                                La clé API pour le paiement en ligne n'est pas configurée. Une clé API valide est requise pour initier les paiements en ligne de manière sécurisée.
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t border-rose-150 pt-3 space-y-2">
+                            <p className="text-[10px] font-black uppercase text-rose-800 tracking-wider">Où placer cette clé API ?</p>
+                            <ul className="list-disc pl-4 space-y-1 text-[10px] text-rose-700 font-bold">
+                              <li>
+                                <span className="text-rose-900">Méthode recommandée :</span> Ajoutez la variable d'environnement dans votre fichier <code className="bg-rose-100 px-1 py-0.5 rounded font-mono text-rose-950 font-semibold">.env</code> à la racine du projet :
+                                <div className="mt-1 bg-rose-950 text-rose-100 font-mono text-[9px] p-2 rounded-lg font-black select-all">
+                                  VITE_PAYMENT_API_KEY=votre_cle_api_stripe_ou_paytech
+                                </div>
+                              </li>
+                              <li>
+                                <span className="text-rose-900">Méthode de test rapide :</span> Saisissez la clé ci-dessous pour l'activer immédiatement sur votre session locale :
+                              </li>
+                            </ul>
+                            
+                            <div className="flex gap-2 mt-2">
+                              <input
+                                type="text"
+                                placeholder="Insérer la clé API (Ex: pk_test_...)"
+                                value={apiKeyInput}
+                                onChange={(e) => {
+                                  setApiKeyInput(e.target.value);
+                                  localStorage.setItem('CCIM_PAYMENT_API_KEY', e.target.value);
+                                }}
+                                className="flex-1 px-3 py-2 bg-white border border-rose-200 rounded-xl outline-none focus:border-rose-500 font-mono text-[10px] text-rose-950 font-black"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (apiKeyInput.trim()) {
+                                    setToastText("Clé API de test enregistrée !");
+                                    setShowToast(true);
+                                    setTimeout(() => setShowToast(false), 2000);
+                                  }
+                                }}
+                                className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 cursor-pointer"
+                              >
+                                Activer
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* SECURE PAYMENT FORM (API ACTIVE) */
+                        <div className="space-y-4">
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+                              <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Passerelle de Paiement Active</span>
+                            </div>
+                            <span className="text-[9px] font-mono text-emerald-950/70 font-black bg-emerald-100 px-2 py-0.5 rounded">
+                              Key: {getEffectiveApiKey().substring(0, 8)}...
+                            </span>
+                          </div>
+
+                          <div className="space-y-3 border-t pt-3">
+                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Saisie des informations de carte</span>
+                            
+                            <div>
+                              <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Nom sur la carte</label>
+                              <input
+                                type="text"
+                                placeholder="M. Yoan ITOUA"
+                                value={cardName}
+                                onChange={(e) => setCardName(e.target.value)}
+                                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-bold text-gray-850"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Numéro de Carte Bancaire</label>
+                              <div className="relative">
+                                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <input
+                                  type="text"
+                                  placeholder="4532 •••• •••• 8824"
+                                  value={cardNumber}
+                                  onChange={(e) => {
+                                    // simple spacer formatting
+                                    const raw = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+                                    const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+                                    setCardNumber(formatted.substring(0, 19));
+                                  }}
+                                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-gray-850"
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Date d'expiration</label>
+                                <input
+                                  type="text"
+                                  placeholder="MM/YY"
+                                  value={cardExpiry}
+                                  onChange={(e) => {
+                                    let v = e.target.value.replace(/[^0-9]/g, '');
+                                    if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2, 4);
+                                    setCardExpiry(v.substring(0, 5));
+                                  }}
+                                  className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-center text-gray-850"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Code CVC (CVV)</label>
+                                <input
+                                  type="password"
+                                  placeholder="•••"
+                                  maxLength={3}
+                                  value={cardCvv}
+                                  onChange={(e) => setCardCvv(e.target.value.replace(/[^0-9]/g, ''))}
+                                  className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-center text-gray-850"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-4 flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedEnt(null)}
+                              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                            >
+                              Annuler
+                            </button>
+                            <button
+                              type="submit"
+                              className="flex-1 bg-[#132e15] hover:bg-emerald-950 text-[#ebd078] hover:text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center border border-[#ebd078]/25"
+                            >
+                              <Lock className="w-4 h-4 shrink-0" />
+                              <span>Payer {paymentCurrency === 'EUR' ? `${Number(paymentAmount).toLocaleString('fr-FR')} EUR` : `${Number(paymentAmount).toLocaleString()} FCFA`}</span>
+                            </button>
+                          </div>
+
+                          <div className="text-center">
+                            <span className="inline-flex items-center gap-1 text-[9px] text-gray-400 font-bold uppercase tracking-wider mx-auto">
+                              🛡️ Sécurisé via clé API • Cryptage de niveau militaire AES-256
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </form>
               </div>
             </motion.div>
@@ -1121,9 +1524,9 @@ export const Cotisations: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-3 text-left font-sans">
-                      {getPaymentsList(receiptModalEnt).map((pay: any) => (
+                      {getPaymentsList(receiptModalEnt).map((pay: any, idx: number) => (
                         <div 
-                          key={pay.id} 
+                          key={`${pay.id || idx}-${idx}`} 
                           className="bg-gray-50 hover:bg-gray-100/50 border border-gray-200 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors"
                         >
                           <div className="space-y-1">
@@ -1153,6 +1556,22 @@ export const Cotisations: React.FC = () => {
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => handleStartEdit(receiptModalEnt, pay)}
+                              type="button"
+                              className="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 p-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center shadow-3xs"
+                              title="Modifier cette cotisation"
+                            >
+                              <Pencil className="w-4 h-4 text-amber-700 shrink-0" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCotisation(receiptModalEnt, pay)}
+                              type="button"
+                              className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 p-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center shadow-3xs"
+                              title="Supprimer cette cotisation"
+                            >
+                              <Trash2 className="w-4 h-4 text-rose-700 shrink-0" />
+                            </button>
                             <button
                               onClick={() => setSelectedReceipt({ ent: receiptModalEnt, payment: pay })}
                               type="button"
@@ -1273,6 +1692,186 @@ export const Cotisations: React.FC = () => {
                     <span>Télécharger Officiel</span>
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Cotisation Modal View */}
+      <AnimatePresence>
+        {editingPayment && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingPayment(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            />
+            
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              className="bg-white rounded-3xl w-full max-w-md p-6 relative z-10 shadow-2xl border border-gray-150 font-sans text-left"
+            >
+              <button 
+                onClick={() => setEditingPayment(null)}
+                className="absolute top-5 right-5 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+                title="Fermer"
+              >
+                <X className="w-5 h-5 text-cscm-dark" />
+              </button>
+
+              <div className="space-y-4">
+                <div className="border-b pb-3">
+                  <span className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Modification</span>
+                  <h3 className="text-xl font-serif font-black text-cscm-dark">Modifier la Cotisation</h3>
+                  <p className="text-xs text-gray-400 font-bold mt-0.5">Pour : <b className="text-cscm-green">{editingPayment.ent.name}</b></p>
+                </div>
+
+                <form onSubmit={handleSaveEdit} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-cscm-dark uppercase tracking-wider mb-1.5">Libellé de la transaction</label>
+                    <input
+                      type="text"
+                      value={editLabel}
+                      onChange={(e) => setEditLabel(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-bold text-cscm-dark disabled:bg-gray-100 disabled:text-gray-400"
+                      required
+                      disabled={editingPayment.payment.id === '2023' || editingPayment.payment.id === '2024' || editingPayment.payment.id === '2025'}
+                    />
+                  </div>
+
+                  <div className="space-y-3 bg-[#FAF9F5] p-4 rounded-2xl border border-gray-150">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider block">Devise de modification</label>
+                      <div className="flex gap-1 bg-gray-200/60 p-0.5 rounded-lg border border-gray-200">
+                        <button
+                          type="button"
+                          onClick={() => setEditCurrency('FCFA')}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
+                            editCurrency === 'FCFA'
+                              ? 'bg-[#132e15] text-[#ebd078] shadow-3xs'
+                              : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                        >
+                          FCFA (XOF)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditCurrency('EUR')}
+                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
+                            editCurrency === 'EUR'
+                              ? 'bg-[#132e15] text-[#ebd078] shadow-3xs'
+                              : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                        >
+                          Euro (EUR)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider block">
+                        {editCurrency === 'EUR' ? 'Montant modifié (EUR)' : 'Montant modifié (FCFA)'}
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#132e15] text-xs font-black">
+                          {editCurrency === 'EUR' ? 'EUR' : 'FCFA'}
+                        </span>
+                        <input
+                          type="number"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(e.target.value)}
+                          className="w-full pl-14 pr-4 py-2 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-black text-[#132e15]"
+                          required
+                          min="1"
+                          step="any"
+                        />
+                      </div>
+                    </div>
+
+                    {editAmount && Number(editAmount) > 0 && (
+                      <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
+                        {editCurrency === 'EUR' ? (
+                          <p className="text-xs text-emerald-800 font-extrabold">
+                            Conversion automatique : <span className="font-mono text-xs font-black">{Math.round(Number(editAmount) * 655.957).toLocaleString()} FCFA</span>
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-600 font-semibold">
+                            Équivalent indicatif : <span className="font-mono text-xs font-black">{(Number(editAmount) / 655.957).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-cscm-dark uppercase tracking-wider mb-1.5">Date du versement</label>
+                    <input
+                      type="date"
+                      value={editDate}
+                      onChange={(e) => setEditDate(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-black text-cscm-dark disabled:bg-gray-100 disabled:text-gray-400"
+                      required
+                      disabled={editingPayment.payment.id === '2023' || editingPayment.payment.id === '2024' || editingPayment.payment.id === '2025'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-cscm-dark uppercase tracking-wider mb-1.5">Référence</label>
+                    <input
+                      type="text"
+                      value={editRef}
+                      onChange={(e) => setEditRef(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-cscm-dark disabled:bg-gray-100 disabled:text-gray-400"
+                      required
+                      disabled={editingPayment.payment.id === '2023' || editingPayment.payment.id === '2024' || editingPayment.payment.id === '2025'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-cscm-dark uppercase tracking-wider mb-1.5">Méthode de Paiement</label>
+                    <select
+                      value={editMethod}
+                      onChange={(e) => setEditMethod(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-bold text-cscm-dark disabled:bg-gray-100 disabled:text-gray-400"
+                      required
+                      disabled={editingPayment.payment.id === '2023' || editingPayment.payment.id === '2024' || editingPayment.payment.id === '2025'}
+                    >
+                      <option value="Virement bancaire">Virement bancaire</option>
+                      <option value="Paiement en ligne">Paiement en ligne</option>
+                      <option value="Carte Bancaire (En Ligne)">Carte Bancaire (En Ligne)</option>
+                      <option value="Chèque">Chèque</option>
+                      <option value="Espèces">Espèces</option>
+                    </select>
+                  </div>
+
+                  {/* Warning label for legacy years */}
+                  {(editingPayment.payment.id === '2023' || editingPayment.payment.id === '2024' || editingPayment.payment.id === '2025') && (
+                    <div className="bg-amber-50 border border-amber-200 text-[#a8820c] font-bold p-3 rounded-xl text-[10px] leading-relaxed">
+                      💡 Saisie d'historique : Pour cette cotisation historique d'archive, seul le montant brut est éditable. Les informations d'archive de date et de référence restent immuables.
+                    </div>
+                  )}
+
+                  <div className="pt-3 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingPayment(null)}
+                      className="flex-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 bg-cscm-green hover:bg-[#1a3814] text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer text-center"
+                    >
+                      <span>Enregistrer les modifications</span>
+                    </button>
+                  </div>
+                </form>
               </div>
             </motion.div>
           </div>
