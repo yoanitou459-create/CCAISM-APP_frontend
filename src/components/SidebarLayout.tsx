@@ -36,11 +36,31 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   }
   const location = useLocation();
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const scrollPositions = React.useRef<Record<string, number>>({});
+
+  // Capture scroll position for the current pathname as the user scrolls
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      scrollPositions.current[location.pathname] = scrollRef.current.scrollTop;
+    }
+  };
 
   useEffect(() => {
+    // When path changes, restore the scroll position (or 0 if not visited yet)
+    const savedScroll = scrollPositions.current[location.pathname] || 0;
+    
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = 0;
+      scrollRef.current.scrollTop = savedScroll;
     }
+
+    // Double check after transitions complete
+    const timer = setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = savedScroll;
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [location.pathname]);
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -579,7 +599,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
         </AnimatePresence>
 
         {/* Dynamic page main container - Independent Scrollable Area */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto pb-24 lg:pb-6 relative scroll-smooth">
+        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto pb-24 lg:pb-6 relative scroll-smooth">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

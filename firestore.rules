@@ -1,21 +1,83 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 1. Global safety net: default deny all undefined paths
+    
+    // 1. Global Safety Net: default deny all undefined paths
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // 2. Rules for enterprises collection
-    match /enterprises/{enterpriseId} {
-      // Allow all reads and writes to enable portal synchronization
-      allow read, write: if true;
+    // 2. Reusable, hardened global helpers
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // 3. Rules for users collection
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation helper for Enterprise entity
+    function isValidEnterprise(data) {
+      return (data.id is int || data.id is float)
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 256
+        && data.memberNo is string && data.memberNo.size() > 0 && data.memberNo.size() <= 128
+        && (!data.keys().hasAny(['email']) || (data.email is string && data.email.size() <= 256))
+        && (!data.keys().hasAny(['telephone']) || (data.telephone is string && data.telephone.size() <= 128))
+        && (!data.keys().hasAny(['adresse']) || (data.adresse is string && data.adresse.size() <= 512))
+        && (!data.keys().hasAny(['raisonSociale']) || (data.raisonSociale is string && data.raisonSociale.size() <= 256))
+        && (!data.keys().hasAny(['secteur']) || (data.secteur is string && data.secteur.size() <= 128))
+        && (!data.keys().hasAny(['cotisations']) || (data.cotisations is list && data.cotisations.size() <= 200));
+    }
+
+    // Validation helper for User entity
+    function isValidUser(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128
+        && data.nom is string && data.nom.size() > 0 && data.nom.size() <= 128
+        && data.prenom is string && data.prenom.size() > 0 && data.prenom.size() <= 128
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 256
+        && data.role is string && (data.role == 'ADMIN' || data.role == 'MODERATEUR' || data.role == 'MEMBRE');
+    }
+
+    // 3. Rules for enterprises collection
+    match /enterprises/{enterpriseId} {
+      // Must be authenticated to read or write
+      allow read: if isSignedIn();
+      
+      allow create: if isSignedIn() 
+        && isValidId(enterpriseId) 
+        && isValidEnterprise(incoming());
+        
+      allow update: if isSignedIn() 
+        && isValidEnterprise(incoming())
+        // Ensure critical immutables like 'id' and 'memberNo' are not altered
+        && incoming().id == existing().id
+        && incoming().memberNo == existing().memberNo;
+
+      allow delete: if isSignedIn();
+    }
+
+    // 4. Rules for users collection
     match /users/{userId} {
-      // Allow all reads and writes to enable admin user synchronization
-      allow read, write: if true;
+      // Must be authenticated to read or write user administration records
+      allow read: if isSignedIn();
+      
+      allow create: if isSignedIn() 
+        && isValidId(userId) 
+        && isValidUser(incoming());
+        
+      allow update: if isSignedIn() 
+        && isValidUser(incoming())
+        && incoming().id == existing().id;
+
+      allow delete: if isSignedIn();
     }
   }
 }

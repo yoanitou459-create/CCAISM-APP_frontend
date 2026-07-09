@@ -478,7 +478,7 @@ export const Cotisations: React.FC = () => {
   const getEnterpriseStats = (ent: any) => {
     const list = ent.cotisations || [];
     
-    // Determine target year and half-year based on selectedMonth and selectedYear
+    // Determine target year and half-year based on selectedMonth and selectedYear (for periodPaid info)
     const targetYear = selectedYear;
     const firstHalfMonths = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin'];
     const targetHalf = firstHalfMonths.includes(selectedMonth) ? 1 : 2;
@@ -515,12 +515,46 @@ export const Cotisations: React.FC = () => {
     const yearsSum = (Number(ent.cotisation_2023) || 0) + (Number(ent.cotisation_2024) || 0) + (Number(ent.cotisation_2025) || 0);
     const sumPaid = baseSum + yearsSum;
     
-    // Under the new rules:
-    // - Annual required amount is 20000 FCFA
-    // - If it's the first half (Jan - Jun): required amount is 10000 FCFA (half-year)
-    // - If it's the second half (Jul - Dec): required amount is 20000 FCFA (full year)
-    const requiredAmount = targetHalf === 1 ? 10000 : 20000;
-    const isUpToDate = periodPaid >= requiredAmount;
+    // Calculate global required amount up to today ("jusqu'au jour d'aujourd'hui")
+    const dateAdhesionStr = ent.dateAdhesion || ent.dateCreation || '';
+    let membershipYear = 2023;
+    let membershipHalf = 1;
+    let membershipMonth = 1;
+
+    if (dateAdhesionStr) {
+      const adDate = new Date(dateAdhesionStr);
+      if (!isNaN(adDate.getTime())) {
+        membershipYear = adDate.getFullYear();
+        membershipMonth = adDate.getMonth() + 1;
+        membershipHalf = membershipMonth <= 6 ? 1 : 2;
+      }
+    }
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    const currentHalf = currentMonth <= 6 ? 1 : 2;
+
+    let requiredTotalToDate = 0;
+    let isExempt = false;
+
+    // Check if joining date is in the future relative to current period
+    if (membershipYear > currentYear || (membershipYear === currentYear && membershipHalf > currentHalf)) {
+      isExempt = true;
+    } else {
+      const effectiveMemberYear = Math.max(2023, membershipYear);
+      const effectiveMemberHalf = membershipYear < 2023 ? 1 : membershipHalf;
+
+      for (let y = effectiveMemberYear; y <= currentYear; y++) {
+        const startHalf = (y === effectiveMemberYear) ? effectiveMemberHalf : 1;
+        const endHalf = (y === currentYear) ? currentHalf : 2;
+        for (let h = startHalf; h <= endHalf; h++) {
+          requiredTotalToDate += 10000; // 10,000 FCFA per half-year (semester)
+        }
+      }
+    }
+
+    const isUpToDate = isExempt ? true : (sumPaid >= requiredTotalToDate);
     const lastDate = list.length > 0 ? list[list.length - 1].date : '-';
     
     return { 
@@ -528,7 +562,9 @@ export const Cotisations: React.FC = () => {
       periodPaid, 
       isUpToDate, 
       lastDate, 
-      requiredAmount 
+      requiredAmount: requiredTotalToDate, // Treat global required to date as requiredAmount
+      isExempt,
+      requiredTotalToDate
     };
   };
 
@@ -641,12 +677,14 @@ export const Cotisations: React.FC = () => {
 
     enterprises.forEach((ent) => {
       const stats = getEnterpriseStats(ent);
-      const rest = Math.max(0, stats.requiredAmount - stats.periodPaid);
-      const statusLabel = stats.isUpToDate 
-        ? (stats.periodPaid >= 30000 
-            ? `A Jour (${(stats.periodPaid / 20000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans)` 
-            : 'A Jour') 
-        : 'Retard';
+      const rest = Math.max(0, stats.requiredAmount - stats.sumPaid);
+      const statusLabel = stats.isExempt
+        ? 'Non membre'
+        : stats.isUpToDate 
+          ? (stats.sumPaid >= 30000 
+              ? `A Jour (${(stats.sumPaid / 20000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans)` 
+              : 'A Jour') 
+          : 'Retard';
 
       if (y > 260) {
         doc.addPage();
@@ -686,7 +724,7 @@ export const Cotisations: React.FC = () => {
       }
       doc.setTextColor(60, 60, 60);
 
-      doc.text(`${stats.periodPaid.toLocaleString()} XOF`, 125, y);
+      doc.text(`${stats.sumPaid.toLocaleString()} XOF`, 125, y);
       doc.text(`${rest.toLocaleString()} XOF`, 160, y);
 
       y += 8;
@@ -700,14 +738,15 @@ export const Cotisations: React.FC = () => {
   };
 
   const formattedEnterprises = enterprises.map(ent => {
-    const { sumPaid, periodPaid, isUpToDate, lastDate, requiredAmount } = getEnterpriseStats(ent);
+    const { sumPaid, periodPaid, isUpToDate, lastDate, requiredAmount, isExempt } = getEnterpriseStats(ent);
     return {
       ...ent,
       sumPaid,
       periodPaid,
       isUpToDate,
       lastDate,
-      requiredAmount
+      requiredAmount,
+      isExempt
     };
   });
 
@@ -1075,7 +1114,7 @@ export const Cotisations: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-xs font-semibold text-gray-700">
                     {filtered.map((ent, idx) => {
-                      const restToPay = Math.max(0, (ent.requiredAmount || 20000) - (ent.periodPaid || 0));
+                      const restToPay = Math.max(0, (ent.requiredAmount || 0) - (ent.sumPaid || 0));
                       return (
                         <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all font-semibold">
                           {/* Member ID */}
@@ -1098,21 +1137,26 @@ export const Cotisations: React.FC = () => {
 
                           {/* Status - displays elegant cotisation status */}
                           <td className="p-4">
-                            {ent.isUpToDate ? (
+                            {ent.isExempt ? (
+                              <span className="inline-flex items-center gap-1.5 bg-gray-50 text-gray-500 text-[10px] px-2.5 py-1 rounded-full font-black border border-gray-200 uppercase tracking-wide" title={`Adhésion le ${ent.dateAdhesion || ent.dateCreation || 'N/A'}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                                Non membre
+                              </span>
+                            ) : ent.isUpToDate ? (
                               <div className="flex flex-col gap-1 items-start">
                                 <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-[10px] px-2.5 py-1 rounded-full font-black border border-emerald-100 uppercase tracking-wide">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                   À jour
                                 </span>
-                                {ent.periodPaid >= 30000 ? (
+                                {ent.sumPaid >= 30000 ? (
                                   <span className="text-[9px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
-                                    {(ent.periodPaid / 20000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans payés
+                                    {(ent.sumPaid / 20000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans payés
                                   </span>
-                                ) : ent.periodPaid >= 20000 ? (
+                                ) : ent.sumPaid >= 20000 ? (
                                   <span className="text-[9px] bg-emerald-50/50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
                                     1 an payé
                                   </span>
-                                ) : ent.periodPaid >= 10000 ? (
+                                ) : ent.sumPaid >= 10000 ? (
                                   <span className="text-[9px] bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
                                     0,5 an payé
                                   </span>
@@ -1127,8 +1171,13 @@ export const Cotisations: React.FC = () => {
                           </td>
 
                           {/* Amount Paid */}
-                          <td className="p-4 font-mono text-emerald-800 font-extrabold">
-                            {formatAmount(ent.periodPaid || 0)}
+                          <td className="p-4 font-mono text-emerald-800 font-extrabold text-left">
+                            <div className="flex flex-col">
+                              <span>{formatAmount(ent.sumPaid || 0)}</span>
+                              <span className="text-[9px] text-[#A69371] font-semibold mt-0.5">
+                                Période: {formatAmount(ent.periodPaid || 0)}
+                              </span>
+                            </div>
                           </td>
 
                           {/* Rest to Pay */}

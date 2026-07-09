@@ -10,7 +10,8 @@ import { SidebarLayout } from './components/SidebarLayout';
 import { getStoredEnterprises, saveStoredEnterprises } from './utils/enterpriseStorage';
 import { getStoredUsers, saveStoredUsers } from './utils/userStorage';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from './firebase';
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { db, handleFirestoreError, OperationType, auth } from './firebase';
 
 import { Cotisations } from './pages/Cotisations';
 import { UserManagement } from './pages/UserManagement';
@@ -24,6 +25,43 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   return <>{children}</>;
 };
+
+// Global Error Boundary to catch any runtime rendering crash and redirect to connection page
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class GlobalErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("GlobalErrorBoundary caught an error:", error, errorInfo);
+    // Clear corrupted session values so that the login screen is clean and accessible
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // Force direct browser redirect to login to completely clean state and recover
+      window.location.href = '/login';
+      return null;
+    }
+
+    return this.props.children;
+  }
+}
 
 // Global resource 404 mitigation - intercepts broken image loads and serves premium fallbacks
 if (typeof window !== 'undefined') {
@@ -499,61 +537,106 @@ export default function App() {
       }
     };
 
-    runSilentMigration();
+    // Ensure the user is signed in to Firebase (at least anonymously to secure the database)
+    let unsubscribeAuth: (() => void) | null = null;
+    let unsubEnterprises: (() => void) | null = null;
+    let unsubUsers: (() => void) | null = null;
 
-    // 3. Keep real-time Firestore listeners active
-    const unsubEnterprises = onSnapshot(collection(db, 'enterprises'), (snapshot) => {
-      const list: any[] = [];
-      snapshot.forEach(docSnap => {
-        list.push(docSnap.data());
-      });
-      if (list.length > 0) {
-        list.sort((a, b) => (a.id || 0) - (b.id || 0));
-        localStorage.setItem('cscm_enterprises', JSON.stringify(list));
-        window.dispatchEvent(new Event('enterprises_updated'));
+    unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log("Authenticated with Firebase UID:", user.uid);
+        
+        // Run migration to Firestore after being authenticated
+        runSilentMigration();
+
+        // 3. Keep real-time Firestore listeners active
+        if (!unsubEnterprises) {
+          unsubEnterprises = onSnapshot(collection(db, 'enterprises'), (snapshot) => {
+            const list: any[] = [];
+            snapshot.forEach(docSnap => {
+              list.push(docSnap.data());
+            });
+            if (list.length > 0) {
+              list.sort((a, b) => (a.id || 0) - (b.id || 0));
+              localStorage.setItem('cscm_enterprises', JSON.stringify(list));
+              window.dispatchEvent(new Event('enterprises_updated'));
+            }
+          }, (error) => {
+            handleFirestoreError(error, OperationType.GET, 'enterprises');
+          });
+        }
+
+        if (!unsubUsers) {
+          unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+            const list: any[] = [];
+            snapshot.forEach(docSnap => {
+              list.push(docSnap.data());
+            });
+            if (list.length > 0) {
+              localStorage.setItem('cscm_users', JSON.stringify(list));
+              window.dispatchEvent(new Event('users_updated'));
+            }
+          }, (error) => {
+            handleFirestoreError(error, OperationType.GET, 'users');
+          });
+        }
+      } else {
+        try {
+          await signInAnonymously(auth);
+        } catch (err) {
+          console.error("Firebase Anonymous Auth failed:", err);
+        }
       }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'enterprises');
     });
 
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      const list: any[] = [];
-      snapshot.forEach(docSnap => {
-        list.push(docSnap.data());
-      });
-      if (list.length > 0) {
-        localStorage.setItem('cscm_users', JSON.stringify(list));
-        window.dispatchEvent(new Event('users_updated'));
+    // Intercept fatal promise errors or network auth errors and bring user back to login
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error("Intercepted unhandled promise rejection:", event.reason);
+      const reasonStr = String(event.reason).toLowerCase();
+      if (
+        reasonStr.includes('permission') || 
+        reasonStr.includes('auth') || 
+        reasonStr.includes('unauthorized') || 
+        reasonStr.includes('401') || 
+        reasonStr.includes('403')
+      ) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
       }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'users');
-    });
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
     return () => {
-      unsubEnterprises();
-      unsubUsers();
+      if (unsubscribeAuth) unsubscribeAuth();
+      if (unsubEnterprises) unsubEnterprises();
+      if (unsubUsers) unsubUsers();
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
     };
   }, []);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        
-        {/* Protected nested routes with persistent SidebarLayout and smooth page transitions */}
-        <Route element={<ProtectedLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/enterprises" element={<EnterpriseList />} />
-          <Route path="/enterprises/add" element={<AddEnterprise />} />
-          <Route path="/cotisations" element={<Cotisations />} />
-          <Route path="/users" element={<UserManagement />} />
-        </Route>
+    <GlobalErrorBoundary>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Protected nested routes with persistent SidebarLayout and smooth page transitions */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/enterprises" element={<EnterpriseList />} />
+            <Route path="/enterprises/add" element={<AddEnterprise />} />
+            <Route path="/cotisations" element={<Cotisations />} />
+            <Route path="/users" element={<UserManagement />} />
+          </Route>
 
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<FallbackRedirect />} />
-      </Routes>
-    </Router>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<FallbackRedirect />} />
+        </Routes>
+      </Router>
+    </GlobalErrorBoundary>
   );
 }
