@@ -483,46 +483,43 @@ export const Cotisations: React.FC = () => {
     const firstHalfMonths = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin'];
     const targetHalf = firstHalfMonths.includes(selectedMonth) ? 1 : 2;
     
-    // Calculate total paid for this specific period
+    // Calculate total paid for the target year (can be in multiple installments)
     let periodPaid = 0;
     
-    // 1. Check custom cotisations
+    // 1. Check custom cotisations for target year
     list.forEach((c: any) => {
       if (c.date) {
         const pDate = new Date(c.date);
         if (!isNaN(pDate.getTime())) {
           const pYear = pDate.getFullYear().toString();
-          const pMonth = pDate.getMonth() + 1; // 1-indexed
-          const pHalf = pMonth <= 6 ? 1 : 2;
-          
-          if (pYear === targetYear && pHalf === targetHalf) {
+          if (pYear === targetYear) {
             periodPaid += Number(c.amount) || 0;
           }
         }
       }
     });
     
-    // 2. Attribute legacy annual payments to the respective year's halves
+    // 2. Add legacy annual payments for target year
     if (targetYear === '2023' && ent.cotisation_2023) {
-      const val = Number(ent.cotisation_2023) || 0;
-      periodPaid += val >= 40000 ? 20000 : (val / 2);
+      periodPaid += Number(ent.cotisation_2023) || 0;
     }
     if (targetYear === '2024' && ent.cotisation_2024) {
-      const val = Number(ent.cotisation_2024) || 0;
-      periodPaid += val >= 40000 ? 20000 : (val / 2);
+      periodPaid += Number(ent.cotisation_2024) || 0;
     }
     if (targetYear === '2025' && ent.cotisation_2025) {
-      const val = Number(ent.cotisation_2025) || 0;
-      periodPaid += val >= 40000 ? 20000 : (val / 2);
+      periodPaid += Number(ent.cotisation_2025) || 0;
     }
     
-    // Overall sum paid
+    // Overall sum paid across all history
     const baseSum = list.reduce((s: number, c: any) => s + (Number(c.amount) || 0), 0);
     const yearsSum = (Number(ent.cotisation_2023) || 0) + (Number(ent.cotisation_2024) || 0) + (Number(ent.cotisation_2025) || 0);
     const sumPaid = baseSum + yearsSum;
     
-    // Required per period is 20000 FCFA
-    const requiredAmount = 20000;
+    // Under the new rules:
+    // - Annual required amount is 20000 FCFA
+    // - If it's the first half (Jan - Jun): required amount is 10000 FCFA (half-year)
+    // - If it's the second half (Jul - Dec): required amount is 20000 FCFA (full year)
+    const requiredAmount = targetHalf === 1 ? 10000 : 20000;
     const isUpToDate = periodPaid >= requiredAmount;
     const lastDate = list.length > 0 ? list[list.length - 1].date : '-';
     
@@ -644,8 +641,12 @@ export const Cotisations: React.FC = () => {
 
     enterprises.forEach((ent) => {
       const stats = getEnterpriseStats(ent);
-      const rest = Math.max(0, 10000 - stats.sumPaid);
-      const statusLabel = stats.isUpToDate ? 'A Jour' : 'Retard';
+      const rest = Math.max(0, stats.requiredAmount - stats.periodPaid);
+      const statusLabel = stats.isUpToDate 
+        ? (stats.periodPaid >= 30000 
+            ? `A Jour (${(stats.periodPaid / 20000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans)` 
+            : 'A Jour') 
+        : 'Retard';
 
       if (y > 260) {
         doc.addPage();
@@ -685,7 +686,7 @@ export const Cotisations: React.FC = () => {
       }
       doc.setTextColor(60, 60, 60);
 
-      doc.text(`${stats.sumPaid.toLocaleString()} XOF`, 125, y);
+      doc.text(`${stats.periodPaid.toLocaleString()} XOF`, 125, y);
       doc.text(`${rest.toLocaleString()} XOF`, 160, y);
 
       y += 8;
@@ -1095,12 +1096,34 @@ export const Cotisations: React.FC = () => {
                             </div>
                           </td>
 
-                          {/* Status - displays elegant "Actif" pill which is official */}
+                          {/* Status - displays elegant cotisation status */}
                           <td className="p-4">
-                            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-[10px] px-2.5 py-1 rounded-full font-black border border-emerald-100 uppercase tracking-wide">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                              Actif
-                            </span>
+                            {ent.isUpToDate ? (
+                              <div className="flex flex-col gap-1 items-start">
+                                <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-[10px] px-2.5 py-1 rounded-full font-black border border-emerald-100 uppercase tracking-wide">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  À jour
+                                </span>
+                                {ent.periodPaid >= 30000 ? (
+                                  <span className="text-[9px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
+                                    {(ent.periodPaid / 20000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans payés
+                                  </span>
+                                ) : ent.periodPaid >= 20000 ? (
+                                  <span className="text-[9px] bg-emerald-50/50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
+                                    1 an payé
+                                  </span>
+                                ) : ent.periodPaid >= 10000 ? (
+                                  <span className="text-[9px] bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
+                                    0,5 an payé
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 text-[10px] px-2.5 py-1 rounded-full font-black border border-rose-100 uppercase tracking-wide">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                En retard
+                              </span>
+                            )}
                           </td>
 
                           {/* Amount Paid */}
