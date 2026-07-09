@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
 import { createPortal } from 'react-dom';
-=======
->>>>>>> origin/main
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldCheck, Landmark, Lightbulb, Contact, Coins } from 'lucide-react';
 import { EditFormModal } from './EditFormModal';
@@ -63,7 +60,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
 
   useEffect(() => {
-<<<<<<< HEAD
     if (!isOpen) return;
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
@@ -75,8 +71,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
   }, [isOpen, onClose, isEditModalOpen, previewCert]);
 
   useEffect(() => {
-=======
->>>>>>> origin/main
     if (previewCert && previewCert.fileData) {
       if (previewCert.fileData.startsWith('data:')) {
         try {
@@ -676,26 +670,15 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-8 max-w-2xl mx-auto">
-<<<<<<< HEAD
               <h3 className="text-3xl font-sans font-bold text-[#274420]">Informations générales</h3>
               <button 
                 onClick={() => handleEdit('Informations générales')}
                 className="btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] text-white px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold shadow-lg shadow-cscm-green/25 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
-=======
-              <h3 className="text-3xl font-serif font-black text-[#132e15]">Informations générales</h3>
-              <button 
-                onClick={() => handleEdit('Informations générales')}
-                className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
->>>>>>> origin/main
               >
                 <Pencil className="w-4 h-4" /> Modifier
               </button>
             </div>
-<<<<<<< HEAD
             <div className="card-elevated p-4 sm:p-8 rounded-2xl max-w-2xl mx-auto space-y-4 text-[#22301C]">
-=======
-            <div className="bg-white p-4 sm:p-8 rounded-2xl border-2 border-[#132e15]/20 max-w-2xl mx-auto space-y-4 shadow-sm text-[#132e15]">
->>>>>>> origin/main
               {[
                 { label: "Date d'adhésion", value: enterprise.dateAdhesion || '' },
                 { label: "Statut membre", value: enterprise.statutMembre || '' },
@@ -711,15 +694,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 { label: "Description", value: enterprise.description || '' },
                 { label: "Secteur d'activité", value: enterprise.secteur || '' },
               ].map((item) => (
-<<<<<<< HEAD
                 <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-gray-100 pb-2 last:border-b-0 last:pb-0 text-left">
                   <span className="font-bold text-[#274420] sm:min-w-[150px] shrink-0">{item.label} :</span>
                   <span className="font-medium text-[#22301C]/70 break-words">{item.value || 'Non spécifié'}</span>
-=======
-                <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-[#132e15]/5 pb-2 last:border-b-0 last:pb-0 text-left">
-                  <span className="font-extrabold text-[#132e15] sm:min-w-[150px] shrink-0">{item.label} :</span>
-                  <span className="font-semibold text-[#132e15]/90 break-words">{item.value || 'Non spécifié'}</span>
->>>>>>> origin/main
                 </div>
               ))}
             </div>
@@ -729,29 +706,17 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-8 max-w-2xl mx-auto">
-<<<<<<< HEAD
               <h3 className="text-3xl font-sans font-bold text-[#274420]">Métiers & expertises</h3>
               <div className="flex gap-3">
                 <button 
                   onClick={() => handleEdit('Métiers & expertises', 'edit')}
                   className="btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] text-white px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold shadow-lg shadow-cscm-green/25 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
-=======
-              <h3 className="text-3xl font-serif font-black text-[#132e15]">Métiers & expertises</h3>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => handleEdit('Métiers & expertises', 'edit')}
-                  className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
->>>>>>> origin/main
                 >
                   <Pencil className="w-4 h-4" /> Modifier
                 </button>
               </div>
             </div>
-<<<<<<< HEAD
             <div className="card-elevated p-4 sm:p-8 rounded-2xl max-w-2xl mx-auto space-y-4 text-[#22301C]">
-=======
-            <div className="bg-white p-4 sm:p-8 rounded-2xl border-2 border-[#132e15]/20 max-w-2xl mx-auto space-y-4 shadow-sm text-[#132e15]">
->>>>>>> origin/main
               {[
                 { label: "Secteur d'activité", value: enterprise.secteur || '' },
                 { label: "Expertise principale", value: enterprise.expertisePrincipale || '' },
@@ -762,15 +727,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 { label: "Niveau d'expertise", value: enterprise.niveauExpertise || enterprise.niveau_expertise || '' },
                 { label: "Capacité de production", value: enterprise.capaciteProduction || enterprise.capacite_production || '' },
               ].map((item) => (
-<<<<<<< HEAD
                 <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-gray-100 pb-2 last:border-b-0 last:pb-0 text-left">
                   <span className="font-bold text-[#274420] sm:min-w-[180px] shrink-0">{item.label} :</span>
                   <span className="font-medium text-[#22301C]/70 break-words">{item.value || 'Non spécifié'}</span>
-=======
-                <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-[#132e15]/5 pb-2 last:border-b-0 last:pb-0 text-left">
-                  <span className="font-extrabold text-[#132e15] sm:min-w-[180px] shrink-0">{item.label} :</span>
-                  <span className="font-semibold text-[#132e15]/90 break-words">{item.value || 'Non spécifié'}</span>
->>>>>>> origin/main
                 </div>
               ))}
             </div>
@@ -780,29 +739,17 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         return (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-3xl mx-auto">
-<<<<<<< HEAD
               <h3 className="text-2xl sm:text-3xl font-sans font-bold text-[#274420] text-left">Certifications</h3>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button 
                   onClick={() => handleEdit('Certifications', 'add')}
                   className="btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] text-white px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-lg shadow-cscm-green/25 hover:shadow-xl transition-all duration-300 cursor-pointer flex-1 sm:flex-initial"
-=======
-              <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Certifications</h3>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button 
-                  onClick={() => handleEdit('Certifications', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
->>>>>>> origin/main
                 >
                   <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Certifications', 'edit', selectedItemIndex)}
-<<<<<<< HEAD
                   className="bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 text-gray-600 px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex-1 sm:flex-initial"
-=======
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
->>>>>>> origin/main
                 >
                   <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
@@ -810,7 +757,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             </div>
 
             {/* Desktop Table View */}
-<<<<<<< HEAD
             <div className="hidden md:block table-shell max-w-3xl mx-auto">
               <table className="table-base">
                 <thead className="table-head">
@@ -822,33 +768,14 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   </tr>
                 </thead>
                 <tbody className="table-body text-xs">
-=======
-            <div className="hidden md:block overflow-hidden max-w-3xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
-                    <th className="border border-[#132e15]/20 p-3 text-left">Certification (s)</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Code (s)</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Date</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Organisme</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white text-[#132e15] font-semibold text-xs divide-y divide-[#132e15]/10">
->>>>>>> origin/main
                   {enterprise.certifications && enterprise.certifications.length > 0 ? (
                     enterprise.certifications.map((cert: any, i: number) => (
                       <tr 
                         key={i} 
                         onClick={() => setSelectedItemIndex(i)}
-<<<<<<< HEAD
                         className={`table-row cursor-pointer ${selectedItemIndex === i ? 'table-row-selected font-bold' : ''}`}
                       >
                         <td className="table-td py-3">
-=======
-                        className={`cursor-pointer transition-colors ${selectedItemIndex === i ? 'bg-[#132e15]/10 font-bold' : 'hover:bg-[#132e15]/5'}`}
-                      >
-                        <td className="border border-[#132e15]/15 p-3 h-10">
->>>>>>> origin/main
                           <div className="flex items-center justify-between gap-2">
                             <span className="truncate max-w-[200px]">{cert.name}</span>
                             {cert.fileData && (
@@ -859,11 +786,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                                     setPreviewCert(cert);
                                   }}
                                   title="Visualiser le document en ligne"
-<<<<<<< HEAD
                                   className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 transition-all duration-300 text-[9px] tracking-wider font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer hover:shadow-sm shrink-0"
-=======
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white transition-all text-[9px] tracking-wider font-extrabold uppercase px-2 py-1 rounded flex items-center gap-1 cursor-pointer hover:shadow-xs shrink-0"
->>>>>>> origin/main
                                 >
                                   <Eye className="w-3 h-3" />
                                   Voir
@@ -879,11 +802,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                                     document.body.removeChild(link);
                                   }}
                                   title="Télécharger la pièce justificative"
-<<<<<<< HEAD
                                   className="bg-cscm-green hover:bg-[#4B9040] text-white transition-all duration-300 text-[9px] tracking-wider font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer hover:shadow-sm shrink-0"
-=======
-                                  className="bg-[#132e15] hover:bg-emerald-800 text-white transition-all text-[9px] tracking-wider font-extrabold uppercase px-2 py-1 rounded flex items-center gap-1 cursor-pointer hover:shadow-xs shrink-0"
->>>>>>> origin/main
                                 >
                                   <Download className="w-3 h-3" />
                                   Doc
@@ -892,24 +811,14 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                             )}
                           </div>
                         </td>
-<<<<<<< HEAD
                         <td className="table-td py-3">{cert.code}</td>
                         <td className="table-td py-3">{cert.date}</td>
                         <td className="table-td py-3">{cert.issuer}</td>
-=======
-                        <td className="border border-[#132e15]/15 p-3 h-10">{cert.code}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{cert.date}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{cert.issuer}</td>
->>>>>>> origin/main
                       </tr>
                     ))
                   ) : (
                     <tr>
-<<<<<<< HEAD
                       <td colSpan={4} className="p-6 text-center text-[#22301C]/55 italic font-medium">
-=======
-                      <td colSpan={4} className="p-6 text-center text-[#132e15]/60 italic font-bold">
->>>>>>> origin/main
                         Aucune certification enregistrée
                       </td>
                     </tr>
@@ -927,22 +836,13 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                     onClick={() => setSelectedItemIndex(i)}
                     className={`p-4 rounded-2xl border text-left transition-all ${
                       selectedItemIndex === i 
-<<<<<<< HEAD
                         ? 'border-cscm-green/40 bg-cscm-green-soft shadow-sm' 
                         : 'border-gray-200 bg-white hover:bg-cscm-green-soft/60'
-=======
-                        ? 'border-[#132e15] bg-[#132e15]/10 shadow-sm' 
-                        : 'border-gray-200 bg-white hover:bg-gray-55 hover:bg-gray-50'
->>>>>>> origin/main
                     }`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="min-w-0">
-<<<<<<< HEAD
                         <h4 className="font-bold text-[#274420] text-sm break-words">{cert.name}</h4>
-=======
-                        <h4 className="font-extrabold text-[#132e15] text-sm break-words">{cert.name}</h4>
->>>>>>> origin/main
                         <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Organisme : {cert.issuer}</p>
                       </div>
                       
@@ -953,11 +853,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                               e.stopPropagation();
                               setPreviewCert(cert);
                             }}
-<<<<<<< HEAD
                             className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 text-[9px] font-bold uppercase px-2.5 py-1.5 rounded-full flex items-center gap-1 cursor-pointer transition-all duration-300 shrink-0"
-=======
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded flex items-center gap-1 cursor-pointer shrink-0"
->>>>>>> origin/main
                           >
                             <Eye className="w-3 h-3" /> Voir
                           </button>
@@ -971,11 +867,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                               link.click();
                               document.body.removeChild(link);
                             }}
-<<<<<<< HEAD
                             className="bg-cscm-green hover:bg-[#4B9040] text-white text-[9px] font-bold uppercase px-2.5 py-1.5 rounded-full flex items-center gap-1 cursor-pointer transition-all duration-300 shrink-0"
-=======
-                            className="bg-[#132e15] text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded flex items-center gap-1 cursor-pointer shrink-0"
->>>>>>> origin/main
                           >
                             <Download className="w-3 h-3" /> Doc
                           </button>
@@ -983,11 +875,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                       )}
                     </div>
                     
-<<<<<<< HEAD
                     <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-gray-100 text-[11px] font-semibold text-gray-600">
-=======
-                    <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-[#132e15]/5 text-[11px] font-semibold text-gray-600">
->>>>>>> origin/main
                       <div>
                         <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Code</span>
                         <span className="text-gray-800 font-bold">{cert.code || '-'}</span>
@@ -1000,11 +888,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   </div>
                 ))
               ) : (
-<<<<<<< HEAD
                 <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 text-[#22301C]/55 italic font-medium">
-=======
-                <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
->>>>>>> origin/main
                   Aucune certification enregistrée
                 </div>
               )}
@@ -1089,29 +973,17 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
           const levierVal = capitauxPropres > 0 ? (totalActif / capitauxPropres).toFixed(2) : '0.00';
 
           return (
-<<<<<<< HEAD
             <div key={`${year}-${idx}`} className="card-elevated text-left rounded-3xl p-6 space-y-6">
               {/* Card Header */}
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <div className="space-y-1">
                   <h4 className="text-xl font-sans font-bold text-[#274420]">Exercice fiscal {year}</h4>
-=======
-            <div key={`${year}-${idx}`} className="bg-white border text-left border-gray-150 rounded-3xl p-6 shadow-xs space-y-6">
-              {/* Card Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-                <div className="space-y-1">
-                  <h4 className="text-xl font-serif font-black text-[#132e15]">Exercice fiscal {year}</h4>
->>>>>>> origin/main
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
                     Visibilité : <span className={visibilite === 'Publique' ? 'text-emerald-700' : 'text-amber-700'}>{visibilite}</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-<<<<<<< HEAD
                   <span className="bg-cscm-green-soft text-cscm-green border border-cscm-green/15 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-=======
-                  <span className="bg-[#132e15] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
->>>>>>> origin/main
                     {currencySymbol}
                   </span>
                   <span className="text-xs text-gray-400 font-bold italic">
@@ -1164,11 +1036,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 {/* CAPITAUX PROPRES */}
                 <div className="bg-cyan-50/70 border border-cyan-100 rounded-2xl p-4">
                   <span className="text-[10px] font-black uppercase text-cyan-600 tracking-wider block mb-1">CAPITAUX PROPRES</span>
-<<<<<<< HEAD
                   <span className="text-base font-black text-cyan-950">{formatCustomMoney(capitauxPropres)}</span>
-=======
-                  <span className="text-base font-black text-white-900 text-cyan-950">{formatCustomMoney(capitauxPropres)}</span>
->>>>>>> origin/main
                 </div>
 
                 {/* ENDETTEMENT */}
@@ -1186,7 +1054,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Indicateurs clés</span>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                   <div className="bg-gray-50 rounded-xl p-2">
-<<<<<<< HEAD
                     <span className="text-[11px] text-gray-500 font-bold block mb-1">Rentabilité nette</span>
                     <span className="text-sm font-bold text-[#274420] block">{rentNetVal}%</span>
                   </div>
@@ -1201,22 +1068,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   <div className="bg-gray-50 rounded-xl p-2">
                     <span className="text-[11px] text-gray-500 font-bold block mb-1">Levier</span>
                     <span className="text-sm font-bold text-[#274420] block">{levierVal}</span>
-=======
-                    <span className="text-[11px] text-gray-450 font-bold block mb-1">Rentabilité nette</span>
-                    <span className="text-sm font-serif font-black text-slate-800 block">{rentNetVal}%</span>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-2">
-                    <span className="text-[11px] text-gray-450 font-bold block mb-1">ROA</span>
-                    <span className="text-sm font-serif font-black text-slate-800 block">{roaVal}%</span>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-2">
-                    <span className="text-[11px] text-gray-450 font-bold block mb-1">ROE</span>
-                    <span className="text-sm font-serif font-black text-slate-800 block">{roeVal}%</span>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-2">
-                    <span className="text-[11px] text-gray-450 font-bold block mb-1">Levier</span>
-                    <span className="text-sm font-serif font-black text-slate-800 block">{levierVal}</span>
->>>>>>> origin/main
                   </div>
                 </div>
               </div>
@@ -1225,7 +1076,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         };
 
         return (
-<<<<<<< HEAD
           <div className="space-y-8 max-w-4xl mx-auto pb-12 text-[#22301C]">
             {/* Header section with buttons */}
             <div className="flex justify-between items-center bg-cscm-green-soft/70 p-4 rounded-2xl border border-cscm-green/[0.08]">
@@ -1236,18 +1086,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   className="btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] text-white px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider shadow-lg shadow-cscm-green/25 hover:shadow-xl transition-all duration-300 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 text-white" /> Ajouter donnée
-=======
-          <div className="space-y-8 max-w-4xl mx-auto pb-12 text-[#132e15]">
-            {/* Header section with buttons */}
-            <div className="flex justify-between items-center bg-[#FAF9F5] p-4 rounded-3xl border border-[#132e15]/10">
-              <h3 className="text-2xl md:text-3xl font-serif font-black text-[#132e15]">Données Financières</h3>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => handleEdit('Données financières', 'add')}
-                  className="bg-[#132e15] hover:bg-[#1f4222] text-[#ebd078] px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer border border-[#ebd078]/20"
-                >
-                  <Plus className="w-4 h-4 text-[#ebd078]" /> Ajouter donnée
->>>>>>> origin/main
                 </button>
                 {unifiedFinancials.length > 0 && (
                   <button 
@@ -1258,15 +1096,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                         showFeedback('error', 'Seules les saisies manuelles dynamiques peuvent être modifiées.');
                       }
                     }}
-<<<<<<< HEAD
                     className="bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 text-gray-600 px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
                   >
                     <Pencil className="w-4 h-4 text-gray-500" /> Modifier dernière
-=======
-                    className="bg-[#132e15] hover:bg-[#1f4222] text-[#ebd078] px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer border border-[#ebd078]/20"
-                  >
-                    <Pencil className="w-4 h-4 text-[#ebd078]" /> Modifier dernière
->>>>>>> origin/main
                   </button>
                 )}
               </div>
@@ -1277,11 +1109,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 {unifiedFinancials.map((item: any, idx: number) => renderExerciseCard(item, idx))}
               </div>
             ) : (
-<<<<<<< HEAD
               <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-cscm-green/15 text-[#22301C]/45 text-sm font-semibold max-w-3xl mx-auto">
-=======
-              <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-amber-100/40 text-gray-400 text-sm font-semibold max-w-3xl mx-auto">
->>>>>>> origin/main
                 Aucune donnée financière enregistrée pour l'instant.
               </div>
             )}
@@ -1292,29 +1120,17 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         return (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-3xl mx-auto">
-<<<<<<< HEAD
               <h3 className="text-2xl sm:text-3xl font-sans font-bold text-[#274420] text-left">Besoins</h3>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button 
                   onClick={() => handleEdit('Besoins', 'add')}
                   className="btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] text-white px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-lg shadow-cscm-green/25 hover:shadow-xl transition-all duration-300 cursor-pointer flex-1 sm:flex-initial"
-=======
-              <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Besoins</h3>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button 
-                  onClick={() => handleEdit('Besoins', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
->>>>>>> origin/main
                 >
                   <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Besoins', 'edit', selectedItemIndex)}
-<<<<<<< HEAD
                   className="bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 text-gray-600 px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex-1 sm:flex-initial"
-=======
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
->>>>>>> origin/main
                 >
                   <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
@@ -1322,7 +1138,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             </div>
 
             {/* Desktop Table View */}
-<<<<<<< HEAD
             <div className="hidden md:block table-shell max-w-3xl mx-auto">
               <table className="table-base">
                 <thead className="table-head">
@@ -1334,48 +1149,22 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   </tr>
                 </thead>
                 <tbody className="table-body text-xs">
-=======
-            <div className="hidden md:block overflow-hidden max-w-3xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
-                    <th className="border border-[#132e15]/20 p-3 text-left">Titre</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Type</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Budget</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Priorité</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white text-[#132e15] font-semibold text-xs divide-y divide-[#132e15]/10">
->>>>>>> origin/main
                   {enterprise.besoins && enterprise.besoins.length > 0 ? (
                     enterprise.besoins.map((besoin: any, i: number) => (
                       <tr 
                         key={i}
                         onClick={() => setSelectedItemIndex(i)}
-<<<<<<< HEAD
                         className={`table-row cursor-pointer ${selectedItemIndex === i ? 'table-row-selected font-bold' : ''}`}
                       >
                         <td className="table-td py-3">{besoin.title}</td>
                         <td className="table-td py-3">{besoin.type}</td>
                         <td className="table-td py-3">{besoin.budget}</td>
                         <td className="table-td py-3">{besoin.priority}</td>
-=======
-                        className={`cursor-pointer transition-colors ${selectedItemIndex === i ? 'bg-[#132e15]/10 font-bold' : 'hover:bg-[#132e15]/5'}`}
-                      >
-                        <td className="border border-[#132e15]/15 p-3 h-10">{besoin.title}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{besoin.type}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{besoin.budget}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{besoin.priority}</td>
->>>>>>> origin/main
                       </tr>
                     ))
                   ) : (
                     <tr>
-<<<<<<< HEAD
                       <td colSpan={4} className="p-6 text-center text-[#22301C]/55 italic font-medium">
-=======
-                      <td colSpan={4} className="p-6 text-center text-[#132e15]/60 italic font-bold">
->>>>>>> origin/main
                         Aucun besoin enregistré
                       </td>
                     </tr>
@@ -1393,7 +1182,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                     onClick={() => setSelectedItemIndex(i)}
                     className={`p-4 rounded-2xl border text-left transition-all ${
                       selectedItemIndex === i 
-<<<<<<< HEAD
                         ? 'border-cscm-green/40 bg-cscm-green-soft shadow-sm' 
                         : 'border-gray-200 bg-white hover:bg-cscm-green-soft/60'
                     }`}
@@ -1402,16 +1190,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                     <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Type : {besoin.type || '-'}</p>
                     
                     <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-gray-100 text-[11px] font-semibold text-gray-600">
-=======
-                        ? 'border-[#132e15] bg-[#132e15]/10 shadow-sm' 
-                        : 'border-gray-200 bg-white hover:bg-gray-55 hover:bg-gray-50'
-                    }`}
-                  >
-                    <h4 className="font-extrabold text-[#132e15] text-sm break-words">{besoin.title}</h4>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Type : {besoin.type || '-'}</p>
-                    
-                    <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-[#132e15]/5 text-[11px] font-semibold text-gray-600">
->>>>>>> origin/main
                       <div>
                         <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Budget</span>
                         <span className="text-gray-800 font-bold">{besoin.budget || '-'}</span>
@@ -1432,11 +1210,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   </div>
                 ))
               ) : (
-<<<<<<< HEAD
                 <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 text-[#22301C]/55 italic font-medium">
-=======
-                <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
->>>>>>> origin/main
                   Aucun besoin enregistré
                 </div>
               )}
@@ -1447,29 +1221,17 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         return (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-4xl mx-auto">
-<<<<<<< HEAD
               <h3 className="text-2xl sm:text-3xl font-sans font-bold text-[#274420] text-left">Contacts</h3>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button 
                   onClick={() => handleEdit('Contacts', 'add')}
                   className="btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] text-white px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-lg shadow-cscm-green/25 hover:shadow-xl transition-all duration-300 cursor-pointer flex-1 sm:flex-initial"
-=======
-              <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Contacts</h3>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button 
-                  onClick={() => handleEdit('Contacts', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
->>>>>>> origin/main
                 >
                   <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Contacts', 'edit', selectedItemIndex)}
-<<<<<<< HEAD
                   className="bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 text-gray-600 px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex-1 sm:flex-initial"
-=======
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
->>>>>>> origin/main
                 >
                   <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
@@ -1477,7 +1239,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             </div>
 
             {/* Desktop Table View */}
-<<<<<<< HEAD
             <div className="hidden md:block table-shell max-w-4xl mx-auto">
               <table className="table-base">
                 <thead className="table-head">
@@ -1490,26 +1251,11 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   </tr>
                 </thead>
                 <tbody className="table-body text-xs">
-=======
-            <div className="hidden md:block overflow-hidden max-w-4xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
-                    <th className="border border-[#132e15]/20 p-3 text-left">Nom</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Fonction</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Téléphone</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Email</th>
-                    <th className="border border-[#132e15]/20 p-3 text-center">Principal</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white text-[#132e15] font-semibold text-xs divide-y divide-[#132e15]/10">
->>>>>>> origin/main
                   {enterprise.contacts && enterprise.contacts.length > 0 ? (
                     enterprise.contacts.map((contact: any, i: number) => (
                       <tr 
                         key={i}
                         onClick={() => setSelectedItemIndex(i)}
-<<<<<<< HEAD
                         className={`table-row cursor-pointer ${selectedItemIndex === i ? 'table-row-selected font-bold' : ''}`}
                       >
                         <td className="table-td py-3">{contact.name}</td>
@@ -1517,24 +1263,11 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                         <td className="table-td py-3">{contact.phone}</td>
                         <td className="table-td py-3">{contact.email}</td>
                         <td className="table-td py-3 text-center font-bold text-cscm-dark">{contact.isPrimary}</td>
-=======
-                        className={`cursor-pointer transition-colors ${selectedItemIndex === i ? 'bg-[#132e15]/10 font-bold' : 'hover:bg-[#132e15]/5'}`}
-                      >
-                        <td className="border border-[#132e15]/15 p-3 h-10">{contact.name}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{contact.function}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{contact.phone}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{contact.email}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10 text-center font-bold text-[#132e15]">{contact.isPrimary}</td>
->>>>>>> origin/main
                       </tr>
                     ))
                   ) : (
                     <tr>
-<<<<<<< HEAD
                       <td colSpan={5} className="p-6 text-center text-[#22301C]/55 italic font-medium">
-=======
-                      <td colSpan={5} className="p-6 text-center text-[#132e15]/60 italic font-bold">
->>>>>>> origin/main
                         Aucun contact enregistré
                       </td>
                     </tr>
@@ -1552,40 +1285,23 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                     onClick={() => setSelectedItemIndex(i)}
                     className={`p-4 rounded-2xl border text-left transition-all ${
                       selectedItemIndex === i 
-<<<<<<< HEAD
                         ? 'border-cscm-green/40 bg-cscm-green-soft shadow-sm' 
                         : 'border-gray-200 bg-white hover:bg-cscm-green-soft/60'
-=======
-                        ? 'border-[#132e15] bg-[#132e15]/10 shadow-sm' 
-                        : 'border-gray-200 bg-white hover:bg-gray-55 hover:bg-gray-50'
->>>>>>> origin/main
                     }`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="min-w-0">
-<<<<<<< HEAD
                         <h4 className="font-bold text-[#274420] text-sm break-words">{contact.name}</h4>
                         <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Fonction : {contact.function || '-'}</p>
                       </div>
                       {contact.isPrimary === 'Oui' && (
                         <span className="bg-cscm-green-soft text-cscm-green border border-cscm-green/15 text-[9px] font-bold uppercase px-2.5 py-1 rounded-full">
-=======
-                        <h4 className="font-extrabold text-[#132e15] text-sm break-words">{contact.name}</h4>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Fonction : {contact.function || '-'}</p>
-                      </div>
-                      {contact.isPrimary === 'Oui' && (
-                        <span className="bg-[#132e15]/10 text-cscm-green text-[9px] font-black uppercase px-2.5 py-1 rounded">
->>>>>>> origin/main
                           Principal
                         </span>
                       )}
                     </div>
                     
-<<<<<<< HEAD
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-2 border-t border-gray-100 text-[11px] font-semibold text-gray-600">
-=======
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-2 border-t border-[#132e15]/5 text-[11px] font-semibold text-gray-600">
->>>>>>> origin/main
                       <div>
                         <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Téléphone</span>
                         <span className="text-gray-800 font-bold">{contact.phone || '-'}</span>
@@ -1598,11 +1314,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   </div>
                 ))
               ) : (
-<<<<<<< HEAD
                 <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 text-[#22301C]/55 italic font-medium">
-=======
-                <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
->>>>>>> origin/main
                   Aucun contact enregistré
                 </div>
               )}
@@ -1613,7 +1325,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         const payments = getPaymentsList(enterprise);
         
         return (
-<<<<<<< HEAD
           <div className="space-y-6 max-w-4xl mx-auto pb-12 text-[#22301C]">
             {/* Header with action buttons */}
             <div className="flex justify-between items-center bg-cscm-green-soft/70 p-4 rounded-2xl border border-cscm-green/[0.08]">
@@ -1624,18 +1335,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   className="btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] text-white px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider shadow-lg shadow-cscm-green/25 hover:shadow-xl transition-all duration-300 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 text-white" /> Ajouter Cotisation
-=======
-          <div className="space-y-6 max-w-4xl mx-auto pb-12 text-[#132e15]">
-            {/* Header with action buttons */}
-            <div className="flex justify-between items-center bg-[#FAF9F5] p-4 rounded-3xl border border-[#132e15]/10">
-              <h3 className="text-2xl md:text-3xl font-serif font-black text-[#132e15]">Historique des cotisations</h3>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => handleEdit('Cotisations', 'add')}
-                  className="bg-[#132e15] hover:bg-[#1f4222] text-[#ebd078] px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer border border-[#ebd078]/20"
-                >
-                  <Plus className="w-4 h-4 text-[#ebd078]" /> Ajouter Cotisation
->>>>>>> origin/main
                 </button>
                 <button 
                   onClick={() => {
@@ -1645,15 +1344,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                       handleEdit('Cotisations', 'edit', selectedItemIndex);
                     }
                   }}
-<<<<<<< HEAD
                   className={`px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                     selectedItemIndex !== null 
                       ? 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 text-gray-600 shadow-sm hover:shadow-md' 
-=======
-                  className={`px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer border ${
-                    selectedItemIndex !== null 
-                      ? 'bg-[#132e15] hover:bg-[#1f4222] text-[#ebd078] border-[#ebd078]/20' 
->>>>>>> origin/main
                       : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                   }`}
                 >
@@ -1663,21 +1356,13 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             </div>
 
             {/* Currency conversion options & Total card matching Capture 1 */}
-<<<<<<< HEAD
             <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white p-6 rounded-3xl border border-cscm-green/[0.08] shadow-xs">
-=======
-            <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white/60 p-6 rounded-3xl border border-amber-100/40 shadow-xs">
->>>>>>> origin/main
               <div className="flex flex-col gap-2 text-left">
                 <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">AFFICHER LES MONTANTS EN</span>
                 <select 
                   value={displayCurrency} 
                   onChange={(e) => setDisplayCurrency(e.target.value)}
-<<<<<<< HEAD
                   className="bg-white focus:bg-white border border-gray-200 text-[#274420] font-bold text-xs py-2.5 px-4 rounded-2xl shadow-xs outline-none cursor-pointer focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] transition-all min-w-[200px]"
-=======
-                  className="bg-white border-2 border-amber-100/30 text-[#132e15] font-serif font-black text-xs py-2.5 px-4 rounded-xl shadow-xs outline-none cursor-pointer focus:border-[#132e15] transition-all min-w-[200px]"
->>>>>>> origin/main
                 >
                   {CURRENCIES.map(curr => (
                     <option key={curr.code} value={curr.code}>
@@ -1687,19 +1372,11 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 </select>
               </div>
               
-<<<<<<< HEAD
               <div className="card-elevated bg-cscm-green-soft/50 px-6 py-4 rounded-3xl flex flex-col items-end min-w-[280px] border border-cscm-green/15">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-cscm-green text-right">TOTAL DES COTISATIONS</span>
                 <div className="flex justify-between w-full mt-2.5 items-end gap-6">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-[#22301C]/55">En {displayCurrency}</span>
                   <span className="text-xl md:text-2xl font-bold text-[#274420]">
-=======
-              <div className="bg-[#132e15] border border-[#ebd078]/30 text-[#ebd078] px-6 py-4 rounded-3xl flex flex-col items-end min-w-[280px] shadow-sm">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#ebd078]/80 text-right">TOTAL DES COTISATIONS</span>
-                <div className="flex justify-between w-full mt-2.5 items-end gap-6">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-[#ebd078]/50">En {displayCurrency}</span>
-                  <span className="text-xl md:text-2xl font-serif font-black text-white">
->>>>>>> origin/main
                     {formatAmount(calculateTotalTreasury(), displayCurrency)}
                   </span>
                 </div>
@@ -1707,7 +1384,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             </div>
 
             {/* Desktop Table View */}
-<<<<<<< HEAD
             <div className="hidden md:block table-shell">
               <table className="table-base">
                 <thead className="table-head">
@@ -1718,18 +1394,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   </tr>
                 </thead>
                 <tbody className="table-body text-xs">
-=======
-            <div className="hidden md:block overflow-hidden rounded-3xl border border-[#132e15]/15 shadow-sm bg-white">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-[#132e15] text-white text-[11px] font-black uppercase tracking-wider border-b border-[#132e15]/10">
-                    <th className="p-4 text-left font-serif">DATE</th>
-                    <th className="p-4 text-left font-serif">LIBELLÉ / MOTIF</th>
-                    <th className="p-4 text-right font-serif">MONTANT ({displayCurrency})</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white text-xs text-gray-700 font-semibold">
->>>>>>> origin/main
                   {payments.length > 0 ? (
                     payments.map((pay: any, index: number) => {
                       const isCustom = pay.id.startsWith('custom-');
@@ -1746,7 +1410,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                               setSelectedItemIndex(null); // non-custom items cannot be edited
                             }
                           }}
-<<<<<<< HEAD
                           className={`table-row cursor-pointer text-left ${
                             !isCustom 
                               ? 'bg-cscm-green-soft/35' 
@@ -1763,34 +1426,12 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                               <span>{pay.label}</span>
                               {!isCustom && (
                                 <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase px-1.5 py-0.5 rounded-md">
-=======
-                          className={`transition-colors text-left ${
-                            !isCustom 
-                              ? 'bg-gray-50/50 hover:bg-gray-50' 
-                              : isSelected 
-                                ? 'bg-amber-50/70 border-l-4 border-amber-500 font-bold' 
-                                : 'hover:bg-gray-50'
-                          }`}
-                        >
-                          <td className="p-4 text-left font-mono font-bold text-gray-500">
-                            {pay.date}
-                          </td>
-                          <td className="p-4 text-left font-medium text-gray-900 border-l border-gray-50">
-                            <div className="flex items-center gap-2">
-                              <span>{pay.label}</span>
-                              {!isCustom && (
-                                <span className="text-[9px] font-bold bg-green-50 text-green-700 border border-green-200 uppercase px-1.5 py-0.5 rounded-md">
->>>>>>> origin/main
                                   Importé
                                 </span>
                               )}
                             </div>
                           </td>
-<<<<<<< HEAD
                           <td className="table-td text-right font-medium text-cscm-dark">
-=======
-                          <td className="p-4 text-right font-medium text-[#132e15] border-l border-gray-50">
->>>>>>> origin/main
                             {formatAmount(pay.amount, displayCurrency)}
                           </td>
                         </tr>
@@ -1827,42 +1468,25 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                       }}
                       className={`p-4 rounded-2xl border text-left transition-all ${
                         !isCustom 
-<<<<<<< HEAD
                           ? 'border-gray-100 bg-cscm-green-soft/70/40 hover:bg-cscm-green-soft/60' 
                           : isSelected 
                             ? 'border-cscm-green/40 bg-cscm-green-soft shadow-sm font-semibold' 
                             : 'border-gray-200 bg-white hover:bg-cscm-green-soft/60'
-=======
-                          ? 'border-gray-150 bg-gray-50/50 hover:bg-gray-50' 
-                          : isSelected 
-                            ? 'border-amber-500 bg-amber-50/70 shadow-sm font-semibold' 
-                            : 'border-gray-200 bg-white hover:bg-gray-50'
->>>>>>> origin/main
                       }`}
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div>
                           <span className="text-[10px] text-gray-400 font-mono font-bold block">{pay.date}</span>
-<<<<<<< HEAD
                           <h4 className="font-bold text-[#274420] text-sm break-words mt-1">{pay.label}</h4>
                           {!isCustom && (
                             <span className="inline-block text-[8px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase px-1.5 py-0.5 rounded-full mt-1">
-=======
-                          <h4 className="font-extrabold text-[#132e15] text-sm break-words mt-1">{pay.label}</h4>
-                          {!isCustom && (
-                            <span className="inline-block text-[8px] font-black bg-green-50 text-green-700 border border-green-200 uppercase px-1.5 py-0.5 rounded mt-1">
->>>>>>> origin/main
                               Importé
                             </span>
                           )}
                         </div>
                         <div className="text-right">
                           <span className="text-gray-400 block text-[9px] font-bold uppercase tracking-wider">Montant</span>
-<<<<<<< HEAD
                           <span className="text-cscm-green font-extrabold text-xs block font-mono mt-0.5">
-=======
-                          <span className="text-emerald-850 font-extrabold text-xs block font-mono mt-0.5">
->>>>>>> origin/main
                             {formatAmount(pay.amount, displayCurrency)}
                           </span>
                         </div>
@@ -1871,11 +1495,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   );
                 })
               ) : (
-<<<<<<< HEAD
                 <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 text-[#22301C]/55 italic font-medium">
-=======
-                <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
->>>>>>> origin/main
                   Aucune cotisation n'a été trouvée pour ce membre.
                 </div>
               )}
@@ -1888,7 +1508,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
     }
   };
 
-<<<<<<< HEAD
   return createPortal(
     <>
     <AnimatePresence>
@@ -1936,34 +1555,12 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 w-full max-w-4xl">
               <div 
                 className="w-32 h-32 rounded-2xl border border-gray-200 flex items-center justify-center text-center p-2 text-xs font-black overflow-hidden bg-white text-[#274420] cursor-pointer relative group shadow-sm transition-all duration-300 hover:border-cscm-green hover:shadow-md"
-=======
-  return (
-    <AnimatePresence>
-      <div className="fixed lg:inset-0 top-16 bottom-16 lg:bottom-0 left-0 right-0 z-30 lg:z-50 bg-[#FAF9F5] flex flex-col overflow-hidden shadow-xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ type: "spring", damping: 28, stiffness: 220 }}
-          className="bg-white w-full h-full flex flex-col overflow-y-auto"
-        >
-          {/* Header Section */}
-          <div className="p-4 md:p-8 border-b border-[#132e15]/10 bg-white relative flex flex-col items-center">
-            <button onClick={onClose} className="absolute top-4 left-4 md:top-8 md:left-8 p-2 hover:bg-gray-55 bg-gray-50 md:bg-transparent rounded-full transition-colors cursor-pointer" title="Retour">
-              <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-[#132e15]" />
-            </button>
-
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-10 md:mt-4 w-full max-w-4xl">
-              <div 
-                className="w-32 h-32 rounded-2xl border-2 border-gray-300 flex items-center justify-center text-center p-2 text-xs font-black overflow-hidden bg-white text-black cursor-pointer relative group shadow-sm transition-all hover:border-[#132e15]"
->>>>>>> origin/main
                 onClick={() => document.getElementById(`upload-ent-logo-${enterprise.id}`)?.click()} 
                 title="Cliquer pour changer le logo de l'entreprise"
               >
                 {enterprise.logo ? (
                   <img src={enterprise.logo} alt={enterprise.name} className="w-full h-full object-cover" />
                 ) : (
-<<<<<<< HEAD
                   <div className="text-[#274420] font-bold leading-tight text-center">
                     LOGO<br/>
                     <span className="text-[10px] font-bold text-[#22301C]/55 uppercase">Entreprise</span>
@@ -1971,15 +1568,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 )}
                 
                 <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center text-cscm-green text-xs font-bold flex-col gap-1 shadow-inner">
-=======
-                  <div className="text-black font-black leading-tight text-center">
-                    LOGO<br/>
-                    <span className="text-[10px] font-black text-black uppercase">Entreprise</span>
-                  </div>
-                )}
-                
-                <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-black text-xs font-black flex-col gap-1 shadow-inner">
->>>>>>> origin/main
                   <span className="tracking-wide">Changer Logo</span>
                 </div>
                 
@@ -2002,7 +1590,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   }}
                 />
               </div>
-<<<<<<< HEAD
               <div className="text-sm space-y-1 text-[#22301C]/70 font-medium">
                 <p><span className="font-bold text-[#274420]">Numéro membre :</span> {enterprise.memberNo}</p>
                 <p><span className="font-bold text-[#274420]">Statut membre :</span> {enterprise.statutMembre}</p>
@@ -2011,26 +1598,12 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 <p><span className="font-bold text-[#274420]">Raison sociale :</span> {enterprise.raisonSociale}</p>
                 <p><span className="font-bold text-[#274420]">Secteur principal :</span> {enterprise.secteur}</p>
                 <p><span className="font-bold text-[#274420]">Pays + ville :</span> {enterprise.pays} - {enterprise.ville}</p>
-=======
-              <div className="text-sm space-y-1 text-[#132e15] font-semibold">
-                <p><span className="font-bold">Numéro membre :</span> {enterprise.memberNo}</p>
-                <p><span className="font-bold">Statut membre :</span> {enterprise.statutMembre}</p>
-                <p><span className="font-bold">Date d'adhésion :</span> {enterprise.dateAdhesion}</p>
-                <p><span className="font-bold">Nom commercial :</span> {enterprise.name}</p>
-                <p><span className="font-bold">Raison sociale :</span> {enterprise.raisonSociale}</p>
-                <p><span className="font-bold">Secteur principal :</span> {enterprise.secteur}</p>
-                <p><span className="font-bold">Pays + ville :</span> {enterprise.pays} - {enterprise.ville}</p>
->>>>>>> origin/main
               </div>
             </div>
           </div>
 
           {/* Navigation Links / Buttons */}
-<<<<<<< HEAD
           <div className="py-3 border-b border-gray-100 bg-white sticky top-0 z-20 px-4 md:px-8">
-=======
-          <div className="py-3 border-b border-[#132e15]/10 bg-white sticky top-0 z-20 px-4 md:px-8">
->>>>>>> origin/main
             <div className="max-w-4xl mx-auto grid grid-cols-4 sm:grid-cols-7 md:flex md:flex-wrap md:justify-center gap-2">
               {tabs.map((tab) => {
                 const IconComponent = getTabIcon(tab);
@@ -2045,17 +1618,10 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                       setActiveTab(tab);
                       setSelectedItemIndex(null);
                     }}
-<<<<<<< HEAD
                     className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2.5 py-2 md:px-4 md:py-2.5 rounded-xl transition-all duration-300 cursor-pointer text-center md:text-left ${
                       isActive 
                         ? 'bg-cscm-green text-white shadow-sm font-bold' 
                         : 'text-[#22301C]/60 hover:bg-cscm-green-soft hover:text-[#274420] border border-gray-100 bg-cscm-green-soft/70'
-=======
-                    className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2.5 py-2 md:px-4 md:py-2.5 rounded-2xl transition-all duration-250 cursor-pointer text-center md:text-left ${
-                      isActive 
-                        ? 'bg-[#132e15] text-[#ebd078] shadow-sm font-black ring-1 ring-[#ebd078]/20' 
-                        : 'text-[#132e15]/70 hover:bg-[#132e15]/5 hover:text-[#132e15] border border-gray-150 bg-[#FAF9F5]'
->>>>>>> origin/main
                     }`}
                     title={tab}
                   >
@@ -2068,11 +1634,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
           </div>
 
           {/* Content */}
-<<<<<<< HEAD
           <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white relative min-h-0">
-=======
-          <div className="p-4 md:p-8 bg-white relative">
->>>>>>> origin/main
             <AnimatePresence>
               {feedbackMessage && (
                 <motion.div
@@ -2081,13 +1643,8 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   exit={{ opacity: 0, y: -20 }}
                   className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-2 rounded-full shadow-lg font-bold text-sm border ${
                     feedbackMessage.type === 'success' 
-<<<<<<< HEAD
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
                       : 'bg-rose-50 text-rose-600 border-rose-100'
-=======
-                      ? 'bg-green-100 text-green-800 border-green-500' 
-                      : 'bg-red-100 text-red-800 border-red-500'
->>>>>>> origin/main
                   }`}
                 >
                   {feedbackMessage.text}
@@ -2108,13 +1665,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             </AnimatePresence>
           </div>
         </motion.div>
-<<<<<<< HEAD
       </motion.div>
       )}
     </AnimatePresence>
-=======
-      </div>
->>>>>>> origin/main
 
       <EditFormModal 
         isOpen={isEditModalOpen}
@@ -2134,11 +1687,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.7 }}
               exit={{ opacity: 0 }}
-<<<<<<< HEAD
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-=======
-              className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"
->>>>>>> origin/main
               onClick={() => setPreviewCert(null)}
             />
             <motion.div
@@ -2146,7 +1695,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", duration: 0.4 }}
-<<<<<<< HEAD
               className="bg-white w-full max-w-5xl rounded-[2rem] ring-1 ring-black/5 shadow-[0_30px_80px_-24px_rgba(62,123,50,0.3)] relative z-10 overflow-hidden flex flex-col max-h-[85vh]"
             >
               {/* Modal Header */}
@@ -2157,18 +1705,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   </div>
                   <div className="text-left">
                     <h4 className="text-sm font-bold text-[#274420]">{previewCert.name}</h4>
-=======
-              className="bg-[#FAF9F5] w-full max-w-5xl rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[85vh] border-2 border-[#132e15]"
-            >
-              {/* Modal Header */}
-              <div className="p-5 border-b border-[#132e15]/10 flex items-center justify-between bg-white">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-100 shrink-0">
-                    <Eye className="w-5 h-5" />
-                  </div>
-                  <div className="text-left">
-                    <h4 className="text-sm font-black text-[#132e15]">{previewCert.name}</h4>
->>>>>>> origin/main
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{previewCert.issuer || 'Organisme de certification'} • {previewCert.date}</p>
                   </div>
                 </div>
@@ -2182,26 +1718,15 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                       link.click();
                       document.body.removeChild(link);
                     }}
-<<<<<<< HEAD
                     className="px-3.5 py-2 bg-white hover:bg-gray-50/80 text-gray-600 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-2 text-xs font-bold border border-gray-200 hover:border-gray-300 cursor-pointer active:scale-95"
                     title="Télécharger"
                   >
                     <Download className="w-4 h-4 text-cscm-green" />
-=======
-                    className="px-3.5 py-2 hover:bg-gray-100 text-[#132e15] rounded-xl transition-all flex items-center gap-2 text-xs font-black border border-gray-250 cursor-pointer active:scale-95"
-                    title="Télécharger"
-                  >
-                    <Download className="w-4 h-4 text-emerald-800" />
->>>>>>> origin/main
                     <span>Télécharger</span>
                   </button>
                   <button
                     onClick={() => setPreviewCert(null)}
-<<<<<<< HEAD
                     className="p-2.5 hover:bg-gray-100 text-gray-600 rounded-2xl transition-all duration-300 cursor-pointer border border-transparent hover:border-gray-200 active:scale-95"
-=======
-                    className="p-2.5 hover:bg-gray-100 text-gray-600 rounded-xl transition-all cursor-pointer border border-transparent hover:border-gray-200 active:scale-95"
->>>>>>> origin/main
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -2209,15 +1734,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
               </div>
 
               {/* Modal Body */}
-<<<<<<< HEAD
               <div className="flex-1 overflow-auto p-6 bg-cscm-green-soft/70 flex items-center justify-center min-h-[450px]">
                 {previewCert.fileData?.startsWith('data:image/') ? (
                   <div className="bg-white p-3 rounded-2xl border border-cscm-green/[0.08] shadow-sm max-w-full max-h-[70vh] overflow-auto flex items-center justify-center">
-=======
-              <div className="flex-1 overflow-auto p-6 bg-gray-50 flex items-center justify-center min-h-[450px]">
-                {previewCert.fileData?.startsWith('data:image/') ? (
-                  <div className="bg-white p-3 rounded-2xl border border-gray-150 shadow-sm max-w-full max-h-[70vh] overflow-auto flex items-center justify-center">
->>>>>>> origin/main
                     <img
                       src={previewBlobUrl || previewCert.fileData}
                       alt={previewCert.name}
@@ -2226,11 +1745,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                     />
                   </div>
                 ) : (previewCert.fileData?.startsWith('data:application/pdf') || previewCert.fileData?.includes('pdf') || previewCert.fileName?.toLowerCase().endsWith('.pdf')) ? (
-<<<<<<< HEAD
                   <div className="w-full h-[65vh] bg-white rounded-2xl border border-cscm-green/[0.08] shadow-sm overflow-hidden flex flex-col">
-=======
-                  <div className="w-full h-[65vh] bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden flex flex-col">
->>>>>>> origin/main
                     <iframe
                       src={previewBlobUrl || previewCert.fileData}
                       title={previewCert.name}
@@ -2238,20 +1753,12 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                     />
                   </div>
                 ) : (
-<<<<<<< HEAD
                   <div className="text-center p-8 bg-white rounded-3xl border border-cscm-green/[0.08] shadow-sm max-w-md space-y-4">
-=======
-                  <div className="text-center p-8 bg-white rounded-3xl border border-gray-150 shadow-sm max-w-md space-y-4">
->>>>>>> origin/main
                     <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-100">
                       <Download className="w-7 h-7" />
                     </div>
                     <div>
-<<<<<<< HEAD
                       <h5 className="font-sans font-bold text-base text-[#274420]">Aperçu non disponible</h5>
-=======
-                      <h5 className="font-serif font-black text-base text-[#132e15]">Aperçu non disponible</h5>
->>>>>>> origin/main
                       <p className="text-xs text-gray-500 font-medium mt-1 leading-relaxed">
                         Ce type de fichier ne peut pas être affiché directement dans le navigateur. Veuillez le télécharger pour le consulter.
                       </p>
@@ -2265,11 +1772,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                         link.click();
                         document.body.removeChild(link);
                       }}
-<<<<<<< HEAD
                       className="w-full btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] text-white font-bold text-xs py-3 px-4 rounded-2xl transition-all duration-300 shadow-lg shadow-cscm-green/25 hover:shadow-xl cursor-pointer"
-=======
-                      className="w-full bg-[#132e15] hover:bg-emerald-800 text-white font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-sm cursor-pointer"
->>>>>>> origin/main
                     >
                       Télécharger le document
                     </button>
@@ -2280,11 +1783,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
           </div>
         )}
       </AnimatePresence>
-<<<<<<< HEAD
     </>,
     document.body
-=======
-    </AnimatePresence>
->>>>>>> origin/main
   );
 };
