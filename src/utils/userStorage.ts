@@ -25,7 +25,7 @@ const INITIAL_USERS: AppUser[] = [
     prenom: 'Ibrahima',
     email: 'admin@cscm.com',
     role: 'ADMIN',
-    password: '12345',
+    password: 'admin',
     dateCreation: '2024-01-15'
   },
   {
@@ -34,7 +34,7 @@ const INITIAL_USERS: AppUser[] = [
     prenom: 'Mariama',
     email: 'mod@cscm.com',
     role: 'MODERATEUR',
-    password: '12345',
+    password: 'mod',
     dateCreation: '2024-02-10'
   },
   {
@@ -43,7 +43,7 @@ const INITIAL_USERS: AppUser[] = [
     prenom: 'Cheikh',
     email: 'membre@cscm.com',
     role: 'MEMBRE',
-    password: '12345',
+    password: 'member',
     dateCreation: '2024-03-01'
   }
 ];
