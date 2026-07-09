@@ -43,7 +43,7 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(235, 208, 120); // gold
-    doc.text("Chambre de Commerce, d'Industrie et de Services (CCIM)", 20, 36);
+    doc.text("Chambre Sénégalaise de Commerce au Maroc (CSCM)", 20, 36);
 
     // Section 1: IDENTITÉ DE L'ENTREPRISE
     doc.setFillColor(245, 245, 245);
@@ -125,6 +125,32 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
     const desc = enterprise.description || "Nous faisons du conseil et accompagnement technique dans le secteur correspondant.";
     const splitDesc = doc.splitTextToSize(desc, 170);
     doc.text(splitDesc, 20, y);
+
+    // Section 4: CERTIFICATS & DOCUMENTS TECHNIQUES
+    if (enterprise.certifications && enterprise.certifications.length > 0) {
+      y += 20;
+      doc.setFillColor(245, 245, 245);
+      doc.rect(15, y, 180, 10, 'F');
+      doc.setTextColor(19, 46, 21);
+      doc.setFont('Helvetica', 'bold');
+      doc.text("4. CERTIFICATS & DOCUMENTS TECHNIQUES", 20, y + 6);
+
+      y += 15;
+      enterprise.certifications.forEach((cert: any, idx: number) => {
+        if (y < 250) {
+          doc.setFont('Helvetica', 'bold');
+          doc.setFontSize(10);
+          doc.setTextColor(19, 46, 21);
+          doc.text(`${idx + 1}. ${cert.name}`, 20, y);
+
+          doc.setFont('Helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(80, 80, 80);
+          doc.text(`Réf: ${cert.code || 'N/A'} | Émis par : ${cert.issuer || 'N/A'} le ${cert.date || 'N/A'}`, 25, y + 5);
+          y += 12;
+        }
+      });
+    }
 
     // Footer signature and seal
     doc.setTextColor(120, 120, 120);
@@ -349,39 +375,34 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
             <div className="space-y-3">
               <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
                 <FileText className="w-4 h-4 text-[#ebd078]" />
-                <h2 className="text-xs font-black uppercase tracking-wider">Certificats & Documents Techniques</h2>
+                <h2 className="text-xs font-black uppercase tracking-wider text-left">Certificats & Documents Techniques</h2>
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#132e15]/15 overflow-hidden divide-y divide-[#132e15]/10 shadow-sm">
-                <div className="p-4 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15">
-                      <Star className="w-4 h-4 text-emerald-700 fill-emerald-700" />
+              <div className="bg-white rounded-2xl border border-[#132e15]/15 overflow-hidden divide-y divide-[#132e15]/10 shadow-sm text-left">
+                {enterprise.certifications && enterprise.certifications.length > 0 ? (
+                  enterprise.certifications.map((cert: any, index: number) => (
+                    <div key={index} className="p-4 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15 font-black text-xs">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#132e15]">{cert.name}</p>
+                          <p className="text-[9px] text-[#132e15]/70 font-bold uppercase tracking-wider">
+                            Réf: {cert.code || 'N/A'} | Délivré par : {cert.issuer || 'N/A'} le {cert.date || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] bg-[#132e15] text-white font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                        {cert.fileName ? "Document Joint" : "Validé"}
+                      </span>
                     </div>
-                    <div>
-                      <p className="font-bold text-[#132e15]">Agrément National d'exercice bilatéral</p>
-                      <p className="text-[9px] text-[#132e15]/70 font-black uppercase tracking-wider">Certifié CSCM</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="p-6 text-center text-xs text-gray-500 font-medium">
+                    Aucun certificat ou agrément technique enregistré pour le moment.
                   </div>
-                  <span className="text-[10px] bg-[#132e15] text-white font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
-                    Disponible
-                  </span>
-                </div>
-
-                <div className="p-4 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500 shrink-0 border border-red-100">
-                      <AlertCircle className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-red-700">Certification de Conformité ISO 27001</p>
-                      <p className="text-[9px] text-red-500 font-black uppercase tracking-wider">Optionnel</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] bg-red-600 text-white font-bold px-2.5 py-1 rounded">
-                    Document non disponible
-                  </span>
-                </div>
+                )}
               </div>
             </div>
 

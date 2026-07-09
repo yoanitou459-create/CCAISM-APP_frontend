@@ -6,7 +6,6 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { EnterpriseList } from './pages/EnterpriseList';
 import { Building2, Plus, Users, Landmark, ArrowRight, ArrowUpRight, Sparkles, Database, Coins, TrendingUp, BarChart3, DollarSign, Activity, ChevronRight, Check } from 'lucide-react';
 import { motion } from 'motion/react';
-import { AddEnterpriseModal } from './components/AddEnterpriseModal';
 import { SidebarLayout } from './components/SidebarLayout';
 import { getStoredEnterprises, saveStoredEnterprises } from './utils/enterpriseStorage';
 import { getStoredUsers, saveStoredUsers } from './utils/userStorage';
@@ -15,6 +14,7 @@ import { db, handleFirestoreError, OperationType } from './firebase';
 
 import { Cotisations } from './pages/Cotisations';
 import { UserManagement } from './pages/UserManagement';
+import { AddEnterprise } from './pages/AddEnterprise';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -25,8 +25,41 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Global resource 404 mitigation - intercepts broken image loads and serves premium fallbacks
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    if (event.target && (event.target as HTMLElement).nodeName === 'IMG') {
+      const img = event.target as HTMLImageElement;
+      if (!img.src.startsWith('data:image/')) {
+        img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23cccccc" stroke-width="1"><rect width="24" height="24" rx="6" fill="%23fcfcfc" stroke="%23f1f1f1"/><circle cx="12" cy="10" r="3"/><path d="M17 18v1H7v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3z"/></svg>';
+      }
+    }
+  }, true);
+}
+
+// Fallback redirect returning to the previous history page or fallback to dashboard
+const FallbackRedirect: React.FC = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    // Navigate back if history exists, otherwise go to dashboard
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-[#FAF9F5] font-sans">
+      <div className="text-center space-y-3">
+        <div className="w-8 h-8 border-3 border-emerald-800 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="text-[10px] text-emerald-800 font-bold uppercase tracking-widest">Redirection en cours...</p>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
-  const [isAddEnterpriseOpen, setIsAddEnterpriseOpen] = useState(false);
   const [enterprises, setEnterprises] = useState<any[]>([]);
   const navigate = useNavigate();
   const userName = JSON.parse(localStorage.getItem('user') || '{"prenom": "Moustapha"}').prenom;
@@ -409,17 +442,15 @@ const Dashboard = () => {
 
       </div>
 
-      {/* Add Enterprise Modal Option */}
-      <AddEnterpriseModal 
-        isOpen={isAddEnterpriseOpen} 
-        onClose={() => setIsAddEnterpriseOpen(false)} 
-        onAdd={(newEnt) => {
-          const current = getStoredEnterprises();
-          saveStoredEnterprises([...current, newEnt]);
-          window.dispatchEvent(new Event('enterprises_updated'));
-        }}
-      />
     </SidebarLayout>
+  );
+};
+
+const ProtectedLayout = () => {
+  return (
+    <ProtectedRoute>
+      <SidebarLayout />
+    </ProtectedRoute>
   );
 };
 
@@ -510,40 +541,18 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route 
-          path="/dashboard" 
-          element = {
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/enterprises" 
-          element = {
-            <ProtectedRoute>
-              <EnterpriseList />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/cotisations" 
-          element = {
-            <ProtectedRoute>
-              <Cotisations />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/users" 
-          element = {
-            <ProtectedRoute>
-              <UserManagement />
-            </ProtectedRoute>
-          } 
-        />
+        
+        {/* Protected nested routes with persistent SidebarLayout and smooth page transitions */}
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/enterprises" element={<EnterpriseList />} />
+          <Route path="/enterprises/add" element={<AddEnterprise />} />
+          <Route path="/cotisations" element={<Cotisations />} />
+          <Route path="/users" element={<UserManagement />} />
+        </Route>
+
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<FallbackRedirect />} />
       </Routes>
     </Router>
   );

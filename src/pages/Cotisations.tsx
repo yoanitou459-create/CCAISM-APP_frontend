@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SidebarLayout } from '../components/SidebarLayout';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 import { jsPDF } from 'jspdf';
 import { 
   getStoredEnterprises, 
@@ -79,6 +80,7 @@ export const Cotisations: React.FC = () => {
   // Receipt and Currency conversion states
   const [receiptModalEnt, setReceiptModalEnt] = useState<any | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ ent: any; payment: any } | null>(null);
   
   // Cotisation Editing States
   const [editingPayment, setEditingPayment] = useState<any | null>(null); // { ent: any, payment: any }
@@ -214,17 +216,7 @@ export const Cotisations: React.FC = () => {
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(235, 208, 120); // Gold
-    doc.text("Chambre de Commerce, d'Industrie et de Services (CCIM)", 20, 36);
-
-    // Receipt Number badge
-    doc.setFillColor(235, 208, 120);
-    doc.rect(130, 20, 60, 12, 'F');
-    doc.setTextColor(19, 46, 21);
-    doc.setFont('Helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text(`N° RECU :`, 134, 25);
-    doc.setFontSize(9);
-    doc.text(`REC-${ent.memberNo || 'MEM'}-${payment.reference || payment.id}`, 134, 29);
+    doc.text("Chambre Sénégalaise de Commerce au Maroc (CSCM)", 20, 36);
 
     // Member and payment information blocks
     doc.setDrawColor(220, 220, 220);
@@ -320,7 +312,7 @@ export const Cotisations: React.FC = () => {
     doc.setTextColor(120, 120, 120);
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(8);
-    doc.text("Reçu généré automatiquement depuis la plateforme administrative sécurisée CCIM.", 15, 220);
+    doc.text("Reçu généré automatiquement depuis la plateforme administrative sécurisée CSCM.", 15, 220);
     doc.text(`Date de génération : ${new Date().toLocaleString('fr-FR')}`, 15, 224);
 
     // Signature box
@@ -424,8 +416,12 @@ export const Cotisations: React.FC = () => {
   };
 
   const handleDeleteCotisation = (ent: any, payment: any) => {
-    const confirmDelete = window.confirm(`Voulez-vous vraiment supprimer cette cotisation de ${payment.amount.toLocaleString()} FCFA ?`);
-    if (!confirmDelete) return;
+    setDeleteTarget({ ent, payment });
+  };
+
+  const confirmDeleteCotisation = () => {
+    if (!deleteTarget) return;
+    const { ent, payment } = deleteTarget;
 
     const list = getStoredEnterprises();
     const updated = list.map(item => {
@@ -455,6 +451,7 @@ export const Cotisations: React.FC = () => {
       return refreshed || prev;
     });
 
+    setDeleteTarget(null);
     setToastText("Cotisation supprimée avec succès.");
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
@@ -480,12 +477,62 @@ export const Cotisations: React.FC = () => {
   // Compute status helpers
   const getEnterpriseStats = (ent: any) => {
     const list = ent.cotisations || [];
+    
+    // Determine target year and half-year based on selectedMonth and selectedYear
+    const targetYear = selectedYear;
+    const firstHalfMonths = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin'];
+    const targetHalf = firstHalfMonths.includes(selectedMonth) ? 1 : 2;
+    
+    // Calculate total paid for this specific period
+    let periodPaid = 0;
+    
+    // 1. Check custom cotisations
+    list.forEach((c: any) => {
+      if (c.date) {
+        const pDate = new Date(c.date);
+        if (!isNaN(pDate.getTime())) {
+          const pYear = pDate.getFullYear().toString();
+          const pMonth = pDate.getMonth() + 1; // 1-indexed
+          const pHalf = pMonth <= 6 ? 1 : 2;
+          
+          if (pYear === targetYear && pHalf === targetHalf) {
+            periodPaid += Number(c.amount) || 0;
+          }
+        }
+      }
+    });
+    
+    // 2. Attribute legacy annual payments to the respective year's halves
+    if (targetYear === '2023' && ent.cotisation_2023) {
+      const val = Number(ent.cotisation_2023) || 0;
+      periodPaid += val >= 40000 ? 20000 : (val / 2);
+    }
+    if (targetYear === '2024' && ent.cotisation_2024) {
+      const val = Number(ent.cotisation_2024) || 0;
+      periodPaid += val >= 40000 ? 20000 : (val / 2);
+    }
+    if (targetYear === '2025' && ent.cotisation_2025) {
+      const val = Number(ent.cotisation_2025) || 0;
+      periodPaid += val >= 40000 ? 20000 : (val / 2);
+    }
+    
+    // Overall sum paid
     const baseSum = list.reduce((s: number, c: any) => s + (Number(c.amount) || 0), 0);
     const yearsSum = (Number(ent.cotisation_2023) || 0) + (Number(ent.cotisation_2024) || 0) + (Number(ent.cotisation_2025) || 0);
     const sumPaid = baseSum + yearsSum;
-    const isUpToDate = sumPaid >= 10000;
+    
+    // Required per period is 20000 FCFA
+    const requiredAmount = 20000;
+    const isUpToDate = periodPaid >= requiredAmount;
     const lastDate = list.length > 0 ? list[list.length - 1].date : '-';
-    return { sumPaid, isUpToDate, lastDate };
+    
+    return { 
+      sumPaid, 
+      periodPaid, 
+      isUpToDate, 
+      lastDate, 
+      requiredAmount 
+    };
   };
 
   const downloadTreasuryReport = () => {
@@ -522,7 +569,7 @@ export const Cotisations: React.FC = () => {
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(235, 208, 120); // Gold
-    doc.text("Chambre de Commerce, d'Industrie et de Services (CCIM)", 20, 36);
+    doc.text("Chambre Sénégalaise de Commerce au Maroc (CSCM)", 20, 36);
 
     // Date de generation
     doc.setTextColor(19, 46, 21);
@@ -627,7 +674,7 @@ export const Cotisations: React.FC = () => {
       }
 
       doc.text(ent.name.substring(0, 24), 18, y);
-      doc.text(ent.memberNo || 'CCIM-00', 65, y);
+      doc.text(ent.memberNo || 'CSCM-00', 65, y);
       
       if (stats.isUpToDate) {
         doc.setTextColor(20, 100, 20);
@@ -644,7 +691,7 @@ export const Cotisations: React.FC = () => {
       y += 8;
     });
 
-    doc.save(`CCIM_Bilan_Caisse_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`CSCM_Bilan_Caisse_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const downloadCustomConversionReport = () => {
@@ -652,12 +699,14 @@ export const Cotisations: React.FC = () => {
   };
 
   const formattedEnterprises = enterprises.map(ent => {
-    const { sumPaid, isUpToDate, lastDate } = getEnterpriseStats(ent);
+    const { sumPaid, periodPaid, isUpToDate, lastDate, requiredAmount } = getEnterpriseStats(ent);
     return {
       ...ent,
       sumPaid,
+      periodPaid,
       isUpToDate,
-      lastDate
+      lastDate,
+      requiredAmount
     };
   });
 
@@ -691,9 +740,8 @@ export const Cotisations: React.FC = () => {
     e.preventDefault();
     if (!selectedEnt) return;
 
-    const finalAmountInFCFA = paymentCurrency === 'EUR'
-      ? Math.round(Number(paymentAmount) * 655.957)
-      : Number(paymentAmount) || 10000;
+    const selectedCurr = CURRENCIES.find(c => c.code === paymentCurrency) || CURRENCIES[0];
+    const finalAmountInFCFA = Math.round(Number(paymentAmount) * selectedCurr.rate);
 
     if (paymentMode === 'online') {
       const apiKey = getEffectiveApiKey();
@@ -734,6 +782,8 @@ export const Cotisations: React.FC = () => {
           date: paymentDate,
           label: paymentLabel || 'Cotisation en ligne (API)',
           amount: finalAmountInFCFA,
+          originalAmount: Number(paymentAmount),
+          originalCurrency: paymentCurrency,
           reference: ref,
           method: 'Paiement en ligne'
         };
@@ -764,6 +814,8 @@ export const Cotisations: React.FC = () => {
         date: paymentDate,
         label: paymentLabel,
         amount: finalAmountInFCFA,
+        originalAmount: Number(paymentAmount),
+        originalCurrency: paymentCurrency,
         reference: paymentRef || 'Virement bancaire',
         method: 'Virement bancaire'
       };
@@ -790,7 +842,12 @@ export const Cotisations: React.FC = () => {
 
   return (
     <SidebarLayout>
-      <div className="max-w-[1440px] mx-auto p-4 md:p-8 font-sans space-y-8 bg-transparent min-h-screen">
+      <motion.div 
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="max-w-[1440px] mx-auto p-4 md:p-8 font-sans space-y-8 bg-transparent min-h-screen"
+      >
         
         {/* Toast Feedbacks */}
         <AnimatePresence>
@@ -808,11 +865,13 @@ export const Cotisations: React.FC = () => {
         </AnimatePresence>
 
         {/* Top Header Selector Panel - styled perfectly like Capture 1/4 */}
-        <div className="bg-white rounded-3xl p-6 border border-gray-150 shadow-xs flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="space-y-1 text-left">
-            <span className="text-[10px] font-black uppercase text-[#132e15] tracking-widest block">SUIVIE DES COTISATIONS</span>
-            <h1 className="text-3xl font-serif font-black text-[#132e15]">Paiements & Trésorerie</h1>
-            <p className="text-xs text-gray-400 font-bold">Sélectionnez la période et actualisez pour synchroniser le bilan financier.</p>
+        <div className="bg-white rounded-3xl p-6 border border-gray-150 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="flex items-center gap-4 text-left">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-widest block">Chambre Sénégalaise de Commerce au Maroc</span>
+              <h1 className="text-2xl md:text-3xl font-serif font-black text-cscm-dark">Paiements & Trésorerie</h1>
+              <p className="text-xs text-gray-400 font-bold">Suivi officiel des cotisations et actualisation en temps réel du bilan financier.</p>
+            </div>
           </div>
 
           {/* Selective Dropdowns + Update Button block */}
@@ -891,7 +950,7 @@ export const Cotisations: React.FC = () => {
             <div className="space-y-1">
               <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Membres Réguliers</span>
               <h3 className="text-4xl font-serif font-black text-emerald-700">{upToDateCount}</h3>
-              <p className="text-xs text-emerald-950/70 font-semibold">Sociétés en règle (vers. &ge; 10 000 FCFA)</p>
+              <p className="text-xs text-emerald-950/70 font-semibold">Sociétés en règle</p>
             </div>
             <div className="p-4 bg-emerald-100/50 rounded-2xl text-emerald-600 border border-emerald-200">
               <ShieldCheck className="w-8 h-8" />
@@ -1015,12 +1074,12 @@ export const Cotisations: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-xs font-semibold text-gray-700">
                     {filtered.map((ent, idx) => {
-                      const restToPay = Math.max(0, 10000 - ent.sumPaid);
+                      const restToPay = Math.max(0, (ent.requiredAmount || 20000) - (ent.periodPaid || 0));
                       return (
                         <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all font-semibold">
                           {/* Member ID */}
                           <td className="p-4 font-mono font-black text-gray-400">
-                            {ent.memberNo || 'CCIM-00'}
+                            {ent.memberNo || 'CSCM-00'}
                           </td>
 
                           {/* Member Entity Details */}
@@ -1046,7 +1105,7 @@ export const Cotisations: React.FC = () => {
 
                           {/* Amount Paid */}
                           <td className="p-4 font-mono text-emerald-800 font-extrabold">
-                            {formatAmount(ent.sumPaid)}
+                            {formatAmount(ent.periodPaid || 0)}
                           </td>
 
                           {/* Rest to Pay */}
@@ -1106,7 +1165,7 @@ export const Cotisations: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
       {/* Add Direct Payment Modal Dialog */}
       <AnimatePresence>
@@ -1194,39 +1253,26 @@ export const Cotisations: React.FC = () => {
                   <div className="space-y-3 bg-[#FAF9F5] p-4 rounded-2xl border border-gray-150">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider block">Devise du versement</label>
-                      <div className="flex gap-1 bg-gray-200/60 p-0.5 rounded-lg border border-gray-200">
-                        <button
-                          type="button"
-                          onClick={() => setPaymentCurrency('FCFA')}
-                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
-                            paymentCurrency === 'FCFA'
-                              ? 'bg-[#132e15] text-[#ebd078] shadow-3xs'
-                              : 'text-gray-500 hover:text-gray-900'
-                          }`}
-                        >
-                          FCFA (XOF)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentCurrency('EUR')}
-                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
-                            paymentCurrency === 'EUR'
-                              ? 'bg-[#132e15] text-[#ebd078] shadow-3xs'
-                              : 'text-gray-500 hover:text-gray-900'
-                          }`}
-                        >
-                          Euro (EUR)
-                        </button>
-                      </div>
+                      <select
+                        value={paymentCurrency}
+                        onChange={(e) => setPaymentCurrency(e.target.value)}
+                        className="bg-white border border-gray-200 text-[#132e15] font-serif font-black text-xs py-1.5 px-3 rounded-xl shadow-3xs outline-none cursor-pointer focus:border-[#132e15] transition-all min-w-[150px]"
+                      >
+                        {CURRENCIES.map(curr => (
+                          <option key={curr.code} value={curr.code}>
+                            {curr.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider block">
-                        {paymentCurrency === 'EUR' ? 'Montant exact (EUR)' : 'Montant exact (FCFA)'}
+                        {paymentCurrency === 'FCFA' ? 'Montant exact (FCFA)' : `Montant exact (${paymentCurrency})`}
                       </label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#132e15] text-xs font-black">
-                          {paymentCurrency === 'EUR' ? 'EUR' : 'FCFA'}
+                          {paymentCurrency}
                         </span>
                         <input
                           type="number"
@@ -1240,19 +1286,28 @@ export const Cotisations: React.FC = () => {
                       </div>
                     </div>
 
-                    {paymentAmount && Number(paymentAmount) > 0 && (
-                      <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
-                        {paymentCurrency === 'EUR' ? (
-                          <p className="text-xs text-emerald-800 font-extrabold">
-                            Conversion automatique : <span className="font-mono text-sm font-black">{Math.round(Number(paymentAmount) * 655.957).toLocaleString()} FCFA</span>
-                          </p>
-                        ) : (
-                          <p className="text-xs text-gray-600 font-semibold">
-                            Équivalent indicatif : <span className="font-mono text-xs font-black">{(Number(paymentAmount) / 655.957).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
-                          </p>
-                        )}
-                      </div>
-                    )}
+                    {paymentAmount && Number(paymentAmount) > 0 && (() => {
+                      const selectedCurr = CURRENCIES.find(c => c.code === paymentCurrency) || CURRENCIES[0];
+                      if (paymentCurrency === 'FCFA') {
+                        const eurEquivalent = Number(paymentAmount) / 655.957;
+                        return (
+                          <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
+                            <p className="text-xs text-gray-600 font-semibold">
+                              Équivalent indicatif : <span className="font-mono text-xs font-black">{eurEquivalent.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+                            </p>
+                          </div>
+                        );
+                      } else {
+                        const convertedFCFA = Math.round(Number(paymentAmount) * selectedCurr.rate);
+                        return (
+                          <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
+                            <p className="text-xs text-emerald-800 font-extrabold">
+                              Conversion automatique : <span className="font-mono text-sm font-black">{convertedFCFA.toLocaleString()} FCFA</span>
+                            </p>
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
 
                   <div>
@@ -1580,14 +1635,6 @@ export const Cotisations: React.FC = () => {
                             >
                               <Eye className="w-4 h-4 text-blue-700 shrink-0" />
                             </button>
-                            <button
-                              onClick={() => downloadReceiptFile(receiptModalEnt, pay)}
-                              type="button"
-                              className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 p-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center shadow-3xs"
-                              title="Télécharger le reçu"
-                            >
-                              <Download className="w-4 h-4 text-emerald-800 shrink-0" />
-                            </button>
                           </div>
                         </div>
                       ))}
@@ -1641,7 +1688,7 @@ export const Cotisations: React.FC = () => {
                   <div className="w-12 h-12 bg-cscm-green/10 text-cscm-green rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-black">
                     ★
                   </div>
-                  <h3 className="text-lg font-serif font-black text-cscm-dark uppercase tracking-wide">Chambre de Commerce</h3>
+                  <h3 className="text-base font-serif font-black text-cscm-dark uppercase tracking-wide leading-tight">Chambre Sénégalaise de Commerce au Maroc CSCM</h3>
                   <p className="text-[#a69371] text-2xs font-black tracking-widest uppercase">Reçu de paiement officiel</p>
                 </div>
 
@@ -1667,10 +1714,10 @@ export const Cotisations: React.FC = () => {
 
                 <div className="flex gap-4 items-center justify-between pt-2">
                   <div className="border border-dashed border-[#132e15]/80 rounded-xl p-2 text-center text-[9px] font-black uppercase tracking-widest text-[#132e15] scale-90">
-                    ★ CCIM PAYÉ ★
+                    ★ CSCM PAYÉ ★
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400">La Trésorerie CCIM</p>
+                    <p className="text-[10px] font-bold text-gray-400">La Trésorerie CSCM</p>
                     <p className="text-xs font-serif font-bold text-cscm-green italic">Signé électroniquement</p>
                   </div>
                 </div>
@@ -1877,6 +1924,13 @@ export const Cotisations: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteCotisation}
+        title={`Voulez-vous vraiment supprimer cette cotisation de ${deleteTarget?.payment?.amount?.toLocaleString() || 0} FCFA ?`}
+      />
     </SidebarLayout>
   );
 };

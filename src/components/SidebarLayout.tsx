@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+
+const SidebarLayoutContext = createContext<boolean>(false);
 import { 
   Building2, 
   LayoutDashboard, 
@@ -20,18 +22,29 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExcelImportModal } from './ExcelImportModal';
-import { AddEnterpriseModal } from './AddEnterpriseModal';
 import { ProfileModal } from './ProfileModal';
 import { getStoredEnterprises, saveStoredEnterprises } from '../utils/enterpriseStorage';
 import { exportEnterprisesToCSV } from '../utils/exportUtils';
 import logoImg from './logo.png';
 
-export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+  const hasParent = useContext(SidebarLayoutContext);
   const navigate = useNavigate();
+
+  if (hasParent) {
+    return <>{children || <Outlet />}</>;
+  }
   const location = useLocation();
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [location.pathname]);
+
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isAddOpen, setIsAddOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastText, setToastText] = useState('');
@@ -77,6 +90,16 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
     // Reload state and trigger event
     window.dispatchEvent(new Event('enterprises_updated'));
   };
+
+  useEffect(() => {
+    const pendingToast = sessionStorage.getItem('cscm_toast_message');
+    if (pendingToast) {
+      setToastText(pendingToast);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      sessionStorage.removeItem('cscm_toast_message');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     updateCountState();
@@ -148,7 +171,8 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f5faef] via-[#FAF9F5] to-[#fefbe3] flex font-sans">
+    <SidebarLayoutContext.Provider value={true}>
+      <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-[#f5faef] via-[#FAF9F5] to-[#fefbe3] flex font-sans">
       {/* Toast Alert */}
       <AnimatePresence>
         {showToast && (
@@ -187,8 +211,8 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
           </div>
           {isExpanded && (
             <div className="overflow-hidden">
-              <h1 className="text-base font-serif font-black tracking-wide text-white truncate">CSCM Portale</h1>
-              <p className="text-[8px] text-cscm-gold uppercase font-black tracking-widest leading-none mt-0.5 truncate">Chambre de Commerce</p>
+              <h1 className="text-base font-serif font-black tracking-wide text-white truncate">Portail CSCM</h1>
+              <p className="text-[8px] text-cscm-gold uppercase font-black tracking-widest leading-none mt-0.5 truncate">Chambre Sénégalaise</p>
             </div>
           )}
         </div>
@@ -258,8 +282,12 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
               )}
               
               <button
-                onClick={() => setIsAddOpen(true)}
-                className={`w-full flex items-center ${isExpanded ? 'gap-3 px-4' : 'justify-center p-3'} py-3 rounded-2xl text-white/70 hover:text-white hover:bg-white/5 font-sans text-xs font-semibold cursor-pointer text-left transition-all`}
+                onClick={() => navigate('/enterprises/add')}
+                className={`w-full flex items-center ${isExpanded ? 'gap-3 px-4' : 'justify-center p-3'} py-3 rounded-2xl font-sans text-xs font-semibold cursor-pointer text-left transition-all ${
+                  location.pathname === '/enterprises/add'
+                    ? 'bg-cscm-green text-white shadow-lg shadow-cscm-green/20 border-l-4 border-cscm-gold pl-3'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
                 title="Ajouter une Entreprise"
               >
                 <Plus className="w-5 h-5 text-cscm-gold shrink-0" />
@@ -332,10 +360,10 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
       </aside>
 
       {/* Main Container including Top Header Bar */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
         {/* Top Header Bar for Desktop - Elegant & High Contrast */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200/85 shadow-xs sticky top-0 z-20">
+        <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200/85 shadow-xs shrink-0">
           <div>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse border border-white" />
@@ -361,7 +389,7 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
         </header>
 
         {/* Mobile Header Bar */}
-        <header className="lg:hidden bg-[#070d06] border-b border-[#112310] text-white p-4 flex items-center justify-between sticky top-0 z-40">
+        <header className="lg:hidden bg-[#070d06] border-b border-[#112310] text-white p-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsMobileOpen(true)}
@@ -371,7 +399,7 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
             </button>
             <div className="text-left">
               <h1 className="text-base font-serif font-black leading-none">CSCM</h1>
-              <p className="text-[7px] text-cscm-gold uppercase tracking-widest font-black mt-0.5">Portail Chambre de Commerce</p>
+              <p className="text-[7px] text-cscm-gold uppercase tracking-widest font-black mt-0.5">Chambre Sénégalaise au Maroc</p>
             </div>
           </div>
 
@@ -432,7 +460,14 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
                   </button>
                 </div>
 
-                <div className="p-6 flex items-center gap-3 border-b border-white/5 bg-white/5">
+                <div 
+                  onClick={() => {
+                    setIsProfileOpen(true);
+                    setIsMobileOpen(false);
+                  }}
+                  className="p-6 flex items-center gap-3 border-b border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                  title="Modifier mon profil"
+                >
                   <div className="w-10 h-10 rounded-full bg-cscm-green/20 text-cscm-gold border border-cscm-green/30 flex items-center justify-center shrink-0 overflow-hidden">
                     {profilePhoto ? (
                       <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
@@ -480,7 +515,7 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
                     <div className="pt-6 mt-6 border-t border-white/10 space-y-1.5">
                       <button
                         onClick={() => {
-                          setIsAddOpen(true);
+                          navigate('/enterprises/add');
                           setIsMobileOpen(false);
                         }}
                         className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/70 hover:text-white hover:bg-white/5 font-sans text-sm font-semibold cursor-pointer text-left transition-colors"
@@ -543,8 +578,8 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
           )}
         </AnimatePresence>
 
-        {/* Dynamic page main container */}
-        <div className="flex-grow">
+        {/* Dynamic page main container - Independent Scrollable Area */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto pb-24 lg:pb-6 relative scroll-smooth">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -554,9 +589,93 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="w-full h-full"
             >
-              {children}
+              {children || <Outlet />}
             </motion.div>
           </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation Bar (Instagram/Facebook format) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070d06]/95 backdrop-blur-md border-t border-[#112310] pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.4)]">
+        <div className="flex justify-around items-center h-16 px-2">
+          {/* Dashboard tab */}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors ${
+              location.pathname === '/dashboard' ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Accueil</span>
+          </button>
+
+          {/* Enterprises tab */}
+          <button
+            onClick={() => navigate('/enterprises')}
+            className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors relative ${
+              location.pathname === '/enterprises' ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <Building2 className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Membres</span>
+            {enterpriseCount > 0 && (
+              <span className="absolute top-1 right-5 bg-cscm-gold text-[#0a1208] text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
+                {enterpriseCount}
+              </span>
+            )}
+          </button>
+
+          {/* Plus button (aligned and simple like the other buttons) */}
+          {user.role !== 'MEMBRE' ? (
+            <button
+              onClick={() => navigate('/enterprises/add')}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors ${
+                location.pathname === '/enterprises/add' ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
+              }`}
+              title="Ajouter une entreprise"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="text-[10px] tracking-tight">Ajouter</span>
+            </button>
+          ) : null}
+
+          {/* 4th Button: Cotisations for Admin, Profile for everyone else (ensures max 5 items for perfect layout symmetry) */}
+          {user.role === 'ADMIN' ? (
+            <button
+              onClick={() => navigate('/cotisations')}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors ${
+                location.pathname === '/cotisations' ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <Coins className="w-5 h-5" />
+              <span className="text-[10px] tracking-tight">Suivi</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsProfileOpen(true)}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors ${
+                isProfileOpen ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <div className="w-5 h-5 rounded-full bg-cscm-green/20 text-cscm-gold border border-cscm-green/35 flex items-center justify-center overflow-hidden">
+                {profilePhoto ? (
+                  <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
+                ) : (
+                  <UserCircle className="w-4 h-4" />
+                )}
+              </div>
+              <span className="text-[10px] tracking-tight">Profil</span>
+            </button>
+          )}
+
+          {/* 5th Button: Drawer trigger for other action buttons */}
+          <button
+            onClick={() => setIsMobileOpen(true)}
+            className="flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 text-white/60 hover:text-white transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Menu</span>
+          </button>
         </div>
       </div>
 
@@ -567,13 +686,6 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
         onImportSuccess={handleImportSuccess}
       />
 
-      {/* Add Enterprise Modal */}
-      <AddEnterpriseModal 
-        isOpen={isAddOpen} 
-        onClose={() => setIsAddOpen(false)} 
-        onAdd={handleAddEnterprise}
-      />
-
       {/* Profile Setting Modal */}
       <ProfileModal 
         isOpen={isProfileOpen} 
@@ -582,5 +694,6 @@ export const SidebarLayout: React.FC<{ children: React.ReactNode }> = ({ childre
       />
 
     </div>
+    </SidebarLayoutContext.Provider>
   );
 };

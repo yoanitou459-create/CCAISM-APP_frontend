@@ -1,8 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, Pencil, Plus, Eye, Download } from 'lucide-react';
+import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldCheck, Landmark, Lightbulb, Contact, Coins } from 'lucide-react';
 import { EditFormModal } from './EditFormModal';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { jsPDF } from 'jspdf';
+
+const CURRENCIES = [
+  { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },
+  { code: 'EUR', name: 'Euro (EUR) - €', rate: 655.957, symbol: '€' },
+  { code: 'USD', name: 'Dollar US (USD) - $', rate: 600, symbol: '$' },
+  { code: 'MAD', name: 'Dirham Marocain (MAD) - DH', rate: 60.3, symbol: 'DH' },
+  { code: 'GBP', name: 'Livre Sterling (GBP) - £', rate: 775.2, symbol: '£' },
+  { code: 'CAD', name: 'Dollar Canadien (CAD) - C$', rate: 445, symbol: 'C$' },
+  { code: 'CHF', name: 'Franc Suisse (CHF) - CHF', rate: 685, symbol: 'CHF' },
+  { code: 'AED', name: 'Dirham EAU (AED) - AED', rate: 163.5, symbol: 'AED' },
+  { code: 'SAR', name: 'Riyal Saoudien (SAR) - SR', rate: 160, symbol: 'SR' }
+];
+
+const getTabIcon = (tab: string) => {
+  switch (tab) {
+    case 'Informations générales':
+      return Info;
+    case 'Métiers & expertises':
+      return Briefcase;
+    case 'Certifications':
+      return ShieldCheck;
+    case 'Données financières':
+      return Landmark;
+    case 'Besoins':
+      return Lightbulb;
+    case 'Contacts':
+      return Contact;
+    case 'Cotisations':
+      return Coins;
+    default:
+      return Info;
+  }
+};
 
 interface EnterpriseDetailModalProps {
   isOpen: boolean;
@@ -20,7 +54,39 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
   const [editMode, setEditMode] = useState<'add' | 'edit'>('edit');
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [displayCurrency, setDisplayCurrency] = useState<'FCFA' | 'EUR' | 'MAD' | 'AED' | 'GBP' | 'QAR'>('FCFA');
+  const [displayCurrency, setDisplayCurrency] = useState<string>('FCFA');
+  const [previewCert, setPreviewCert] = useState<any | null>(null);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (previewCert && previewCert.fileData) {
+      if (previewCert.fileData.startsWith('data:')) {
+        try {
+          const parts = previewCert.fileData.split(',');
+          const byteString = atob(parts[1]);
+          const mimeString = parts[0].split(':')[1].split(';')[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          const blob = new Blob([ab], { type: mimeString });
+          const url = URL.createObjectURL(blob);
+          setPreviewBlobUrl(url);
+          return () => {
+            URL.revokeObjectURL(url);
+          };
+        } catch (e) {
+          console.error("Failed to convert data URI to object URL:", e);
+          setPreviewBlobUrl(previewCert.fileData);
+        }
+      } else {
+        setPreviewBlobUrl(previewCert.fileData);
+      }
+    } else {
+      setPreviewBlobUrl(null);
+    }
+  }, [previewCert]);
 
   if (!isOpen) return null;
 
@@ -72,6 +138,165 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
     }
     
     return payments;
+  };
+
+  const downloadReceiptPDF = (ent: any, payment: any, currencyCode: string) => {
+    const rawAmount = Number(payment.amount);
+    let amountStr = '';
+    
+    if (currencyCode === 'FCFA') {
+      amountStr = `${rawAmount.toLocaleString('fr-FR')} FCFA`;
+    } else {
+      const curr = CURRENCIES.find(c => c.code === currencyCode);
+      if (curr) {
+        const converted = rawAmount / curr.rate;
+        amountStr = `${converted.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr.code}`;
+      } else {
+        amountStr = `${rawAmount.toLocaleString('fr-FR')} FCFA`;
+      }
+    }
+
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Outer border decoration
+    doc.setDrawColor(19, 46, 21); // #132e15
+    doc.setLineWidth(1);
+    doc.rect(8, 8, 194, 281); // full page margin border
+    doc.setDrawColor(235, 208, 120); // gold border
+    doc.setLineWidth(0.5);
+    doc.rect(10, 10, 190, 277);
+
+    // Title Header Block
+    doc.setFillColor(19, 46, 21); // #132e15
+    doc.rect(12, 12, 186, 32, 'F');
+
+    // Title text
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text("RECU DE PAIEMENT OFFICIEL", 20, 28);
+    
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(235, 208, 120); // Gold
+    doc.text("Chambre Sénégalaise de Commerce au Maroc (CSCM)", 20, 36);
+
+    // Member and payment information blocks
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.5);
+    
+    // Grid - Section 1: Membre Émetteur
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 55, 180, 10, 'F');
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text("1. INFORMATIONS DU MEMBRE ADHERENT", 20, 61);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text("Nom de l'entreprise :", 20, 72);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(ent.name, 65, 72);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Raison Sociale :", 20, 79);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(ent.raisonSociale || ent.name, 65, 79);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Numéro d'adhérent :", 20, 86);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(ent.memberNo || '-', 65, 86);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Secteur d'activité :", 20, 93);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(ent.secteur || 'PME', 65, 93);
+
+    // Section 2: Détails de la transaction
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 105, 180, 10, 'F');
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.text("2. DETAILS DE LA TRANSACTION", 20, 111);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Libellé du versement :", 20, 122);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(payment.label || 'Cotisation', 65, 122);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Date du paiement :", 20, 129);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(payment.date, 65, 129);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Mode de règlement :", 20, 136);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(payment.method || 'Virement bancaire', 65, 136);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text("Référence transaction :", 20, 143);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(19, 46, 21);
+    doc.text(payment.reference || '-', 65, 143);
+
+    // Amount box
+    doc.setFillColor(237, 252, 244); // light emerald background
+    doc.setDrawColor(19, 46, 21);
+    doc.setLineWidth(1);
+    doc.rect(15, 160, 180, 24, 'FD');
+
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text("MONTANT ENCAISSÉ", 20, 167);
+    
+    doc.setFontSize(20);
+    doc.text(amountStr, 20, 178);
+
+    // Footer signature and seal
+    doc.setTextColor(120, 120, 120);
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text("Reçu généré automatiquement depuis la plateforme administrative sécurisée CSCM.", 15, 220);
+    doc.text(`Date de génération : ${new Date().toLocaleString('fr-FR')}`, 15, 224);
+
+    // Signature box
+    doc.setDrawColor(19, 46, 21);
+    doc.setLineWidth(0.5);
+    doc.line(130, 245, 185, 245);
+    
+    doc.setTextColor(19, 46, 21);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text("La Trésorerie Générale CSCM", 136, 250);
+    doc.setFont('Helvetica', 'oblique');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Signé électroniquement", 143, 255);
+
+    doc.save(`Recu_${ent.name.replace(/[^a-zA-Z0-9]/g, '_')}_${payment.reference}.pdf`);
   };
 
   const downloadReceiptFile = (ent: any, payment: any, currency: 'FCFA' | 'EUR' | 'MAD' | 'AED' | 'GBP' | 'QAR') => {
@@ -352,21 +577,16 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
     return baseSum + yearsSum;
   };
 
-  const formatAmount = (amountFCFA: number, currency: string) => {
-    switch (currency) {
-      case 'EUR':
-        return `${(amountFCFA / 655.957).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
-      case 'MAD':
-        return `${(amountFCFA * 0.0165).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`;
-      case 'AED':
-        return `${(amountFCFA * 0.00603).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`;
-      case 'GBP':
-        return `${(amountFCFA * 0.00129).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} £`;
-      case 'QAR':
-        return `${(amountFCFA * 0.00597).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} QAR`;
-      default:
-        return `${amountFCFA.toLocaleString('fr-FR')} FCFA`;
+  const formatAmount = (amountFCFA: number, currencyCode: string) => {
+    if (currencyCode === 'FCFA') {
+      return `${amountFCFA.toLocaleString('fr-FR')} FCFA`;
     }
+    const curr = CURRENCIES.find(c => c.code === currencyCode);
+    if (!curr) {
+      return `${amountFCFA.toLocaleString('fr-FR')} FCFA`;
+    }
+    const converted = amountFCFA / curr.rate;
+    return `${converted.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr.symbol || curr.code}`;
   };
 
   const handleEdit = (type: string, mode: 'add' | 'edit' = 'edit', index: number | null = null) => {
@@ -446,7 +666,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 <Pencil className="w-4 h-4" /> Modifier
               </button>
             </div>
-            <div className="bg-white p-8 rounded-2xl border-2 border-[#132e15]/20 max-w-2xl mx-auto space-y-4 shadow-sm text-[#132e15]">
+            <div className="bg-white p-4 sm:p-8 rounded-2xl border-2 border-[#132e15]/20 max-w-2xl mx-auto space-y-4 shadow-sm text-[#132e15]">
               {[
                 { label: "Date d'adhésion", value: enterprise.dateAdhesion || '' },
                 { label: "Statut membre", value: enterprise.statutMembre || '' },
@@ -462,9 +682,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 { label: "Description", value: enterprise.description || '' },
                 { label: "Secteur d'activité", value: enterprise.secteur || '' },
               ].map((item) => (
-                <div key={item.label} className="flex gap-4 border-b border-[#132e15]/5 pb-2 last:border-b-0 last:pb-0">
-                  <span className="font-extrabold text-[#132e15] min-w-[150px]">{item.label} :</span>
-                  <span className="font-semibold text-[#132e15]/90">{item.value || 'Non spécifié'}</span>
+                <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-[#132e15]/5 pb-2 last:border-b-0 last:pb-0 text-left">
+                  <span className="font-extrabold text-[#132e15] sm:min-w-[150px] shrink-0">{item.label} :</span>
+                  <span className="font-semibold text-[#132e15]/90 break-words">{item.value || 'Non spécifié'}</span>
                 </div>
               ))}
             </div>
@@ -484,7 +704,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 </button>
               </div>
             </div>
-            <div className="bg-white p-8 rounded-2xl border-2 border-[#132e15]/20 max-w-2xl mx-auto space-y-4 shadow-sm text-[#132e15]">
+            <div className="bg-white p-4 sm:p-8 rounded-2xl border-2 border-[#132e15]/20 max-w-2xl mx-auto space-y-4 shadow-sm text-[#132e15]">
               {[
                 { label: "Secteur d'activité", value: enterprise.secteur || '' },
                 { label: "Expertise principale", value: enterprise.expertisePrincipale || '' },
@@ -495,9 +715,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 { label: "Niveau d'expertise", value: enterprise.niveauExpertise || enterprise.niveau_expertise || '' },
                 { label: "Capacité de production", value: enterprise.capaciteProduction || enterprise.capacite_production || '' },
               ].map((item) => (
-                <div key={item.label} className="flex gap-4 border-b border-[#132e15]/5 pb-2 last:border-b-0 last:pb-0">
-                  <span className="font-extrabold text-[#132e15] min-w-[180px]">{item.label} :</span>
-                  <span className="font-semibold text-[#132e15]/90">{item.value || 'Non spécifié'}</span>
+                <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-[#132e15]/5 pb-2 last:border-b-0 last:pb-0 text-left">
+                  <span className="font-extrabold text-[#132e15] sm:min-w-[180px] shrink-0">{item.label} :</span>
+                  <span className="font-semibold text-[#132e15]/90 break-words">{item.value || 'Non spécifié'}</span>
                 </div>
               ))}
             </div>
@@ -506,24 +726,26 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
       case 'Certifications':
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center mb-8 max-w-3xl mx-auto">
-              <h3 className="text-3xl font-serif font-black text-[#132e15]">Certifications</h3>
-              <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-3xl mx-auto">
+              <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Certifications</h3>
+              <div className="flex gap-2 w-full sm:w-auto">
                 <button 
                   onClick={() => handleEdit('Certifications', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-3 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
+                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
                 >
-                  <div className="bg-[#ebd078] rounded p-0.5"><Plus className="w-3 h-3 text-[#132e15]" /></div> Ajouter une certification
+                  <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Certifications', 'edit', selectedItemIndex)}
-                  className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
+                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
                 >
-                  <Pencil className="w-4 h-4" /> Modifier
+                  <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
               </div>
             </div>
-            <div className="overflow-hidden max-w-3xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-hidden max-w-3xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
@@ -545,24 +767,35 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                           <div className="flex items-center justify-between gap-2">
                             <span className="truncate max-w-[200px]">{cert.name}</span>
                             {cert.fileData && (
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const link = document.createElement('a');
-                                  link.href = cert.fileData;
-                                  link.download = cert.fileName || 'justificatif_certification';
-                                  document.body.appendChild(link);
-                                  link.click();
-                                  document.body.removeChild(link);
-                                }}
-                                title="Télécharger la pièce justificative"
-                                className="bg-[#132e15] hover:bg-emerald-800 text-white transition-all text-[8px] tracking-wider font-extrabold uppercase px-2 py-1 rounded-sm shrink-0 flex items-center gap-1 cursor-pointer"
-                              >
-                                Doc
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 3v12"/>
-                                </svg>
-                              </button>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPreviewCert(cert);
+                                  }}
+                                  title="Visualiser le document en ligne"
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white transition-all text-[9px] tracking-wider font-extrabold uppercase px-2 py-1 rounded flex items-center gap-1 cursor-pointer hover:shadow-xs shrink-0"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                  Voir
+                                </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const link = document.createElement('a');
+                                    link.href = cert.fileData;
+                                    link.download = cert.fileName || 'justificatif_certification';
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                  }}
+                                  title="Télécharger la pièce justificative"
+                                  className="bg-[#132e15] hover:bg-emerald-800 text-white transition-all text-[9px] tracking-wider font-extrabold uppercase px-2 py-1 rounded flex items-center gap-1 cursor-pointer hover:shadow-xs shrink-0"
+                                >
+                                  <Download className="w-3 h-3" />
+                                  Doc
+                                </button>
+                              </div>
                             )}
                           </div>
                         </td>
@@ -580,6 +813,73 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="block md:hidden space-y-4 max-w-3xl mx-auto">
+              {enterprise.certifications && enterprise.certifications.length > 0 ? (
+                enterprise.certifications.map((cert: any, i: number) => (
+                  <div 
+                    key={i}
+                    onClick={() => setSelectedItemIndex(i)}
+                    className={`p-4 rounded-2xl border text-left transition-all ${
+                      selectedItemIndex === i 
+                        ? 'border-[#132e15] bg-[#132e15]/10 shadow-sm' 
+                        : 'border-gray-200 bg-white hover:bg-gray-55 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0">
+                        <h4 className="font-extrabold text-[#132e15] text-sm break-words">{cert.name}</h4>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Organisme : {cert.issuer}</p>
+                      </div>
+                      
+                      {cert.fileData && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewCert(cert);
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded flex items-center gap-1 cursor-pointer shrink-0"
+                          >
+                            <Eye className="w-3 h-3" /> Voir
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const link = document.createElement('a');
+                              link.href = cert.fileData;
+                              link.download = cert.fileName || 'justificatif_certification';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
+                            className="bg-[#132e15] text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded flex items-center gap-1 cursor-pointer shrink-0"
+                          >
+                            <Download className="w-3 h-3" /> Doc
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-[#132e15]/5 text-[11px] font-semibold text-gray-600">
+                      <div>
+                        <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Code</span>
+                        <span className="text-gray-800 font-bold">{cert.code || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Date</span>
+                        <span className="text-gray-800 font-bold">{cert.date || '-'}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
+                  Aucune certification enregistrée
+                </div>
+              )}
             </div>
           </div>
         );
@@ -807,24 +1107,26 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
       case 'Besoins':
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center mb-8 max-w-3xl mx-auto">
-              <h3 className="text-3xl font-serif font-black text-[#132e15]">Besoins</h3>
-              <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-3xl mx-auto">
+              <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Besoins</h3>
+              <div className="flex gap-2 w-full sm:w-auto">
                 <button 
                   onClick={() => handleEdit('Besoins', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-3 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
+                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
                 >
-                  <div className="bg-[#ebd078] rounded p-0.5"><Plus className="w-3 h-3 text-[#132e15]" /></div> Ajouter Besoin
+                  <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Besoins', 'edit', selectedItemIndex)}
-                  className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
+                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
                 >
-                  <Pencil className="w-4 h-4" /> Modifier
+                  <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
               </div>
             </div>
-            <div className="overflow-hidden max-w-3xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-hidden max-w-3xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
@@ -858,29 +1160,74 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards View */}
+            <div className="block md:hidden space-y-4 max-w-3xl mx-auto">
+              {enterprise.besoins && enterprise.besoins.length > 0 ? (
+                enterprise.besoins.map((besoin: any, i: number) => (
+                  <div 
+                    key={i}
+                    onClick={() => setSelectedItemIndex(i)}
+                    className={`p-4 rounded-2xl border text-left transition-all ${
+                      selectedItemIndex === i 
+                        ? 'border-[#132e15] bg-[#132e15]/10 shadow-sm' 
+                        : 'border-gray-200 bg-white hover:bg-gray-55 hover:bg-gray-50'
+                    }`}
+                  >
+                    <h4 className="font-extrabold text-[#132e15] text-sm break-words">{besoin.title}</h4>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Type : {besoin.type || '-'}</p>
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-[#132e15]/5 text-[11px] font-semibold text-gray-600">
+                      <div>
+                        <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Budget</span>
+                        <span className="text-gray-800 font-bold">{besoin.budget || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Priorité</span>
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black mt-0.5 ${
+                          besoin.priority === 'Haute' 
+                          ? 'bg-rose-50 text-rose-700 border border-rose-100' 
+                          : besoin.priority === 'Moyenne'
+                          ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        }`}>
+                          {besoin.priority || '-'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
+                  Aucun besoin enregistré
+                </div>
+              )}
+            </div>
           </div>
         );
       case 'Contacts':
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center mb-8 max-w-4xl mx-auto">
-              <h3 className="text-3xl font-serif font-black text-[#132e15]">Contacts</h3>
-              <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-4xl mx-auto">
+              <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Contacts</h3>
+              <div className="flex gap-2 w-full sm:w-auto">
                 <button 
                   onClick={() => handleEdit('Contacts', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-3 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
+                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
                 >
-                  <div className="bg-[#ebd078] rounded p-0.5"><Plus className="w-3 h-3 text-[#132e15]" /></div> Ajouter Contact
+                  <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Contacts', 'edit', selectedItemIndex)}
-                  className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
+                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
                 >
-                  <Pencil className="w-4 h-4" /> Modifier
+                  <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
               </div>
             </div>
-            <div className="overflow-hidden max-w-4xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-hidden max-w-4xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
@@ -915,6 +1262,50 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="block md:hidden space-y-4 max-w-4xl mx-auto">
+              {enterprise.contacts && enterprise.contacts.length > 0 ? (
+                enterprise.contacts.map((contact: any, i: number) => (
+                  <div 
+                    key={i}
+                    onClick={() => setSelectedItemIndex(i)}
+                    className={`p-4 rounded-2xl border text-left transition-all ${
+                      selectedItemIndex === i 
+                        ? 'border-[#132e15] bg-[#132e15]/10 shadow-sm' 
+                        : 'border-gray-200 bg-white hover:bg-gray-55 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0">
+                        <h4 className="font-extrabold text-[#132e15] text-sm break-words">{contact.name}</h4>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Fonction : {contact.function || '-'}</p>
+                      </div>
+                      {contact.isPrimary === 'Oui' && (
+                        <span className="bg-[#132e15]/10 text-cscm-green text-[9px] font-black uppercase px-2.5 py-1 rounded">
+                          Principal
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-2 border-t border-[#132e15]/5 text-[11px] font-semibold text-gray-600">
+                      <div>
+                        <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Téléphone</span>
+                        <span className="text-gray-800 font-bold">{contact.phone || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Email</span>
+                        <span className="text-gray-800 font-bold break-all">{contact.email || '-'}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
+                  Aucun contact enregistré
+                </div>
+              )}
             </div>
           </div>
         );
@@ -958,15 +1349,14 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">AFFICHER LES MONTANTS EN</span>
                 <select 
                   value={displayCurrency} 
-                  onChange={(e) => setDisplayCurrency(e.target.value as any)}
+                  onChange={(e) => setDisplayCurrency(e.target.value)}
                   className="bg-white border-2 border-amber-100/30 text-[#132e15] font-serif font-black text-xs py-2.5 px-4 rounded-xl shadow-xs outline-none cursor-pointer focus:border-[#132e15] transition-all min-w-[200px]"
                 >
-                  <option value="FCFA">FCFA (XOF)</option>
-                  <option value="EUR">EUR (Euro)</option>
-                  <option value="MAD">MAD (Dirham Marocain)</option>
-                  <option value="AED">AED (Dirham Émirati)</option>
-                  <option value="GBP">GBP (Livre Sterling)</option>
-                  <option value="QAR">QAR (Dirham du Qatar)</option>
+                  {CURRENCIES.map(curr => (
+                    <option key={curr.code} value={curr.code}>
+                      {curr.name}
+                    </option>
+                  ))}
                 </select>
               </div>
               
@@ -981,15 +1371,14 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
               </div>
             </div>
 
-            {/* Custom styled table matching image 1 */}
-            <div className="overflow-hidden rounded-3xl border border-[#132e15]/15 shadow-sm bg-white">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-hidden rounded-3xl border border-[#132e15]/15 shadow-sm bg-white">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#132e15] text-white text-[11px] font-black uppercase tracking-wider border-b border-[#132e15]/10">
                     <th className="p-4 text-left font-serif">DATE</th>
                     <th className="p-4 text-left font-serif">LIBELLÉ / MOTIF</th>
                     <th className="p-4 text-right font-serif">MONTANT ({displayCurrency})</th>
-                    <th className="p-4 text-center font-serif">REÇU</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white text-xs text-gray-700 font-semibold">
@@ -1033,31 +1422,71 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                           <td className="p-4 text-right font-medium text-[#132e15] border-l border-gray-50">
                             {formatAmount(pay.amount, displayCurrency)}
                           </td>
-                          <td className="p-4 text-center border-l border-gray-50">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                downloadReceiptFile(enterprise, pay, displayCurrency);
-                              }}
-                              type="button"
-                              className="bg-[#132e15] hover:bg-[#1a3819] text-[#ebd078] hover:text-white border border-[#ebd078]/20 font-black text-[10px] uppercase tracking-wider px-3.5 py-2.5 rounded-full flex items-center gap-1.5 mx-auto transition-all shadow-3xs cursor-pointer active:scale-95"
-                            >
-                              <Download className="w-3.5 h-3.5 text-[#ebd078]" />
-                              <span>Télécharger</span>
-                            </button>
-                          </td>
                         </tr>
                       );
                     })
                   ) : (
                     <tr>
-                      <td colSpan={4} className="p-10 text-center text-gray-400 italic font-bold">
+                      <td colSpan={3} className="p-10 text-center text-gray-400 italic font-bold">
                         Aucune cotisation n'a été trouvée pour ce membre.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="block md:hidden space-y-4">
+              {payments.length > 0 ? (
+                payments.map((pay: any, index: number) => {
+                  const isCustom = pay.id.startsWith('custom-');
+                  const customIndex = isCustom ? Number(pay.id.split('-')[1]) : null;
+                  const isSelected = isCustom && selectedItemIndex === customIndex;
+                  
+                  return (
+                    <div
+                      key={`${pay.id || index}-${index}`}
+                      onClick={() => {
+                        if (isCustom) {
+                          setSelectedItemIndex(customIndex);
+                        } else {
+                          setSelectedItemIndex(null);
+                        }
+                      }}
+                      className={`p-4 rounded-2xl border text-left transition-all ${
+                        !isCustom 
+                          ? 'border-gray-150 bg-gray-50/50 hover:bg-gray-50' 
+                          : isSelected 
+                            ? 'border-amber-500 bg-amber-50/70 shadow-sm font-semibold' 
+                            : 'border-gray-200 bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <span className="text-[10px] text-gray-400 font-mono font-bold block">{pay.date}</span>
+                          <h4 className="font-extrabold text-[#132e15] text-sm break-words mt-1">{pay.label}</h4>
+                          {!isCustom && (
+                            <span className="inline-block text-[8px] font-black bg-green-50 text-green-700 border border-green-200 uppercase px-1.5 py-0.5 rounded mt-1">
+                              Importé
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="text-gray-400 block text-[9px] font-bold uppercase tracking-wider">Montant</span>
+                          <span className="text-emerald-850 font-extrabold text-xs block font-mono mt-0.5">
+                            {formatAmount(pay.amount, displayCurrency)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
+                  Aucune cotisation n'a été trouvée pour ce membre.
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1069,41 +1498,37 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed lg:inset-0 top-16 bottom-16 lg:bottom-0 left-0 right-0 z-30 lg:z-50 bg-[#FAF9F5] flex flex-col overflow-hidden shadow-xl">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-        />
-        
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="bg-white w-full max-w-6xl rounded-xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[95vh]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 28, stiffness: 220 }}
+          className="bg-white w-full h-full flex flex-col overflow-y-auto"
         >
           {/* Header Section */}
-          <div className="p-8 border-b border-[#132e15]/10 bg-white relative">
-            <button onClick={onClose} className="absolute top-8 left-8 p-2 hover:bg-gray-50 rounded-full transition-colors cursor-pointer">
-              <ChevronLeft className="w-8 h-8 text-[#132e15]" />
+          <div className="p-4 md:p-8 border-b border-[#132e15]/10 bg-white relative flex flex-col items-center">
+            <button onClick={onClose} className="absolute top-4 left-4 md:top-8 md:left-8 p-2 hover:bg-gray-55 bg-gray-50 md:bg-transparent rounded-full transition-colors cursor-pointer" title="Retour">
+              <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-[#132e15]" />
             </button>
 
-            <div className="flex flex-col md:flex-row items-center justify-center gap-8 mt-4">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-10 md:mt-4 w-full max-w-4xl">
               <div 
-                className="w-32 h-32 rounded-full border border-gray-300 flex items-center justify-center text-center p-2 text-[10px] font-bold overflow-hidden bg-gray-50 cursor-pointer relative group"
+                className="w-32 h-32 rounded-2xl border-2 border-gray-300 flex items-center justify-center text-center p-2 text-xs font-black overflow-hidden bg-white text-black cursor-pointer relative group shadow-sm transition-all hover:border-[#132e15]"
                 onClick={() => document.getElementById(`upload-ent-logo-${enterprise.id}`)?.click()} 
                 title="Cliquer pour changer le logo de l'entreprise"
               >
                 {enterprise.logo ? (
                   <img src={enterprise.logo} alt={enterprise.name} className="w-full h-full object-cover" />
                 ) : (
-                  <>LOGO<br/>Entreprise</>
+                  <div className="text-black font-black leading-tight text-center">
+                    LOGO<br/>
+                    <span className="text-[10px] font-black text-black uppercase">Entreprise</span>
+                  </div>
                 )}
                 
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black flex-col gap-1">
-                  <span>Changer Logo</span>
+                <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-black text-xs font-black flex-col gap-1 shadow-inner">
+                  <span className="tracking-wide">Changer Logo</span>
                 </div>
                 
                 <input 
@@ -1137,32 +1562,39 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 py-4 border-b border-[#132e15]/10 bg-white sticky top-0 z-20 px-8">
-            {tabs.map((tab, index) => (
-              <React.Fragment key={tab}>
-                <button
-                  onClick={() => {
-                    setActiveTab(tab);
-                    setSelectedItemIndex(null);
-                  }}
-                  className={`text-sm tracking-wide transition-colors cursor-pointer ${
-                    activeTab === tab 
-                      ? 'text-[#132e15] font-black underline underline-offset-8 decoration-2' 
-                      : 'text-[#132e15]/60 hover:text-[#132e15]'
-                  }`}
-                >
-                  {tab}
-                </button>
-                {index < tabs.length - 1 && (
-                  <span className="text-[#132e15]/20 font-light">|</span>
-                )}
-              </React.Fragment>
-            ))}
+          {/* Navigation Links / Buttons */}
+          <div className="py-3 border-b border-[#132e15]/10 bg-white sticky top-0 z-20 px-4 md:px-8">
+            <div className="max-w-4xl mx-auto grid grid-cols-4 sm:grid-cols-7 md:flex md:flex-wrap md:justify-center gap-2">
+              {tabs.map((tab) => {
+                const IconComponent = getTabIcon(tab);
+                const isActive = activeTab === tab;
+                const shortName = tab === 'Informations générales' ? 'Général' :
+                                  tab === 'Métiers & expertises' ? 'Expertises' :
+                                  tab === 'Données financières' ? 'Finance' : tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setSelectedItemIndex(null);
+                    }}
+                    className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2.5 py-2 md:px-4 md:py-2.5 rounded-2xl transition-all duration-250 cursor-pointer text-center md:text-left ${
+                      isActive 
+                        ? 'bg-[#132e15] text-[#ebd078] shadow-sm font-black ring-1 ring-[#ebd078]/20' 
+                        : 'text-[#132e15]/70 hover:bg-[#132e15]/5 hover:text-[#132e15] border border-gray-150 bg-[#FAF9F5]'
+                    }`}
+                    title={tab}
+                  >
+                    <IconComponent className="w-4 h-4 md:w-4.5 md:h-4.5 shrink-0" />
+                    <span className="text-[9px] md:text-xs font-bold leading-none tracking-tight">{shortName}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-8 bg-white relative">
+          <div className="p-4 md:p-8 bg-white relative">
             <AnimatePresence>
               {feedbackMessage && (
                 <motion.div
@@ -1204,6 +1636,111 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         onSave={handleSave}
         itemIndex={selectedItemIndex}
       />
+
+      {/* Certification Document Preview Modal */}
+      <AnimatePresence>
+        {previewCert && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.7 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"
+              onClick={() => setPreviewCert(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="bg-[#FAF9F5] w-full max-w-5xl rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[85vh] border-2 border-[#132e15]"
+            >
+              {/* Modal Header */}
+              <div className="p-5 border-b border-[#132e15]/10 flex items-center justify-between bg-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-100 shrink-0">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="text-sm font-black text-[#132e15]">{previewCert.name}</h4>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{previewCert.issuer || 'Organisme de certification'} • {previewCert.date}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = previewCert.fileData;
+                      link.download = previewCert.fileName || 'justificatif_certification';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    className="px-3.5 py-2 hover:bg-gray-100 text-[#132e15] rounded-xl transition-all flex items-center gap-2 text-xs font-black border border-gray-250 cursor-pointer active:scale-95"
+                    title="Télécharger"
+                  >
+                    <Download className="w-4 h-4 text-emerald-800" />
+                    <span>Télécharger</span>
+                  </button>
+                  <button
+                    onClick={() => setPreviewCert(null)}
+                    className="p-2.5 hover:bg-gray-100 text-gray-600 rounded-xl transition-all cursor-pointer border border-transparent hover:border-gray-200 active:scale-95"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="flex-1 overflow-auto p-6 bg-gray-50 flex items-center justify-center min-h-[450px]">
+                {previewCert.fileData?.startsWith('data:image/') ? (
+                  <div className="bg-white p-3 rounded-2xl border border-gray-150 shadow-sm max-w-full max-h-[70vh] overflow-auto flex items-center justify-center">
+                    <img
+                      src={previewBlobUrl || previewCert.fileData}
+                      alt={previewCert.name}
+                      referrerPolicy="no-referrer"
+                      className="max-w-full max-h-[60vh] object-contain rounded-xl"
+                    />
+                  </div>
+                ) : (previewCert.fileData?.startsWith('data:application/pdf') || previewCert.fileData?.includes('pdf') || previewCert.fileName?.toLowerCase().endsWith('.pdf')) ? (
+                  <div className="w-full h-[65vh] bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden flex flex-col">
+                    <iframe
+                      src={previewBlobUrl || previewCert.fileData}
+                      title={previewCert.name}
+                      className="w-full h-full border-0"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center p-8 bg-white rounded-3xl border border-gray-150 shadow-sm max-w-md space-y-4">
+                    <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-100">
+                      <Download className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <h5 className="font-serif font-black text-base text-[#132e15]">Aperçu non disponible</h5>
+                      <p className="text-xs text-gray-500 font-medium mt-1 leading-relaxed">
+                        Ce type de fichier ne peut pas être affiché directement dans le navigateur. Veuillez le télécharger pour le consulter.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = previewCert.fileData;
+                        link.download = previewCert.fileName || 'justificatif_certification';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="w-full bg-[#132e15] hover:bg-emerald-800 text-white font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-sm cursor-pointer"
+                    >
+                      Télécharger le document
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 };

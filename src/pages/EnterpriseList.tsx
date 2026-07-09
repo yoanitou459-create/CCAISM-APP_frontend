@@ -21,6 +21,38 @@ const CURRENCIES = [
   { code: 'SAR', name: 'Riyal Saoudien (SAR) - SR', rate: 160, symbol: 'SR' }
 ];
 
+const getSectorStyle = (sector: string) => {
+  const sec = (sector || '').toLowerCase();
+  if (sec.includes('it') || sec.includes('tech') || sec.includes('informatique')) {
+    return 'bg-purple-50 text-purple-700 border-purple-200/60';
+  }
+  if (sec.includes('btp') || sec.includes('construction') || sec.includes('bâtiment')) {
+    return 'bg-amber-50 text-amber-700 border-amber-200/60';
+  }
+  if (sec.includes('fin') || sec.includes('banque') || sec.includes('finance')) {
+    return 'bg-blue-50 text-blue-700 border-blue-200/60';
+  }
+  if (sec.includes('tra') || sec.includes('log') || sec.includes('transport')) {
+    return 'bg-indigo-50 text-indigo-700 border-indigo-200/60';
+  }
+  if (sec.includes('tou') || sec.includes('voyage') || sec.includes('tourisme')) {
+    return 'bg-orange-50 text-orange-700 border-orange-200/60';
+  }
+  if (sec.includes('edu') || sec.includes('enseig') || sec.includes('education')) {
+    return 'bg-cyan-50 text-cyan-700 border-cyan-200/60';
+  }
+  if (sec.includes('agr') || sec.includes('ferme') || sec.includes('agriculture')) {
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
+  }
+  if (sec.includes('agro') || sec.includes('alim')) {
+    return 'bg-teal-50 text-teal-700 border-teal-200/60';
+  }
+  if (sec.includes('san') || sec.includes('clini') || sec.includes('sante') || sec.includes('santé')) {
+    return 'bg-rose-50 text-rose-700 border-rose-200/60';
+  }
+  return 'bg-slate-50 text-slate-700 border-slate-200/60';
+};
+
 export const EnterpriseList = () => {
   const navigate = useNavigate();
   const [selectedEnterprise, setSelectedEnterprise] = useState<any>(null);
@@ -98,9 +130,13 @@ export const EnterpriseList = () => {
 
   const handleUpdateEnterprise = (updatedEnterprise: any) => {
     const updated = enterprises.map(e => e.id === updatedEnterprise.id ? updatedEnterprise : e);
+    setEnterprises(updated);
     saveStoredEnterprises(updated);
     if (selectedEnterprise?.id === updatedEnterprise.id) {
       setSelectedEnterprise(updatedEnterprise);
+    }
+    if (enterpriseToSummary?.id === updatedEnterprise.id) {
+      setEnterpriseToSummary(updatedEnterprise);
     }
   };
 
@@ -150,9 +186,8 @@ export const EnterpriseList = () => {
     e.preventDefault();
     if (!quickPaymentEnt) return;
 
-    const finalAmountInFCFA = paymentCurrency === 'EUR'
-      ? Math.round(Number(paymentAmount) * 655.957)
-      : Number(paymentAmount) || 10000;
+    const selectedCurr = CURRENCIES.find(c => c.code === paymentCurrency) || CURRENCIES[0];
+    const finalAmountInFCFA = Math.round(Number(paymentAmount) * selectedCurr.rate);
 
     if (paymentMode === 'online') {
       const apiKey = getEffectiveApiKey();
@@ -194,6 +229,8 @@ export const EnterpriseList = () => {
           date: new Date().toISOString().split('T')[0],
           label: 'Cotisation Annuelle En Ligne',
           amount: finalAmountInFCFA,
+          originalAmount: Number(paymentAmount),
+          originalCurrency: paymentCurrency,
           reference: `ONL-${Math.floor(100000 + Math.random() * 900000)}`,
           method: 'Carte Bancaire (En Ligne)'
         };
@@ -225,6 +262,8 @@ export const EnterpriseList = () => {
         date: new Date().toISOString().split('T')[0],
         label: 'Cotisation Annuelle Fixe',
         amount: finalAmountInFCFA,
+        originalAmount: Number(paymentAmount),
+        originalCurrency: paymentCurrency,
         reference: paymentRef || 'Virement Bancaire Standard',
         method: 'Virement bancaire'
       };
@@ -253,7 +292,12 @@ export const EnterpriseList = () => {
 
   return (
     <SidebarLayout>
-      <div className="max-w-[1440px] mx-auto p-4 md:p-8 font-sans space-y-8">
+      <motion.div 
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="max-w-[1440px] mx-auto p-4 md:p-8 font-sans space-y-8"
+      >
         {/* Toast Feedbacks */}
         <AnimatePresence>
           {feedbackMessage && (
@@ -443,16 +487,16 @@ export const EnterpriseList = () => {
         {/* Grid-style list layout / Table */}
         <div className="bg-white rounded-[2rem] shadow-sm border border-[#132e15]/20 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1000px]">
+            <table className="w-full text-left border-collapse min-w-full lg:min-w-[1000px]">
               <thead>
                 <tr className="bg-[#132e15] border-b border-[#132e15]/20 text-white text-[11px] uppercase font-black tracking-widest">
                   <th className="p-6">Nom de l'entreprise</th>
                   <th className="p-6">N° Membre</th>
-                  <th className="p-6">Raison sociale</th>
-                  <th className="p-6">Localisation</th>
-                  <th className="p-6">Secteur</th>
-                  <th className="p-6">Effectif</th>
-                  <th className="p-6">Statut Adhésion</th>
+                  <th className="p-6 hidden lg:table-cell">Raison sociale</th>
+                  <th className="p-6 hidden sm:table-cell">Localisation</th>
+                  <th className="p-6 hidden md:table-cell">Secteur</th>
+                  <th className="p-6 hidden md:table-cell">Effectif</th>
+                  <th className="p-6 hidden sm:table-cell">Statut Adhésion</th>
                   <th className="p-6 text-right">Actions</th>
                 </tr>
               </thead>
@@ -473,18 +517,19 @@ export const EnterpriseList = () => {
                       </div>
                     </td>
                     <td className="p-6 text-[#132e15]/80 font-mono text-xs font-bold">{ent.memberNo}</td>
-                    <td className="p-6 text-[#132e15]/90 font-bold">{ent.raisonSociale}</td>
-                    <td className="p-6 text-[#132e15]">
+                    <td className="p-6 text-[#132e15]/90 font-bold hidden lg:table-cell">{ent.raisonSociale}</td>
+                    <td className="p-6 text-[#132e15] hidden sm:table-cell">
                       <div className="font-bold text-[#132e15]">{ent.ville}</div>
                       <div className="text-[10px] text-[#132e15]/70 font-bold uppercase mt-0.5">{ent.pays}</div>
                     </td>
-                    <td className="p-6">
-                      <span className="bg-cscm-green/10 text-cscm-green text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider border border-cscm-green/10">
+                    <td className="p-6 hidden md:table-cell">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${getSectorStyle(ent.secteur)}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                         {ent.secteur}
                       </span>
                     </td>
-                    <td className="p-6 text-[#132e15] font-black">{ent.effectif} pers.</td>
-                    <td className="p-6 col">
+                    <td className="p-6 text-[#132e15] font-black hidden md:table-cell">{ent.effectif} pers.</td>
+                    <td className="p-6 hidden sm:table-cell">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${
                         ent.statutMembre === 'Actif' 
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
@@ -556,7 +601,7 @@ export const EnterpriseList = () => {
             </table>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Modals */}
       <EnterpriseDetailModal 
@@ -612,7 +657,7 @@ export const EnterpriseList = () => {
                   <h4 className="text-sm font-black text-cscm-dark uppercase tracking-wider">Traitement de la transaction...</h4>
                   <p className="text-xs text-gray-500 font-bold max-w-xs mx-auto animate-pulse">{paymentProgressText}</p>
                   <div className="pt-2">
-                    <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Passerelle de Paiement CCIM</span>
+                    <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Passerelle de Paiement CSCM</span>
                   </div>
                 </div>
               ) : (
@@ -648,39 +693,22 @@ export const EnterpriseList = () => {
                   <div className="space-y-3 bg-[#FAF9F5] p-4 rounded-2xl border border-gray-150">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider block">Devise du versement</label>
-                      <div className="flex gap-1 bg-gray-200/60 p-0.5 rounded-lg border border-gray-200">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPaymentCurrency('FCFA');
-                          }}
-                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
-                            paymentCurrency === 'FCFA'
-                              ? 'bg-[#132e15] text-white shadow-3xs'
-                              : 'text-gray-500 hover:text-gray-900'
-                          }`}
-                        >
-                          FCFA (XOF)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPaymentCurrency('EUR');
-                          }}
-                          className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
-                            paymentCurrency === 'EUR'
-                              ? 'bg-[#132e15] text-white shadow-3xs'
-                              : 'text-gray-500 hover:text-gray-900'
-                          }`}
-                        >
-                          Euro (EUR)
-                        </button>
-                      </div>
+                      <select
+                        value={paymentCurrency}
+                        onChange={(e) => setPaymentCurrency(e.target.value)}
+                        className="bg-white border border-gray-200 text-[#132e15] font-serif font-black text-xs py-1.5 px-3 rounded-xl shadow-3xs outline-none cursor-pointer focus:border-[#132e15] transition-all min-w-[150px]"
+                      >
+                        {CURRENCIES.map(curr => (
+                          <option key={curr.code} value={curr.code}>
+                            {curr.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-[9px] font-black uppercase text-gray-400 tracking-wider block">
-                        {paymentCurrency === 'EUR' ? 'Montant en Euro (EUR)' : 'Montant en Franc CFA (FCFA)'}
+                        {paymentCurrency === 'FCFA' ? 'Montant exact (FCFA)' : `Montant exact (${paymentCurrency})`}
                       </label>
                       <div className="relative">
                         <input 
@@ -688,30 +716,39 @@ export const EnterpriseList = () => {
                           required
                           min="1"
                           step="any"
-                          placeholder={paymentCurrency === 'EUR' ? 'Ex: 15.24' : 'Ex: 10000'}
+                          placeholder="Ex: 10000"
                           value={paymentAmount}
                           onChange={(e) => setPaymentAmount(e.target.value)}
                           className="w-full pl-3 pr-12 py-2 rounded-xl border border-gray-200 outline-none focus:border-cscm-green transition-all text-sm font-black text-[#132e15] bg-white"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                          {paymentCurrency === 'EUR' ? 'EUR' : 'XOF'}
+                          {paymentCurrency}
                         </span>
                       </div>
                     </div>
 
-                    {paymentAmount && Number(paymentAmount) > 0 && (
-                      <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center">
-                        {paymentCurrency === 'EUR' ? (
-                          <p className="text-xs text-emerald-800 font-extrabold">
-                            Conversion automatique : <span className="font-mono text-sm font-black">{Math.round(Number(paymentAmount) * 655.957).toLocaleString()} FCFA</span>
-                          </p>
-                        ) : (
-                          <p className="text-xs text-gray-600 font-semibold">
-                            Équivalent indicatif : <span className="font-mono text-xs font-black">{(Number(paymentAmount) / 655.957).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
-                          </p>
-                        )}
-                      </div>
-                    )}
+                    {paymentAmount && Number(paymentAmount) > 0 && (() => {
+                      const selectedCurr = CURRENCIES.find(c => c.code === paymentCurrency) || CURRENCIES[0];
+                      if (paymentCurrency === 'FCFA') {
+                        const eurEquivalent = Number(paymentAmount) / 655.957;
+                        return (
+                          <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
+                            <p className="text-xs text-gray-600 font-semibold">
+                              Équivalent indicatif : <span className="font-mono text-xs font-black">{eurEquivalent.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+                            </p>
+                          </div>
+                        );
+                      } else {
+                        const convertedFCFA = Math.round(Number(paymentAmount) * selectedCurr.rate);
+                        return (
+                          <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
+                            <p className="text-xs text-emerald-800 font-extrabold">
+                              Conversion automatique : <span className="font-mono text-sm font-black">{convertedFCFA.toLocaleString()} FCFA</span>
+                            </p>
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
 
                   {paymentMode === 'manual' ? (
