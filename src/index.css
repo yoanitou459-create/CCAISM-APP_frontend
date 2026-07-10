@@ -1,31 +1,147 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-cscm-gold: #E5C35E;
-  --color-cscm-green: #37662B;
-  --color-cscm-dark: #12210E;
-  --color-cscm-light: #FAF9F5;
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Outfit", ui-serif, sans-serif;
+  --color-cscm-gold: #C9A84C;
+  --color-cscm-gold-light: #E8D49A;
+  --color-cscm-green: #1E4D2B;
+  --color-cscm-green-mid: #2A5C38;
+  --color-cscm-green-soft: #EEF4F0;
+  --color-cscm-forest: #16301E;
+  --color-cscm-dark: #1A3D2A;
+  --color-cscm-light: #FAFBF7;
+  --color-cscm-input: #F0F4F8;
+  --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Roboto", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  @apply bg-cscm-dark text-white font-sans;
-  background: radial-gradient(circle at top left, #294A1E 0%, #12210E 100%);
+  @apply text-[#1A3D2A] font-sans antialiased;
+  background: #F8FAFB;
   min-height: 100vh;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #1E4D2B;
+  color: #fff;
+}
+
+/* ---- Refined scrollbars (webkit + firefox) ---- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(30, 77, 43, 0.3) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(30, 77, 43, 0.25);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(30, 77, 43, 0.45);
 }
 
 .glass-card {
-  @apply bg-white/[0.08] backdrop-blur-xl border border-white/15 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)];
+  @apply bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_20px_50px_rgba(34,48,28,0.08)];
 }
 
 .input-field {
-  @apply w-full bg-white/5 border border-white/20 rounded-2xl px-4 py-3 outline-none focus:border-cscm-gold focus:ring-2 focus:ring-cscm-gold/30 transition-all text-white placeholder:text-white/40;
+  @apply w-full bg-white border border-[#22301C]/10 rounded-2xl px-4 py-3 outline-none focus:border-cscm-green focus:ring-2 focus:ring-cscm-green/20 transition-all text-[#22301C] placeholder:text-[#22301C]/35;
 }
 
 .btn-primary {
-  @apply bg-cscm-green hover:bg-[#437A35] text-white px-8 py-3.5 rounded-2xl font-semibold transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-black/15;
+  @apply bg-cscm-green hover:bg-cscm-green-mid text-white px-8 py-3.5 rounded-2xl font-semibold transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-cscm-green/20;
+}
+
+/* ---- Premium surface & elevation utilities ---- */
+.card-elevated {
+  @apply bg-white rounded-[1.5rem] border border-[#22301C]/[0.06];
+  box-shadow:
+    0 1px 2px rgba(34, 48, 28, 0.03),
+    0 10px 30px -10px rgba(34, 48, 28, 0.07);
+  transition: box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
+}
+.card-elevated:hover {
+  border-color: rgba(30, 77, 43, 0.16);
+  box-shadow:
+    0 2px 4px rgba(34, 48, 28, 0.04),
+    0 22px 44px -14px rgba(30, 77, 43, 0.16);
+  transform: translateY(-2px);
+}
+
+/* Fine-grain texture overlay for colored panels */
+.texture-noise {
+  position: relative;
+}
+.texture-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.3;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Gold shimmering divider line */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(227, 199, 102, 0.7), transparent);
+}
+
+/* Soft sheen sweep on hover — subtle, no layout shift */
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.btn-sheen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.btn-sheen:hover::after {
+  left: 130%;
+}
+
+/* Subtle entrance animation for lists/cards */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Gentle floating ambiance for decorative halos */
+@keyframes float-soft {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.03);
+  }
+}
+.animate-float-soft {
+  animation: float-soft 9s ease-in-out infinite;
 }
 
 /* Scrollbar-none class to hide horizontal scrollbar */
@@ -35,4 +151,176 @@ body {
 .scrollbar-none {
   -ms-overflow-style: none !important;  /* IE and Edge */
   scrollbar-width: none !important;  /* Firefox */
+}
+
+/* ---- App-wide form & surface utilities ---- */
+.input-light {
+  @apply w-full border border-[#22301C]/10 focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/10 text-[#22301C] text-sm font-medium p-3 rounded-2xl bg-white outline-none placeholder:text-[#22301C]/30 transition-all;
+}
+
+.select-light {
+  @apply w-full border border-[#22301C]/10 focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/10 text-[#22301C] text-sm font-medium p-3 rounded-2xl bg-white outline-none transition-all;
+}
+
+.panel-soft {
+  @apply bg-cscm-green-soft/70 border border-cscm-green/10;
+}
+
+.table-head {
+  @apply bg-gradient-to-r from-cscm-green-soft via-[#E8F0EA] to-cscm-green-soft/80 border-b border-cscm-green/15;
+}
+
+.table-shell {
+  @apply overflow-x-auto rounded-2xl border border-cscm-green/10 bg-white shadow-[0_4px_24px_-8px_rgba(22,48,30,0.08)];
+}
+
+.table-base {
+  @apply w-full text-left border-collapse;
+}
+
+.table-head-row {
+  @apply text-cscm-dark text-[11px] uppercase font-bold tracking-wider;
+}
+
+.table-th {
+  @apply px-5 py-4 text-cscm-green font-semibold;
+}
+
+.table-body {
+  @apply divide-y divide-cscm-green/[0.08] text-sm font-medium text-cscm-dark;
+}
+
+.table-row {
+  @apply hover:bg-cscm-green-soft/45 transition-colors duration-200;
+}
+
+.table-td {
+  @apply px-5 py-4;
+}
+
+.table-row-selected {
+  @apply bg-cscm-green-soft/60 border-l-[3px] border-l-cscm-green;
+}
+
+.page-title {
+  @apply text-2xl md:text-3xl font-sans font-bold text-cscm-dark tracking-tight;
+}
+
+.section-title {
+  @apply text-base font-sans font-bold text-cscm-dark;
+}
+
+.badge-soft {
+  @apply inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-cscm-green bg-cscm-green-soft border border-cscm-green/15 px-3 py-1.5 rounded-full;
+}
+
+.modal-header {
+  @apply p-6 bg-white border-b border-cscm-green/10 flex justify-between items-center relative shrink-0;
+}
+
+.modal-header-accent {
+  @apply p-6 bg-gradient-to-r from-cscm-green-soft/90 via-white to-cscm-green-soft/40 border-b border-cscm-green/15 flex justify-between items-center relative shrink-0;
+}
+
+.modal-section-badge {
+  @apply bg-cscm-green-soft border border-cscm-green/15 px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-cscm-green font-bold;
+}
+
+.modal-stat-card {
+  @apply bg-white border border-cscm-green/15 rounded-xl p-4 text-center space-y-1 shadow-sm;
+}
+
+.btn-submit {
+  @apply bg-cscm-green hover:bg-cscm-green-mid text-white font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-cscm-green/25 hover:shadow-xl hover:shadow-cscm-green/35 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer;
+  position: relative;
+  overflow: hidden;
+}
+.btn-submit::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.btn-submit:hover::after {
+  left: 130%;
+}
+
+.btn-ghost {
+  @apply bg-white border border-[#22301C]/10 hover:border-cscm-green/25 hover:bg-cscm-green-soft/40 text-gray-600 font-bold rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer;
+}
+
+.hero-banner {
+  @apply relative overflow-hidden bg-white border border-cscm-green/15 rounded-[2rem] p-8 md:p-10 shadow-[0_20px_50px_-20px_rgba(62,123,50,0.2)] ring-1 ring-cscm-green/5;
+}
+
+.hero-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(30,77,43,0.08), transparent 55%);
+  pointer-events: none;
+}
+
+/* ---- Auth pages (login / signup / forgot) ---- */
+.auth-shell {
+  @apply min-h-screen flex items-center justify-center p-4 md:p-8 bg-[#F8FAFB];
+}
+
+.auth-card {
+  @apply w-full max-w-5xl bg-white rounded-[1.75rem] shadow-[0_24px_64px_-20px_rgba(22,48,30,0.28)] ring-1 ring-black/[0.04] flex flex-col lg:flex-row overflow-hidden;
+}
+
+.auth-form-panel {
+  @apply w-full lg:w-[52%] p-8 md:p-12 flex flex-col justify-center bg-white;
+}
+
+.auth-brand-panel {
+  @apply w-full lg:w-[48%] relative flex flex-col items-center justify-between p-8 md:p-10 text-white min-h-[420px] lg:min-h-[620px];
+  background: linear-gradient(145deg, #1E4D2B 0%, #16301E 55%, #0F2215 100%);
+}
+
+.auth-brand-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(201,168,76,0.12) 0%, transparent 35%),
+    radial-gradient(circle at 85% 75%, rgba(255,255,255,0.06) 0%, transparent 40%),
+    radial-gradient(circle at 50% 40%, rgba(255,255,255,0.04) 0%, transparent 50%);
+}
+
+.auth-brand-watermark {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.auth-input {
+  @apply w-full bg-cscm-input border-0 rounded-xl px-4 py-3.5 outline-none text-sm text-[#1A3D2A] placeholder:text-gray-400 transition-all focus:ring-2 focus:ring-cscm-green/20;
+}
+
+.auth-fields-box {
+  @apply bg-[#F7F9FB] rounded-2xl p-5 space-y-4 border border-gray-100;
+}
+
+.auth-glass-card {
+  @apply relative z-10 w-full rounded-2xl p-5 backdrop-blur-md border border-white/15;
+  background: rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+.auth-google-btn {
+  @apply w-full py-3.5 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-full transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer shadow-sm;
+}
+
+.auth-submit-btn {
+  @apply w-full py-3.5 bg-cscm-green hover:bg-[#2A5C38] text-white text-sm font-semibold rounded-xl transition-all duration-300 shadow-md shadow-cscm-green/20 hover:shadow-lg cursor-pointer;
 }

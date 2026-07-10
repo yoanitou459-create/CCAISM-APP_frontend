@@ -34,22 +34,22 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-[#E5E5E5] w-full max-w-md rounded-lg shadow-2xl relative z-10 border-2 border-black p-8 text-center"
+          className="bg-white w-full max-w-md rounded-[2rem] ring-1 ring-black/5 shadow-[0_30px_80px_-24px_rgba(62,123,50,0.3)] relative z-10 p-8 text-center"
         >
-          <h3 className="text-2xl font-serif font-bold text-[#4A3728] mb-8">
+          <h3 className="text-2xl font-sans font-bold text-[#274420] mb-8">
             {title}
           </h3>
           
-          <div className="flex justify-center gap-8">
+          <div className="flex justify-center gap-4">
             <button
               onClick={onConfirm}
-              className="bg-[#A81C1C] text-white px-8 py-2 rounded-md border-2 border-black font-bold text-xl hover:bg-[#8B1717] transition-colors shadow-md"
+              className="bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white px-8 py-2.5 rounded-2xl font-bold text-base shadow-lg shadow-rose-500/25 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
             >
               Valider
             </button>
             <button
               onClick={onClose}
-              className="bg-[#E1F1F1] text-black px-8 py-2 rounded-md border-2 border-black font-bold text-xl hover:bg-[#D1E1E1] transition-colors shadow-md"
+              className="bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 text-gray-600 px-8 py-2.5 rounded-2xl font-bold text-base shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
             >
               Retour
             </button>
