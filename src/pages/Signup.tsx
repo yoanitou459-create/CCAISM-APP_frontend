@@ -171,7 +171,7 @@ export const Signup: React.FC = () => {
                     name="given-name"
                     autoComplete="given-name"
                     required
-                    placeholder="Entrer prénom"
+                    placeholder="Saisissez votre prénom"
                     value={formData.prenom}
                     onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
@@ -188,7 +188,7 @@ export const Signup: React.FC = () => {
                     name="family-name"
                     autoComplete="family-name"
                     required
-                    placeholder="Entrer nom"
+                    placeholder="Saisissez votre nom de famille"
                     value={formData.nom}
                     onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
@@ -206,7 +206,7 @@ export const Signup: React.FC = () => {
                   name="email"
                   autoComplete="username"
                   required
-                  placeholder="Entrer email"
+                  placeholder="Saisissez votre adresse email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"

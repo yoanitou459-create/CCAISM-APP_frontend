@@ -320,7 +320,7 @@ export const UserManagement: React.FC = () => {
             <Search className="w-4 h-4 text-[#132e15] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
-              placeholder="Rechercher par prénom, nom, ou email..."
+              placeholder="Saisissez un prénom, nom, ou email pour rechercher..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-cscm-green transition-all text-xs font-semibold text-[#132e15]"
@@ -486,7 +486,7 @@ export const UserManagement: React.FC = () => {
                     <input 
                       type="text" 
                       required
-                      placeholder="Ex: Ibrahima"
+                      placeholder="Saisissez le prénom (Ex: Ibrahima)"
                       value={prenom}
                       onChange={(e) => setPrenom(e.target.value)}
                       className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
@@ -497,7 +497,7 @@ export const UserManagement: React.FC = () => {
                     <input 
                       type="text" 
                       required
-                      placeholder="Ex: Diop"
+                      placeholder="Saisissez le nom (Ex: Diop)"
                       value={nom}
                       onChange={(e) => setNom(e.target.value)}
                       className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
@@ -513,7 +513,7 @@ export const UserManagement: React.FC = () => {
                   <input 
                     type="email" 
                     required
-                    placeholder="Ex: i.diop@cscm.com"
+                    placeholder="Saisissez l'adresse email professionnelle (Ex: i.diop@cscm.com)"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"

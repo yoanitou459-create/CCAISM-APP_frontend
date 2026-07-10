@@ -161,7 +161,7 @@ export const Cotisations: React.FC = () => {
         payments.push({
           id: `custom-${index}`,
           label: cot.label || `Cotisation Annuelle`,
-          amount: Number(cot.amount) || 10000,
+          amount: Number(cot.amount) || rules.amountPerSemester,
           date: cot.date || new Date().toISOString().split('T')[0],
           reference: cot.reference || `REF-${Math.floor(Math.random() * 900000 + 100000)}`,
           method: 'Virement bancaire'
@@ -471,6 +471,7 @@ export const Cotisations: React.FC = () => {
     const activeRules = getLocalCotisationRules();
     setRules(activeRules);
     setNewRuleAmount(String(activeRules.amountPerSemester));
+    setPaymentAmount(String(activeRules.amountPerSemester));
   };
 
   const handleUpdateRules = async (e: React.FormEvent) => {
@@ -566,7 +567,7 @@ export const Cotisations: React.FC = () => {
     const yearsSum = (Number(ent.cotisation_2023) || 0) + (Number(ent.cotisation_2024) || 0) + (Number(ent.cotisation_2025) || 0);
     const sumPaid = baseSum + yearsSum;
     
-    // Calculate global required amount up to today ("jusqu'au jour d'aujourd'hui")
+    // Calculate global required amount up to the selected evaluation period
     const dateAdhesionStr = ent.dateAdhesion || ent.dateCreation || '';
     let membershipYear = 2023;
     let membershipHalf = 1;
@@ -586,6 +587,11 @@ export const Cotisations: React.FC = () => {
     const currentMonth = today.getMonth() + 1;
     const currentHalf = currentMonth <= 6 ? 1 : 2;
 
+    const parsedAmountInput = Number(newRuleAmount);
+    const activeRuleAmount = (!isNaN(parsedAmountInput) && parsedAmountInput > 0)
+      ? parsedAmountInput
+      : rules.amountPerSemester;
+
     let requiredTotalToDate = 0;
     let isExempt = false;
 
@@ -600,7 +606,7 @@ export const Cotisations: React.FC = () => {
         const startHalf = (y === effectiveMemberYear) ? effectiveMemberHalf : 1;
         const endHalf = (y === currentYear) ? currentHalf : 2;
         for (let h = startHalf; h <= endHalf; h++) {
-          requiredTotalToDate += rules.amountPerSemester; // Dynamic amount per half-year (semester)
+          requiredTotalToDate += activeRuleAmount; // Dynamic active rule amount per half-year (semester)
         }
       }
     }
@@ -817,6 +823,9 @@ export const Cotisations: React.FC = () => {
   const handleOpenPayment = (ent: any) => {
     setSelectedEnt(ent);
     setPaymentMode('manual');
+    setPaymentAmount(String(rules.amountPerSemester));
+    setPaymentCurrency('FCFA');
+    setPaymentLabel('Cotisation Semestrielle');
     setCardName('');
     setCardNumber('');
     setCardExpiry('');
@@ -1023,7 +1032,7 @@ export const Cotisations: React.FC = () => {
         </div>
 
         {/* Panel de Configuration des Cotisations - Dynamique et Synchronisé via Firestore */}
-        <div className="bg-[#FAF9F5] rounded-3xl p-6 border border-[#ebd078]/30 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="bg-[#FAF9F5] rounded-3xl p-6 border border-[#ebd078]/30 shadow-xs flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
           <div className="space-y-1 text-left">
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5 text-emerald-800" />
@@ -1032,23 +1041,25 @@ export const Cotisations: React.FC = () => {
             <h3 className="text-lg font-serif font-black text-cscm-dark">Règle active : {rules.amountPerSemester.toLocaleString()} {rules.currency} par semestre</h3>
             <p className="text-xs text-gray-500 font-semibold">Tous les changements effectués ici sont appliqués immédiatement pour tous les utilisateurs de l'application.</p>
           </div>
-          <form onSubmit={handleUpdateRules} className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-48">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">XOF</span>
+          <form onSubmit={handleUpdateRules} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full xl:w-auto">
+            <div className="relative flex-1 sm:w-60">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-black tracking-wider">XOF (FCFA)</span>
               <input
                 type="number"
                 value={newRuleAmount}
                 onChange={(e) => setNewRuleAmount(e.target.value)}
-                className="w-full pl-12 pr-4 py-2.5 bg-white border border-gray-250 rounded-2xl outline-none focus:border-[#132e15] text-xs font-black text-[#132e15]"
+                placeholder="Saisissez le montant de la cotisation..."
+                className="w-full pl-24 pr-4 py-3 bg-white border-2 border-gray-200 focus:border-[#132e15] rounded-xl outline-none text-xs font-black text-[#132e15] transition-all text-center"
                 required
-                min="100"
+                min="1"
               />
             </div>
+
             <button
               type="submit"
-              className="bg-[#132e15] hover:bg-[#204923] text-[#ebd078] border border-[#ebd078]/20 px-4 py-2.5 rounded-2xl font-black text-xs tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap shadow-xs"
+              className="bg-[#132e15] hover:bg-[#204923] text-[#ebd078] border border-[#ebd078]/20 px-6 py-3 rounded-xl font-black text-xs tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap shadow-xs active:scale-95"
             >
-              Appliquer la règle
+              Enregistrer
             </button>
           </form>
         </div>
@@ -1171,7 +1182,7 @@ export const Cotisations: React.FC = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
                     <input
                       type="text"
-                      placeholder="Rechercher un membre..."
+                      placeholder="Saisissez un membre à rechercher..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 outline-none focus:border-emerald-700 text-xs font-semibold text-gray-700 placeholder:text-gray-400"
@@ -1433,6 +1444,7 @@ export const Cotisations: React.FC = () => {
                           value={paymentAmount}
                           onChange={(e) => setPaymentAmount(e.target.value)}
                           className="w-full pl-14 pr-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-sm font-black text-[#132e15]"
+                          placeholder="Saisissez le montant exact"
                           required
                           min="1"
                           step="any"
@@ -1471,6 +1483,7 @@ export const Cotisations: React.FC = () => {
                       value={paymentLabel}
                       onChange={(e) => setPaymentLabel(e.target.value)}
                       className="w-full px-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-sm font-bold text-[#132e15]"
+                      placeholder="Saisissez le libellé de la transaction (Ex: Cotisation Semestrielle)"
                       required
                     />
                   </div>
@@ -1496,7 +1509,7 @@ export const Cotisations: React.FC = () => {
                             value={paymentRef}
                             onChange={(e) => setPaymentRef(e.target.value)}
                             className="w-full px-4 py-3 bg-white border border-gray-250 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-[#132e15]"
-                            placeholder="Ex: VIR-102941"
+                            placeholder="Saisissez la référence du transfert (Ex: VIR-102941)"
                             required
                           />
                         </div>
@@ -1596,7 +1609,7 @@ export const Cotisations: React.FC = () => {
                               <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Nom sur la carte</label>
                               <input
                                 type="text"
-                                placeholder="M. Yoan ITOUA"
+                                placeholder="Saisissez le nom complet du titulaire de la carte"
                                 value={cardName}
                                 onChange={(e) => setCardName(e.target.value)}
                                 className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-bold text-gray-850"
@@ -1610,7 +1623,7 @@ export const Cotisations: React.FC = () => {
                                 <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 <input
                                   type="text"
-                                  placeholder="4532 •••• •••• 8824"
+                                  placeholder="Saisissez le numéro de carte (4532 •••• •••• 8824)"
                                   value={cardNumber}
                                   onChange={(e) => {
                                     // simple spacer formatting
@@ -1629,7 +1642,7 @@ export const Cotisations: React.FC = () => {
                                 <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Date d'expiration</label>
                                 <input
                                   type="text"
-                                  placeholder="MM/YY"
+                                  placeholder="Saisissez la date d'expiration (MM/YY)"
                                   value={cardExpiry}
                                   onChange={(e) => {
                                     let v = e.target.value.replace(/[^0-9]/g, '');
@@ -1644,7 +1657,7 @@ export const Cotisations: React.FC = () => {
                                 <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Code CVC (CVV)</label>
                                 <input
                                   type="password"
-                                  placeholder="•••"
+                                  placeholder="Saisissez le code de sécurité (CVV)"
                                   maxLength={3}
                                   value={cardCvv}
                                   onChange={(e) => setCardCvv(e.target.value.replace(/[^0-9]/g, ''))}

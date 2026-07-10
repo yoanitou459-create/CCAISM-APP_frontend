@@ -46,6 +46,12 @@ service cloud.firestore {
         && data.role is string && (data.role == 'ADMIN' || data.role == 'MODERATEUR' || data.role == 'MEMBRE');
     }
 
+    // Validation helper for CotisationRules
+    function isValidCotisationRules(data) {
+      return data.amountPerSemester > 0
+        && data.currency == 'FCFA';
+    }
+
     // 3. Rules for enterprises collection
     match /enterprises/{enterpriseId} {
       // Must be authenticated to read or write
@@ -78,6 +84,14 @@ service cloud.firestore {
         && incoming().id == existing().id;
 
       allow delete: if isSignedIn();
+    }
+
+    // 5. Rules for settings collection
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isSignedIn() 
+        && isValidId(settingId) 
+        && (settingId == 'cotisation_rules' ? isValidCotisationRules(incoming()) : true);
     }
   }
 }

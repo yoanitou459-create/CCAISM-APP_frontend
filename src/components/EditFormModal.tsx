@@ -638,8 +638,8 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
           <div className="space-y-5 max-w-2xl mx-auto text-gray-900">
             {[
               { label: "Date de versement", key: 'date', type: 'date' },
-              { label: "Motif / Libellé de paiement", key: 'label', placeholder: "Ex: Paiement Cotisation Annuelle 2024" },
-              { label: "Montant (FCFA)", key: 'amount', placeholder: "Ex: 10000", type: 'number' },
+              { label: "Motif / Libellé de paiement", key: 'label', placeholder: "Saisissez le motif de paiement (Ex: Paiement Cotisation Annuelle)" },
+              { label: "Montant (FCFA)", key: 'amount', placeholder: "Saisissez le montant de la cotisation", type: 'number' },
             ].map((field: any, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-2 border-b border-gray-100 last:border-0">
                 <label className="sm:w-48 text-xs font-black uppercase tracking-wider text-gray-500 shrink-0">{field.label}</label>

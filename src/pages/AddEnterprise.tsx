@@ -237,7 +237,7 @@ export const AddEnterprise: React.FC = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  placeholder="Ex: Innov Sénégal" 
+                  placeholder="Saisissez le nom commercial (Ex: Innov Sénégal)" 
                   required
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
@@ -251,7 +251,7 @@ export const AddEnterprise: React.FC = () => {
                   name="raisonSociale"
                   value={formData.raisonSociale}
                   onChange={handleInputChange}
-                  placeholder="Ex: Innov Sénégal SARL" 
+                  placeholder="Saisissez la raison sociale (Ex: Innov Sénégal SARL)" 
                   required
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
@@ -322,7 +322,7 @@ export const AddEnterprise: React.FC = () => {
                   name="numRC"
                   value={formData.numRC}
                   onChange={handleInputChange}
-                  placeholder="Ex: RC-DKR-2021-B-105" 
+                  placeholder="Saisissez le numéro de Registre de Commerce (Ex: RC-DKR-2021-B-105)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -335,7 +335,7 @@ export const AddEnterprise: React.FC = () => {
                   name="ninea"
                   value={formData.ninea}
                   onChange={handleInputChange}
-                  placeholder="Ex: 0028192-3G3" 
+                  placeholder="Saisissez le numéro NINEA (Ex: 0028192-3G3)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -403,7 +403,7 @@ export const AddEnterprise: React.FC = () => {
                   name="pays"
                   value={formData.pays}
                   onChange={handleInputChange}
-                  placeholder="Ex: Sénégal" 
+                  placeholder="Saisissez le pays (Ex: Sénégal)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -416,7 +416,7 @@ export const AddEnterprise: React.FC = () => {
                   name="ville"
                   value={formData.ville}
                   onChange={handleInputChange}
-                  placeholder="Ex: Dakar" 
+                  placeholder="Saisissez la ville (Ex: Dakar)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -429,7 +429,7 @@ export const AddEnterprise: React.FC = () => {
                   name="adresse"
                   value={formData.adresse}
                   onChange={handleInputChange}
-                  placeholder="Ex: Point E, Rue de Diourbel" 
+                  placeholder="Saisissez l'adresse complète (Ex: Point E, Rue de Diourbel)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -442,7 +442,7 @@ export const AddEnterprise: React.FC = () => {
                   name="codePostal"
                   value={formData.codePostal}
                   onChange={handleInputChange}
-                  placeholder="Ex: 11000" 
+                  placeholder="Saisissez le code postal (Ex: 11000)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -455,7 +455,7 @@ export const AddEnterprise: React.FC = () => {
                   name="telephone"
                   value={formData.telephone}
                   onChange={handleInputChange}
-                  placeholder="Ex: +221 33 800 00 00" 
+                  placeholder="Saisissez le téléphone principal (Ex: +221 33 800 00 00)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -468,7 +468,7 @@ export const AddEnterprise: React.FC = () => {
                   name="telephoneSecondaire"
                   value={formData.telephoneSecondaire}
                   onChange={handleInputChange}
-                  placeholder="Ex: +221 77 123 45 67" 
+                  placeholder="Saisissez le téléphone secondaire (Ex: +221 77 123 45 67)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -481,7 +481,7 @@ export const AddEnterprise: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="Ex: contact@entreprise.sn" 
+                  placeholder="Saisissez l'adresse email de l'entreprise" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -494,7 +494,7 @@ export const AddEnterprise: React.FC = () => {
                   name="siteWeb"
                   value={formData.siteWeb}
                   onChange={handleInputChange}
-                  placeholder="Ex: www.entreprise.sn" 
+                  placeholder="Saisissez le site internet de l'entreprise (Ex: www.entreprise.sn)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -523,7 +523,7 @@ export const AddEnterprise: React.FC = () => {
                   name="effectif"
                   value={formData.effectif}
                   onChange={handleInputChange}
-                  placeholder="Ex: 50" 
+                  placeholder="Saisissez l'effectif d'employés (Ex: 50)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -536,7 +536,7 @@ export const AddEnterprise: React.FC = () => {
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  placeholder="Services technologiques, logistique portuaire..." 
+                  placeholder="Saisissez la description des activités principales" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -582,7 +582,7 @@ export const AddEnterprise: React.FC = () => {
                   name="fonction"
                   value={formData.fonction}
                   onChange={handleInputChange}
-                  placeholder="Ex: Directeur Général" 
+                  placeholder="Saisissez la fonction (Ex: Directeur Général)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -595,7 +595,7 @@ export const AddEnterprise: React.FC = () => {
                   name="nomContact"
                   value={formData.nomContact}
                   onChange={handleInputChange}
-                  placeholder="Ex: Ndiaye" 
+                  placeholder="Saisissez le nom du représentant (Ex: Ndiaye)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -608,7 +608,7 @@ export const AddEnterprise: React.FC = () => {
                   name="prenomContact"
                   value={formData.prenomContact}
                   onChange={handleInputChange}
-                  placeholder="Ex: Amadou" 
+                  placeholder="Saisissez le prénom du représentant (Ex: Amadou)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -621,7 +621,7 @@ export const AddEnterprise: React.FC = () => {
                   name="emailContact"
                   value={formData.emailContact}
                   onChange={handleInputChange}
-                  placeholder="Ex: amadou@innov.sn" 
+                  placeholder="Saisissez l'adresse email du représentant (Ex: amadou@innov.sn)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>
@@ -634,7 +634,7 @@ export const AddEnterprise: React.FC = () => {
                   name="mobileContact"
                   value={formData.mobileContact}
                   onChange={handleInputChange}
-                  placeholder="Ex: +221 77 600 00 00" 
+                  placeholder="Saisissez le téléphone portable du représentant (Ex: +221 77 600 00 00)" 
                   className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
                 />
               </div>

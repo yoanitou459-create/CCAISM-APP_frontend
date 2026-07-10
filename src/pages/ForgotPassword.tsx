@@ -66,7 +66,7 @@ export const ForgotPassword: React.FC = () => {
                 <input 
                   type="email" 
                   required
-                  placeholder="Entrer email"
+                  placeholder="Saisissez votre adresse email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"

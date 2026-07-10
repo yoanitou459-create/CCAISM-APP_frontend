@@ -79,7 +79,9 @@ export const EnterpriseList = () => {
   const [userRole, setUserRole] = useState<'ADMIN' | 'MODERATEUR' | 'MEMBRE'>('MEMBRE');
 
   const loadRules = () => {
-    setRules(getLocalCotisationRules());
+    const activeRules = getLocalCotisationRules();
+    setRules(activeRules);
+    setPaymentAmount(String(activeRules.amountPerSemester));
   };
 
   const loadData = () => {
@@ -408,7 +410,7 @@ export const EnterpriseList = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#132e15] w-5 h-5 pointer-events-none font-bold" />
               <input 
                 type="text" 
-                placeholder="Rechercher par nom, raison sociale, numéro de membre..."
+                placeholder="Saisissez un nom, une raison sociale ou un numéro de membre à rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-150 outline-none focus:border-cscm-green focus:ring-2 focus:ring-cscm-green/10 transition-all text-sm placeholder:text-[#132e15]/60 font-semibold text-[#132e15]"
@@ -725,7 +727,7 @@ export const EnterpriseList = () => {
                           required
                           min="1"
                           step="any"
-                          placeholder="Ex: 10000"
+                          placeholder="Saisissez le montant de la cotisation"
                           value={paymentAmount}
                           onChange={(e) => setPaymentAmount(e.target.value)}
                           className="w-full pl-3 pr-12 py-2 rounded-xl border border-gray-200 outline-none focus:border-cscm-green transition-all text-sm font-black text-[#132e15] bg-white"
@@ -773,7 +775,7 @@ export const EnterpriseList = () => {
                         <input 
                           type="text" 
                           required
-                          placeholder="Ex: VR-719582-BOA"
+                          placeholder="Saisissez la référence du virement bancaire (Ex: VR-719582-BOA)"
                           value={paymentRef}
                           onChange={(e) => setPaymentRef(e.target.value)}
                           className="w-full px-4 py-3.5 rounded-xl border border-gray-250 outline-none focus:border-cscm-green transition-all font-mono text-xs text-cscm-dark bg-white font-semibold text-[#132e15]"
@@ -840,7 +842,7 @@ export const EnterpriseList = () => {
                               <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Nom sur la carte</label>
                               <input
                                 type="text"
-                                placeholder="M. Yoan ITOUA"
+                                placeholder="Saisissez le nom complet du titulaire de la carte"
                                 value={cardName}
                                 onChange={(e) => setCardName(e.target.value)}
                                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-bold text-gray-850"
@@ -854,7 +856,7 @@ export const EnterpriseList = () => {
                                 <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 <input
                                   type="text"
-                                  placeholder="4532 •••• •••• 8824"
+                                  placeholder="Saisissez le numéro de carte (4532 •••• •••• 8824)"
                                   value={cardNumber}
                                   onChange={(e) => {
                                     const raw = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
@@ -872,7 +874,7 @@ export const EnterpriseList = () => {
                                 <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Expiration</label>
                                 <input
                                   type="text"
-                                  placeholder="MM/YY"
+                                  placeholder="Saisissez la date d'expiration (MM/YY)"
                                   value={cardExpiry}
                                   onChange={(e) => {
                                     let v = e.target.value.replace(/[^0-9]/g, '');
@@ -887,7 +889,7 @@ export const EnterpriseList = () => {
                                 <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">CVC (CVV)</label>
                                 <input
                                   type="password"
-                                  placeholder="•••"
+                                  placeholder="Saisissez le code de sécurité (CVV)"
                                   maxLength={3}
                                   value={cardCvv}
                                   onChange={(e) => setCardCvv(e.target.value.replace(/[^0-9]/g, ''))}
