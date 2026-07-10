@@ -8,6 +8,7 @@ import { ConfirmationModal } from '../components/ConfirmationModal';
 import { EnterpriseSummaryModal } from '../components/EnterpriseSummaryModal';
 import { getStoredEnterprises, saveStoredEnterprises, Enterprise } from '../utils/enterpriseStorage';
 import { getEffectiveApiKey } from '../utils/paymentConfig';
+import { getLocalCotisationRules } from '../utils/cotisationRules';
 
 const CURRENCIES = [
   { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },
@@ -64,7 +65,8 @@ export const EnterpriseList = () => {
   const [quickPaymentEnt, setQuickPaymentEnt] = useState<any>(null);
   const [paymentMode, setPaymentMode] = useState<'manual' | 'online'>('manual');
   const [paymentRef, setPaymentRef] = useState('');
-  const [paymentAmount, setPaymentAmount] = useState('10000'); // Montant exact modifiable, par défaut 10000 FCFA
+  const [rules, setRules] = useState(() => getLocalCotisationRules());
+  const [paymentAmount, setPaymentAmount] = useState(() => String(getLocalCotisationRules().amountPerSemester)); // Montant exact modifiable, par défaut depuis les règles
   const [paymentCurrency, setPaymentCurrency] = useState<string>('FCFA');
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -75,6 +77,10 @@ export const EnterpriseList = () => {
 
   const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
   const [userRole, setUserRole] = useState<'ADMIN' | 'MODERATEUR' | 'MEMBRE'>('MEMBRE');
+
+  const loadRules = () => {
+    setRules(getLocalCotisationRules());
+  };
 
   const loadData = () => {
     const freshList = getStoredEnterprises();
@@ -100,9 +106,12 @@ export const EnterpriseList = () => {
 
   useEffect(() => {
     loadData();
+    loadRules();
     window.addEventListener('enterprises_updated', loadData);
+    window.addEventListener('cotisation_rules_updated', loadRules);
     return () => {
       window.removeEventListener('enterprises_updated', loadData);
+      window.removeEventListener('cotisation_rules_updated', loadRules);
     };
   }, []);
 
@@ -546,7 +555,7 @@ export const EnterpriseList = () => {
                             onClick={() => {
                               setQuickPaymentEnt(ent);
                               setPaymentMode('manual');
-                              setPaymentAmount('10000');
+                              setPaymentAmount(String(rules.amountPerSemester));
                               setCardName('');
                               setCardNumber('');
                               setCardExpiry('');
@@ -556,7 +565,7 @@ export const EnterpriseList = () => {
                               setPaymentRef(`VIR-${Math.floor(100000 + Math.random() * 900000)}`);
                             }}
                             className="p-2 text-[#a8820c] hover:text-amber-600 hover:bg-amber-50 border border-amber-100 rounded-xl transition-all"
-                            title="Ajouter Cotisation (10 000 FCFA)"
+                            title={`Ajouter Cotisation (${rules.amountPerSemester.toLocaleString()} FCFA)`}
                           >
                             <Coins className="w-4.5 h-4.5 text-amber-500 animate-pulse" />
                           </button>

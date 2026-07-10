@@ -4,6 +4,7 @@ import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldChe
 import { EditFormModal } from './EditFormModal';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { jsPDF } from 'jspdf';
+import { getLocalCotisationRules } from '../utils/cotisationRules';
 
 const CURRENCIES = [
   { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },
@@ -129,7 +130,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         payments.push({
           id: `custom-${index}`,
           label: cot.label || `Cotisation Annuelle`,
-          amount: Number(cot.amount) || 10000,
+          amount: Number(cot.amount) || getLocalCotisationRules().amountPerSemester,
           date: cot.date || new Date().toISOString().split('T')[0],
           reference: cot.reference || `REF-${Math.floor(Math.random() * 900000 + 100000)}`,
           method: 'Virement bancaire'

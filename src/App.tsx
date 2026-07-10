@@ -16,6 +16,7 @@ import { db, handleFirestoreError, OperationType, auth } from './firebase';
 import { Cotisations } from './pages/Cotisations';
 import { UserManagement } from './pages/UserManagement';
 import { AddEnterprise } from './pages/AddEnterprise';
+import { setupCotisationRulesListener, getLocalCotisationRules } from './utils/cotisationRules';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -102,6 +103,7 @@ const FallbackRedirect: React.FC = () => {
 
 const Dashboard = () => {
   const [enterprises, setEnterprises] = useState<any[]>([]);
+  const [rules, setRules] = useState(() => getLocalCotisationRules());
   const navigate = useNavigate();
   const userName = JSON.parse(localStorage.getItem('user') || '{"prenom": "Moustapha"}').prenom;
 
@@ -109,11 +111,18 @@ const Dashboard = () => {
     setEnterprises(getStoredEnterprises());
   };
 
+  const loadRules = () => {
+    setRules(getLocalCotisationRules());
+  };
+
   useEffect(() => {
     loadData();
+    loadRules();
     window.addEventListener('enterprises_updated', loadData);
+    window.addEventListener('cotisation_rules_updated', loadRules);
     return () => {
       window.removeEventListener('enterprises_updated', loadData);
+      window.removeEventListener('cotisation_rules_updated', loadRules);
     };
   }, []);
 
@@ -166,10 +175,52 @@ const Dashboard = () => {
 
   const maxMonthCount = Math.max(...monthlyStats.map(m => m.count), 1);
 
-  // Solvability check
+  // Solvability check using dynamic rules
   const upToDateList = enterprises.filter(e => {
     const sum = (e.cotisations || []).reduce((s: number, c: any) => s + (Number(c.amount) || 0), 0);
-    return sum >= 10000;
+    const yearsSum = (Number(e.cotisation_2023) || 0) + (Number(e.cotisation_2024) || 0) + (Number(e.cotisation_2025) || 0);
+    const totalPaid = sum + yearsSum;
+
+    // Calculate required amount up to today using rules.amountPerSemester
+    const dateAdhesionStr = e.dateAdhesion || e.dateCreation || '';
+    let membershipYear = 2023;
+    let membershipHalf = 1;
+    let membershipMonth = 1;
+
+    if (dateAdhesionStr) {
+      const adDate = new Date(dateAdhesionStr);
+      if (!isNaN(adDate.getTime())) {
+        membershipYear = adDate.getFullYear();
+        membershipMonth = adDate.getMonth() + 1;
+        membershipHalf = membershipMonth <= 6 ? 1 : 2;
+      }
+    }
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    const currentHalf = currentMonth <= 6 ? 1 : 2;
+
+    let requiredTotalToDate = 0;
+    let isExempt = false;
+
+    // Check if joining date is in the future relative to current period
+    if (membershipYear > currentYear || (membershipYear === currentYear && membershipHalf > currentHalf)) {
+      isExempt = true;
+    } else {
+      const effectiveMemberYear = Math.max(2023, membershipYear);
+      const effectiveMemberHalf = membershipYear < 2023 ? 1 : membershipHalf;
+
+      for (let y = effectiveMemberYear; y <= currentYear; y++) {
+        const startHalf = (y === effectiveMemberYear) ? effectiveMemberHalf : 1;
+        const endHalf = (y === currentYear) ? currentHalf : 2;
+        for (let h = startHalf; h <= endHalf; h++) {
+          requiredTotalToDate += rules.amountPerSemester;
+        }
+      }
+    }
+
+    return isExempt ? true : (totalPaid >= requiredTotalToDate);
   });
   const upToDateCount = upToDateList.length;
   const delayedCount = Math.max(0, totalEnterprises - upToDateCount);
@@ -544,6 +595,7 @@ export default function App() {
     let unsubscribeAuth: (() => void) | null = null;
     let unsubEnterprises: (() => void) | null = null;
     let unsubUsers: (() => void) | null = null;
+    let unsubCotisationRules: (() => void) | null = null;
 
     unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -583,6 +635,10 @@ export default function App() {
             handleFirestoreError(error, OperationType.GET, 'users');
           });
         }
+
+        if (!unsubCotisationRules) {
+          unsubCotisationRules = setupCotisationRulesListener();
+        }
       } else {
         try {
           await signInAnonymously(auth);
@@ -615,6 +671,7 @@ export default function App() {
       if (unsubscribeAuth) unsubscribeAuth();
       if (unsubEnterprises) unsubEnterprises();
       if (unsubUsers) unsubUsers();
+      if (unsubCotisationRules) unsubCotisationRules();
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
     };
   }, []);

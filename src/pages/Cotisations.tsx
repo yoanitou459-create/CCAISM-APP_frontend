@@ -8,6 +8,11 @@ import {
 } from '../utils/enterpriseStorage';
 import { getEffectiveApiKey } from '../utils/paymentConfig';
 import { 
+  getLocalCotisationRules, 
+  saveCotisationRules, 
+  fetchLatestCotisationRules 
+} from '../utils/cotisationRules';
+import { 
   Coins, 
   Search, 
   Plus, 
@@ -48,6 +53,8 @@ const CURRENCIES = [
 
 export const Cotisations: React.FC = () => {
   const [enterprises, setEnterprises] = useState<any[]>([]);
+  const [rules, setRules] = useState(() => getLocalCotisationRules());
+  const [newRuleAmount, setNewRuleAmount] = useState(() => String(getLocalCotisationRules().amountPerSemester));
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'up_to_date' | 'delayed'>('delayed');
   const [selectedEnt, setSelectedEnt] = useState<any | null>(null);
@@ -56,7 +63,7 @@ export const Cotisations: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // New Payment Form State
-  const [paymentAmount, setPaymentAmount] = useState('10000');
+  const [paymentAmount, setPaymentAmount] = useState(() => String(getLocalCotisationRules().amountPerSemester));
   const [paymentCurrency, setPaymentCurrency] = useState<string>('FCFA');
   const [paymentLabel, setPaymentLabel] = useState('Cotisation Annuelle 2025');
   const [paymentRef, setPaymentRef] = useState('');
@@ -460,11 +467,55 @@ export const Cotisations: React.FC = () => {
     window.dispatchEvent(new Event('enterprises_updated'));
   };
 
+  const loadRules = () => {
+    const activeRules = getLocalCotisationRules();
+    setRules(activeRules);
+    setNewRuleAmount(String(activeRules.amountPerSemester));
+  };
+
+  const handleUpdateRules = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsedAmount = Number(newRuleAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setToastText("Montant invalide.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+    
+    const userJson = localStorage.getItem('user');
+    const author = userJson ? JSON.parse(userJson).email || JSON.parse(userJson).prenom : 'Utilisateur';
+
+    const updatedRules = {
+      amountPerSemester: parsedAmount,
+      currency: 'FCFA',
+      lastUpdated: new Date().toISOString(),
+      updatedBy: author
+    };
+
+    try {
+      await saveCotisationRules(updatedRules);
+      setToastText("Règles de cotisation actualisées avec succès !");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      
+      // Also update default payment amount input
+      setPaymentAmount(String(parsedAmount));
+    } catch (err) {
+      setToastText("Erreur lors de la mise à jour des règles.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    loadRules();
     window.addEventListener('enterprises_updated', loadData);
+    window.addEventListener('cotisation_rules_updated', loadRules);
     return () => {
       window.removeEventListener('enterprises_updated', loadData);
+      window.removeEventListener('cotisation_rules_updated', loadRules);
     };
   }, []);
 
@@ -549,7 +600,7 @@ export const Cotisations: React.FC = () => {
         const startHalf = (y === effectiveMemberYear) ? effectiveMemberHalf : 1;
         const endHalf = (y === currentYear) ? currentHalf : 2;
         for (let h = startHalf; h <= endHalf; h++) {
-          requiredTotalToDate += 10000; // 10,000 FCFA per half-year (semester)
+          requiredTotalToDate += rules.amountPerSemester; // Dynamic amount per half-year (semester)
         }
       }
     }
@@ -971,6 +1022,37 @@ export const Cotisations: React.FC = () => {
           </div>
         </div>
 
+        {/* Panel de Configuration des Cotisations - Dynamique et Synchronisé via Firestore */}
+        <div className="bg-[#FAF9F5] rounded-3xl p-6 border border-[#ebd078]/30 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-1 text-left">
+            <div className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-emerald-800" />
+              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">Règles des Cotisations (Synchronisé)</span>
+            </div>
+            <h3 className="text-lg font-serif font-black text-cscm-dark">Règle active : {rules.amountPerSemester.toLocaleString()} {rules.currency} par semestre</h3>
+            <p className="text-xs text-gray-500 font-semibold">Tous les changements effectués ici sont appliqués immédiatement pour tous les utilisateurs de l'application.</p>
+          </div>
+          <form onSubmit={handleUpdateRules} className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:w-48">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">XOF</span>
+              <input
+                type="number"
+                value={newRuleAmount}
+                onChange={(e) => setNewRuleAmount(e.target.value)}
+                className="w-full pl-12 pr-4 py-2.5 bg-white border border-gray-250 rounded-2xl outline-none focus:border-[#132e15] text-xs font-black text-[#132e15]"
+                required
+                min="100"
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-[#132e15] hover:bg-[#204923] text-[#ebd078] border border-[#ebd078]/20 px-4 py-2.5 rounded-2xl font-black text-xs tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap shadow-xs"
+            >
+              Appliquer la règle
+            </button>
+          </form>
+        </div>
+
         {/* Dashboard 4 KPI Cards Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: En Retard Code Block */}
@@ -1148,15 +1230,15 @@ export const Cotisations: React.FC = () => {
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                   À jour
                                 </span>
-                                {ent.sumPaid >= 30000 ? (
+                                {ent.sumPaid >= rules.amountPerSemester * 3 ? (
                                   <span className="text-[9px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
-                                    {(ent.sumPaid / 20000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans payés
+                                    {(ent.sumPaid / (rules.amountPerSemester * 2)).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans payés
                                   </span>
-                                ) : ent.sumPaid >= 20000 ? (
+                                ) : ent.sumPaid >= rules.amountPerSemester * 2 ? (
                                   <span className="text-[9px] bg-emerald-50/50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
                                     1 an payé
                                   </span>
-                                ) : ent.sumPaid >= 10000 ? (
+                                ) : ent.sumPaid >= rules.amountPerSemester ? (
                                   <span className="text-[9px] bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider block">
                                     0,5 an payé
                                   </span>
