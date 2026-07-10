@@ -1,5 +1,5 @@
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 
 export interface AppUser {
   id: string;
@@ -96,4 +96,21 @@ export const getCurrentUserRole = (): 'ADMIN' | 'MODERATEUR' | 'MEMBRE' => {
   } catch (e) {
     return 'MEMBRE';
   }
+};
+
+export const fetchLatestUsers = async (): Promise<AppUser[]> => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'users'));
+    const list: AppUser[] = [];
+    querySnapshot.forEach(docSnap => {
+      list.push(docSnap.data() as AppUser);
+    });
+    if (list.length > 0) {
+      localStorage.setItem('cscm_users', JSON.stringify(list));
+      return list;
+    }
+  } catch (e) {
+    console.warn("Could not fetch latest users from Firestore:", e);
+  }
+  return getStoredUsers();
 };
