@@ -57,7 +57,7 @@ const cot_10k = [
   { date: '2025-02-10', label: 'Cotisation Q1 2025', amount: 10000, reference: 'VIR-482159' }
 ];
 
-const INITIAL_ENTERPRISES: Enterprise[] = [
+export const INITIAL_ENTERPRISES: Enterprise[] = [
   // 2 Agro
   {
     id: 1,

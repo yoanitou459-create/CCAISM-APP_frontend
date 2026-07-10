@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { SidebarLayout } from '../components/SidebarLayout';
 import { getStoredUsers, saveStoredUsers, AppUser } from '../utils/userStorage';
 import { isLocalEnvironment } from '../lib/localEnvironment';
+import { seedFirestoreDatabase } from '../lib/seedFirestore';
 import { 
   Users, 
   UserPlus, 
@@ -19,7 +20,8 @@ import {
   Shield, 
   AlertCircle,
   Eye,
-  Settings
+  Settings,
+  Database
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,6 +48,7 @@ export const UserManagement: React.FC = () => {
   // Toast
   const [toastText, setToastText] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [isSyncingFirestore, setIsSyncingFirestore] = useState(false);
 
   const loadUsers = () => {
     setUsers(getStoredUsers());
@@ -74,6 +77,27 @@ export const UserManagement: React.FC = () => {
     setToastText(text);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleSyncFirestore = async () => {
+    if (!window.confirm('Envoyer toutes les données (utilisateurs, entreprises, règles) vers Firebase Firestore ?')) {
+      return;
+    }
+    setIsSyncingFirestore(true);
+    try {
+      const result = await seedFirestoreDatabase();
+      if (result.errors.length > 0) {
+        triggerToast(`Sync partielle : ${result.users} users, ${result.enterprises} entreprises. Vérifiez la console.`);
+        console.error('Erreurs sync Firestore:', result.errors);
+      } else {
+        triggerToast(`Firebase OK : ${result.users} utilisateurs, ${result.enterprises} entreprises synchronisés.`);
+      }
+    } catch (err) {
+      console.error(err);
+      triggerToast('Échec sync Firebase. Activez l\'auth anonyme dans Firebase Console.');
+    } finally {
+      setIsSyncingFirestore(false);
+    }
   };
 
   const handleOpenAdd = () => {
@@ -209,13 +233,24 @@ export const UserManagement: React.FC = () => {
               </p>
             </div>
 
-            <button
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={handleSyncFirestore}
+                disabled={isSyncingFirestore}
+                className="px-6 py-3.5 flex items-center gap-2.5 text-xs font-bold uppercase tracking-wider rounded-2xl border-2 border-cscm-green/30 text-cscm-green bg-white hover:bg-cscm-green-soft transition-all disabled:opacity-50"
+              >
+                <Database className="w-4 h-4" />
+                {isSyncingFirestore ? 'Synchronisation...' : 'Sync Firebase'}
+              </button>
+              <button
               onClick={handleOpenAdd}
               className="btn-submit px-6 py-3.5 flex items-center gap-2.5 shrink-0 text-xs select-none"
             >
               <UserPlus className="w-4 h-4" />
               Accréditer un utilisateur
             </button>
+            </div>
           </div>
         </div>
 

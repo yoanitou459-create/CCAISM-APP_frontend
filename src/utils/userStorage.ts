@@ -13,7 +13,7 @@ export interface AppUser {
   status?: 'Actif' | 'Inactif';
 }
 
-const INITIAL_USERS: AppUser[] = [
+export const INITIAL_USERS: AppUser[] = [
   {
     id: 'u1',
     nom: 'Diop',
