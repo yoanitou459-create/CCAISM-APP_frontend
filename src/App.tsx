@@ -611,11 +611,9 @@ export default function App() {
             snapshot.forEach(docSnap => {
               list.push(docSnap.data());
             });
-            if (list.length > 0) {
-              list.sort((a, b) => (a.id || 0) - (b.id || 0));
-              localStorage.setItem('cscm_enterprises', JSON.stringify(list));
-              window.dispatchEvent(new Event('enterprises_updated'));
-            }
+            list.sort((a, b) => (a.id || 0) - (b.id || 0));
+            localStorage.setItem('cscm_enterprises', JSON.stringify(list));
+            window.dispatchEvent(new Event('enterprises_updated'));
           }, (error) => {
             handleFirestoreError(error, OperationType.GET, 'enterprises');
           });
@@ -627,9 +625,37 @@ export default function App() {
             snapshot.forEach(docSnap => {
               list.push(docSnap.data());
             });
-            if (list.length > 0) {
-              localStorage.setItem('cscm_users', JSON.stringify(list));
-              window.dispatchEvent(new Event('users_updated'));
+            localStorage.setItem('cscm_users', JSON.stringify(list));
+            window.dispatchEvent(new Event('users_updated'));
+
+            // Keep currently logged-in user profile updated in real-time
+            const loggedUserStr = localStorage.getItem('user');
+            if (loggedUserStr) {
+              try {
+                const loggedUser = JSON.parse(loggedUserStr);
+                const dbUser = list.find(u => u.email.toLowerCase() === loggedUser.email.toLowerCase());
+                if (dbUser) {
+                  if (dbUser.status === 'Inactif') {
+                    // Instantly kick user out if deactivated by an admin
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.dispatchEvent(new Event('user_profile_updated'));
+                    window.location.href = '/login';
+                  } else if (dbUser.role !== loggedUser.role || dbUser.nom !== loggedUser.nom || dbUser.prenom !== loggedUser.prenom) {
+                    // Update role or profile information in real-time
+                    const updatedUser = {
+                      ...loggedUser,
+                      role: dbUser.role,
+                      nom: dbUser.nom,
+                      prenom: dbUser.prenom
+                    };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    window.dispatchEvent(new Event('user_profile_updated'));
+                  }
+                }
+              } catch (e) {
+                console.error("Error keeping logged-in user synchronized:", e);
+              }
             }
           }, (error) => {
             handleFirestoreError(error, OperationType.GET, 'users');
