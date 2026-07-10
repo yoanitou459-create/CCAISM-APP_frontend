@@ -100,7 +100,7 @@ export const UserManagement: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteUser = (userId: string, userEmail: string) => {
+  const handleDeleteUser = async (userId: string, userEmail: string) => {
     if (currentUser && currentUser.email.toLowerCase() === userEmail.toLowerCase()) {
       alert("Invalide: Vous ne pouvez pas supprimer votre propre compte administrateur en cours d'utilisation.");
       return;
@@ -108,12 +108,12 @@ export const UserManagement: React.FC = () => {
 
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement l'utilisateur ${userEmail} ?`)) {
       const updated = users.filter(u => u.id !== userId);
-      saveStoredUsers(updated);
+      await saveStoredUsers(updated);
       triggerToast('Utilisateur supprimé avec succès.');
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -142,7 +142,7 @@ export const UserManagement: React.FC = () => {
         }
         return u;
       });
-      saveStoredUsers(updated);
+      await saveStoredUsers(updated);
       setIsModalOpen(false);
       triggerToast("L'utilisateur a été mis à jour avec succès.");
     } else {
@@ -157,7 +157,7 @@ export const UserManagement: React.FC = () => {
         status, // Include status!
         dateCreation: new Date().toISOString().split('T')[0]
       };
-      saveStoredUsers([...users, newUser]);
+      await saveStoredUsers([...users, newUser]);
       setIsModalOpen(false);
       triggerToast("Nouvel utilisateur créé avec succès.");
     }

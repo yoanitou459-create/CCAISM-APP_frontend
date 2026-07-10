@@ -60,7 +60,7 @@ export const Signup: React.FC = () => {
         dateCreation: new Date().toISOString().split('T')[0],
       };
 
-      saveStoredUsers([...users, newUser]);
+      await saveStoredUsers([...users, newUser]);
       navigate('/login', { state: { message: 'Votre compte a été créé avec succès ! Connectez-vous avec votre email et mot de passe.' } });
     } catch {
       setError("Une erreur est survenue lors de la création du compte. Veuillez réessayer.");
@@ -99,7 +99,7 @@ export const Signup: React.FC = () => {
           status: 'Actif',
           dateCreation: new Date().toISOString().split('T')[0],
         };
-        saveStoredUsers([...users, matchedUser]);
+        await saveStoredUsers([...users, matchedUser]);
       }
 
       if (matchedUser.status === 'Inactif') {
