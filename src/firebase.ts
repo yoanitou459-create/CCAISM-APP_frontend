@@ -34,8 +34,25 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errMsg = error instanceof Error ? error.message : String(error);
+  
+  // If it's an authorization/permission issue, clear session and redirect to login immediately
+  if (
+    errMsg.toLowerCase().includes('permission') || 
+    errMsg.toLowerCase().includes('unauthenticated') || 
+    errMsg.toLowerCase().includes('insufficient')
+  ) {
+    if (typeof window !== 'undefined') {
+      console.warn("Firestore access denied. Redirecting to login...", errMsg);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+      return;
+    }
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMsg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
