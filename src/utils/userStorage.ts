@@ -52,36 +52,34 @@ export const getStoredUsers = (): AppUser[] => {
 };
 
 export const saveStoredUsers = (users: AppUser[]) => {
-  // If Firebase is active, update Firestore documents in background
-  if (localStorage.getItem('cscm_firebase_active') === 'true') {
-    const oldData = localStorage.getItem('cscm_users');
-    let oldList: AppUser[] = [];
-    if (oldData) {
-      try {
-        oldList = JSON.parse(oldData);
-      } catch (e) {}
-    }
-    const newIds = new Set(users.map(u => String(u.id)));
-    const deletedIds = oldList.map(u => String(u.id)).filter(id => !newIds.has(id));
-
-    // Handle deletions
-    deletedIds.forEach(async (id) => {
-       try {
-         await deleteDoc(doc(db, 'users', id));
-       } catch (e) {
-         handleFirestoreError(e, OperationType.DELETE, `users/${id}`);
-       }
-    });
-
-    // Handle additions/modifications
-    users.forEach(async (u) => {
-       try {
-         await setDoc(doc(db, 'users', String(u.id)), u);
-       } catch (e) {
-         handleFirestoreError(e, OperationType.WRITE, `users/${u.id}`);
-       }
-    });
+  // Always update Firestore documents in background to ensure a shared, synchronized backend
+  const oldData = localStorage.getItem('cscm_users');
+  let oldList: AppUser[] = [];
+  if (oldData) {
+    try {
+      oldList = JSON.parse(oldData);
+    } catch (e) {}
   }
+  const newIds = new Set(users.map(u => String(u.id)));
+  const deletedIds = oldList.map(u => String(u.id)).filter(id => !newIds.has(id));
+
+  // Handle deletions
+  deletedIds.forEach(async (id) => {
+     try {
+       await deleteDoc(doc(db, 'users', id));
+     } catch (e) {
+       handleFirestoreError(e, OperationType.DELETE, `users/${id}`);
+     }
+  });
+
+  // Handle additions/modifications
+  users.forEach(async (u) => {
+     try {
+       await setDoc(doc(db, 'users', String(u.id)), u);
+     } catch (e) {
+       handleFirestoreError(e, OperationType.WRITE, `users/${u.id}`);
+     }
+  });
 
   localStorage.setItem('cscm_users', JSON.stringify(users));
   window.dispatchEvent(new Event('users_updated'));
