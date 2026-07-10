@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthBrandPanel } from '../components/AuthBrandPanel';
 import { getStoredUsers, fetchLatestUsers } from '../utils/userStorage';
@@ -14,6 +14,8 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const successMessage = (location.state as { message?: string } | null)?.message ?? '';
 
   useEffect(() => {
     getStoredUsers();
@@ -192,6 +194,11 @@ export const Login: React.FC = () => {
               </div>
 
               <AnimatePresence>
+                {successMessage && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-xs text-center font-medium">
+                    {successMessage}
+                  </motion.div>
+                )}
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}

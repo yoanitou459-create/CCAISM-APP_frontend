@@ -33,42 +33,40 @@ export const Signup: React.FC = () => {
     setError('');
     setSuccessMessage('');
 
-    if (formData.email && formData.password && formData.nom && formData.prenom) {
-      setIsVerifying(true);
-      try {
-        const users = await fetchLatestUsers();
-        const trimmedEmail = formData.email.trim().toLowerCase();
-        const matchedUser = users.find(u => u.email.toLowerCase() === trimmedEmail);
-
-        if (!matchedUser) {
-          setError("Cette adresse email n'est pas autorisée ou enregistrée dans notre base de données. L'accès à la plateforme est restreint. Veuillez contacter l'administrateur.");
-          return;
-        }
-
-        const updatedUsers = users.map(u => {
-          if (u.email.toLowerCase() === trimmedEmail) {
-            return {
-              ...u,
-              nom: formData.nom.trim(),
-              prenom: formData.prenom.trim(),
-              password: formData.password,
-              status: 'Actif' as const
-            };
-          }
-          return u;
-        });
-
-        saveStoredUsers(updatedUsers);
-        navigate('/login', { state: { message: 'Votre compte a été configuré avec succès ! Connectez-vous avec votre mot de passe.' } });
-      } catch {
-        setError("Une erreur est survenue lors de la vérification de l'adresse email. Veuillez réessayer.");
-      } finally {
-        setIsVerifying(false);
-      }
+    if (!formData.email || !formData.password || !formData.nom || !formData.prenom) {
+      setError('Veuillez remplir tous les champs');
       return;
     }
 
-    setError('Veuillez remplir tous les champs');
+    setIsVerifying(true);
+    try {
+      const users = await fetchLatestUsers();
+      const trimmedEmail = formData.email.trim().toLowerCase();
+      const alreadyExists = users.some(u => u.email.toLowerCase() === trimmedEmail);
+
+      if (alreadyExists) {
+        setError('Un compte existe déjà avec cette adresse email. Connectez-vous ou utilisez une autre adresse.');
+        return;
+      }
+
+      const newUser = {
+        id: 'u_' + Date.now(),
+        nom: formData.nom.trim(),
+        prenom: formData.prenom.trim(),
+        email: trimmedEmail,
+        password: formData.password,
+        role: 'MEMBRE' as const,
+        status: 'Actif' as const,
+        dateCreation: new Date().toISOString().split('T')[0],
+      };
+
+      saveStoredUsers([...users, newUser]);
+      navigate('/login', { state: { message: 'Votre compte a été créé avec succès ! Connectez-vous avec votre email et mot de passe.' } });
+    } catch {
+      setError("Une erreur est survenue lors de la création du compte. Veuillez réessayer.");
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleGoogleSignup = async () => {
@@ -79,23 +77,47 @@ export const Signup: React.FC = () => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const gUser = result.user;
-      if (gUser?.email) {
-        const email = gUser.email.toLowerCase();
-        const users = await fetchLatestUsers();
-        const matchedUser = users.find(u => u.email.toLowerCase() === email);
-
-        if (!matchedUser) {
-          setError(`Votre adresse email Google (${email}) n'est pas autorisée ou enregistrée dans notre base de données. Veuillez contacter l'administrateur.`);
-          return;
-        }
-
-        const names = gUser.displayName ? gUser.displayName.split(' ') : [];
-        const prenom = names[0] || matchedUser.prenom || '';
-        const nom = names.slice(1).join(' ') || matchedUser.nom || '';
-
-        setFormData({ nom, prenom, email, password: '' });
-        setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) a été injectée. Veuillez maintenant choisir votre mot de passe ci-dessous pour finaliser l'inscription.`);
+      if (!gUser?.email) {
+        setError('Impossible de récupérer votre adresse email Google.');
+        return;
       }
+
+      const email = gUser.email.toLowerCase();
+      const users = await fetchLatestUsers();
+      let matchedUser = users.find(u => u.email.toLowerCase() === email);
+
+      if (!matchedUser) {
+        const names = gUser.displayName ? gUser.displayName.split(' ') : ['Utilisateur', 'Google'];
+        const prenom = names[0] || 'Utilisateur';
+        const nom = names.slice(1).join(' ') || 'Google';
+        matchedUser = {
+          id: 'u_' + Date.now(),
+          nom,
+          prenom,
+          email,
+          role: 'MEMBRE',
+          status: 'Actif',
+          dateCreation: new Date().toISOString().split('T')[0],
+        };
+        saveStoredUsers([...users, matchedUser]);
+      }
+
+      if (matchedUser.status === 'Inactif') {
+        setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
+        return;
+      }
+
+      localStorage.setItem('token', `google-token-${matchedUser.id}`);
+      localStorage.setItem('user', JSON.stringify({
+        id: matchedUser.id,
+        nom: matchedUser.nom,
+        prenom: matchedUser.prenom,
+        email: matchedUser.email,
+        role: matchedUser.role,
+      }));
+
+      window.dispatchEvent(new Event('user_profile_updated'));
+      navigate('/dashboard');
     } catch (err: unknown) {
       console.error('Google signup error:', err);
       const code = err && typeof err === 'object' && 'code' in err ? String((err as { code: string }).code) : '';
