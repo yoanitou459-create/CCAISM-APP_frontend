@@ -20,6 +20,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
     nom: user.nom || 'Admin',
     prenom: user.prenom || 'System',
     email: user.email || 'admin@ccaism.com',
+    entreprise: user.entreprise || '',
     langue: 'Français',
     apparence: 'Clair'
   });
@@ -47,7 +48,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
       ...user, 
       nom: formData.nom, 
       prenom: formData.prenom, 
-      email: formData.email 
+      email: formData.email,
+      entreprise: formData.entreprise
     };
     localStorage.setItem('user', JSON.stringify(updatedUser));
     // Save appearance preference
@@ -163,6 +165,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                       type="email" 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">NOM DE L'ENTREPRISE (RAISON SOCIALE)</label>
+                    <input 
+                      type="text" 
+                      value={formData.entreprise}
+                      onChange={(e) => setFormData({...formData, entreprise: e.target.value})}
+                      placeholder="Non spécifié"
                       className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
                     />
                   </div>

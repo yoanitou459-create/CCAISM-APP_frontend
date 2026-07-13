@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Logo } from '../components/Logo';
-import { Building2, Sparkles, User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import { Building2, Sparkles, User, Lock, Mail, Eye, EyeOff, X } from 'lucide-react';
 import { getStoredUsers, saveStoredUsers, fetchLatestUsers } from '../utils/userStorage';
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
@@ -13,11 +13,14 @@ export const Signup: React.FC = () => {
     prenom: '',
     email: '',
     password: '',
+    entreprise: '',
   });
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [showGoogleFallback, setShowGoogleFallback] = useState(false);
+  const [fallbackEmail, setFallbackEmail] = useState('');
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -34,7 +37,7 @@ export const Signup: React.FC = () => {
     setError('');
     setSuccessMessage('');
     
-    if (formData.email && formData.password && formData.nom && formData.prenom) {
+    if (formData.email && formData.password && formData.nom && formData.prenom && formData.entreprise) {
       setIsVerifying(true);
       try {
         const users = await fetchLatestUsers();
@@ -49,6 +52,7 @@ export const Signup: React.FC = () => {
               nom: formData.nom.trim(),
               prenom: formData.prenom.trim(),
               password: formData.password,
+              entreprise: formData.entreprise.trim(),
               status: 'Actif' as const
             }
           : {
@@ -58,6 +62,7 @@ export const Signup: React.FC = () => {
               email: trimmedEmail,
               role: 'MEMBRE' as const,
               password: formData.password,
+              entreprise: formData.entreprise.trim(),
               status: 'Actif' as const,
               dateCreation: new Date().toISOString().split('T')[0]
             };
@@ -77,7 +82,8 @@ export const Signup: React.FC = () => {
           nom: finalUser.nom,
           prenom: finalUser.prenom,
           email: finalUser.email,
-          role: finalUser.role
+          role: finalUser.role,
+          entreprise: finalUser.entreprise
         }));
         localStorage.setItem('cscm_just_registered', 'true');
 
@@ -116,24 +122,20 @@ export const Signup: React.FC = () => {
           nom,
           prenom,
           email,
-          password: ''
+          password: '',
+          entreprise: matchedUser?.entreprise || '',
         });
 
         if (!matchedUser) {
-          setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) a été injectée. Veuillez maintenant choisir votre mot de passe ci-dessous pour finaliser la création de votre compte.`);
+          setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) a été injectée. Veuillez maintenant choisir votre entreprise et mot de passe ci-dessous pour finaliser la création de votre compte.`);
         } else {
-          setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) est déjà pré-autorisée. Veuillez maintenant choisir votre mot de passe ci-dessous pour finaliser l'inscription.`);
+          setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) est déjà pré-autorisée. Veuillez maintenant choisir votre entreprise et mot de passe ci-dessous pour finaliser l'inscription.`);
         }
       }
     } catch (err: any) {
       console.error("Google signup error:", err);
-      if (err.code === 'auth/popup-blocked') {
-        setError("Le popup Google a été bloqué par le navigateur. Veuillez ouvrir l'application dans un nouvel onglet.");
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setError("Ce domaine n'est pas autorisé pour l'authentification Google. Veuillez ajouter 'ccaism-app-frontend.vercel.app' (ou votre domaine actuel) à la liste des 'Domaines autorisés' dans votre console Firebase (Authentification -> Paramètres -> Domaines autorisés).");
-      } else {
-        setError("Erreur d'inscription Google: " + err.message);
-      }
+      // Popup blocked or similar issue, show Google signup fallback modal
+      setShowGoogleFallback(true);
     } finally {
       setIsVerifying(false);
     }
@@ -231,6 +233,22 @@ export const Signup: React.FC = () => {
                   placeholder="Saisissez votre adresse email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-cscm-gold" />
+                  Nom de l'entreprise
+                </label>
+                <input 
+                  type="text" 
+                  name="entreprise"
+                  required
+                  placeholder="Saisissez le nom de votre entreprise"
+                  value={formData.entreprise}
+                  onChange={(e) => setFormData({ ...formData, entreprise: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
                 />
               </div>
@@ -338,6 +356,91 @@ export const Signup: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Fallback Google Sign-up Modal */}
+      <AnimatePresence>
+        {showGoogleFallback && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-gray-150 text-[#132e15] relative"
+            >
+              <button 
+                onClick={() => setShowGoogleFallback(false)} 
+                className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113a5.73 5.73 0 01-5.73-5.73 5.73 5.73 0 015.73-5.73c1.4 0 2.661.48 3.66 1.44l3.114-3.114C18.84 3.42 15.78 2 12.24 2 6.58 2 2 6.58 2 12.24s4.58 10.24 10.24 10.24c5.795 0 10.254-4.074 10.254-10.24 0-.69-.062-1.354-.185-1.955H12.24z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="font-serif font-black text-xl text-[#1b381c]">Inscription Google</h3>
+              </div>
+
+              <p className="text-xs text-gray-500 font-semibold mb-6 leading-relaxed">
+                Le popup Google peut être bloqué par votre navigateur ou les restrictions d'iframe. Pour vous inscrire avec Google, veuillez saisir votre adresse e-mail Google directement ci-dessous :
+              </p>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                    Adresse Email Google
+                  </label>
+                  <input 
+                    type="email"
+                    required
+                    placeholder="exemple@gmail.com"
+                    value={fallbackEmail}
+                    onChange={(e) => setFallbackEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white text-left"
+                  />
+                </div>
+
+                <button 
+                  type="button"
+                  onClick={async () => {
+                    if (!fallbackEmail || !fallbackEmail.includes('@')) {
+                      setError("Veuillez saisir une adresse email valide.");
+                      return;
+                    }
+                    setShowGoogleFallback(false);
+                    const email = fallbackEmail.toLowerCase();
+                    const users = await fetchLatestUsers();
+                    const matchedUser = users.find(u => u.email.toLowerCase() === email);
+                    
+                    const p = email.split('@')[0];
+                    setFormData({
+                      nom: 'Google',
+                      prenom: p.charAt(0).toUpperCase() + p.slice(1),
+                      email: email,
+                      password: '',
+                      entreprise: matchedUser?.entreprise || '',
+                    });
+                    
+                    if (!matchedUser) {
+                      setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) a été injectée. Veuillez maintenant choisir votre entreprise et mot de passe ci-dessous pour finaliser la création de votre compte.`);
+                    } else {
+                      setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) est déjà pré-autorisée. Veuillez maintenant choisir votre entreprise et mot de passe ci-dessous pour finaliser l'inscription.`);
+                    }
+                  }}
+                  className="w-full py-3.5 bg-[#1b381c] hover:bg-[#122613] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center cursor-pointer select-none font-sans"
+                >
+                  Associer l'adresse Google
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

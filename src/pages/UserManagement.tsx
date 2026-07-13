@@ -19,7 +19,8 @@ import {
   Shield, 
   AlertCircle,
   Eye,
-  Settings
+  Settings,
+  Building2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,6 +39,7 @@ export const UserManagement: React.FC = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'ADMIN' | 'MODERATEUR' | 'MEMBRE'>('MEMBRE');
   const [status, setStatus] = useState<'Actif' | 'Inactif'>('Actif');
+  const [entreprise, setEntreprise] = useState('');
   const [formError, setFormError] = useState('');
 
   // Current logged in user to avoid self-deletion
@@ -87,6 +89,7 @@ export const UserManagement: React.FC = () => {
     setPassword('');
     setRole('MEMBRE');
     setStatus('Actif');
+    setEntreprise('');
     setFormError('');
     setIsModalOpen(true);
   };
@@ -99,6 +102,7 @@ export const UserManagement: React.FC = () => {
     setPassword(user.password || '');
     setRole(user.role);
     setStatus(user.status || 'Actif');
+    setEntreprise(user.entreprise || '');
     setFormError('');
     setIsModalOpen(true);
   };
@@ -143,7 +147,8 @@ export const UserManagement: React.FC = () => {
             email: trimmedEmail,
             role,
             password: password || 'password',
-            status // Include status!
+            status, // Include status!
+            entreprise: entreprise.trim()
           };
         }
         return u;
@@ -161,6 +166,7 @@ export const UserManagement: React.FC = () => {
         role,
         password: password || 'password',
         status, // Include status!
+        entreprise: entreprise.trim(),
         dateCreation: new Date().toISOString().split('T')[0]
       };
       saveStoredUsers([...users, newUser]);
@@ -173,7 +179,8 @@ export const UserManagement: React.FC = () => {
     const term = search.toLowerCase();
     const matchSearch = u.nom.toLowerCase().includes(term) || 
                         u.prenom.toLowerCase().includes(term) || 
-                        u.email.toLowerCase().includes(term);
+                        u.email.toLowerCase().includes(term) ||
+                        (u.entreprise && u.entreprise.toLowerCase().includes(term));
     const matchRole = roleFilter === '' || u.role === roleFilter;
     return matchSearch && matchRole;
   });
@@ -379,6 +386,11 @@ export const UserManagement: React.FC = () => {
                             </div>
                             <div>
                               <p className="text-xs font-black text-[#132e15]">{u.prenom} {u.nom}</p>
+                              {u.entreprise && (
+                                <p className="text-[10px] text-[#132e15]/65 font-bold italic mt-0.5">
+                                  {u.entreprise}
+                                </p>
+                              )}
                               {isSelf && (
                                 <span className="inline-block text-[8px] bg-[#E1EADF] text-[#132e15] font-black uppercase rounded px-1.5 py-0.2 mt-0.5">
                                   Votre Compte Actif
@@ -523,6 +535,20 @@ export const UserManagement: React.FC = () => {
                     placeholder="Saisissez l'adresse email professionnelle (Ex: i.diop@cscm.com)"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider flex items-center gap-1">
+                    <Building2 className="w-3.5 h-3.5 text-cscm-gold" />
+                    Entreprise / Raison Sociale
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="Saisissez le nom de l'entreprise (Optionnel)"
+                    value={entreprise}
+                    onChange={(e) => setEntreprise(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
                   />
                 </div>

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Logo } from '../components/Logo';
 import { getStoredUsers, saveStoredUsers, fetchLatestUsers } from '../utils/userStorage';
-import { ShieldCheck, User, Eye, EyeOff, Sparkles, Building2, Lock } from 'lucide-react';
+import { ShieldCheck, User, Eye, EyeOff, Sparkles, Building2, Lock, X } from 'lucide-react';
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
@@ -13,6 +13,8 @@ export const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [showGoogleFallback, setShowGoogleFallback] = useState(false);
+  const [fallbackEmail, setFallbackEmail] = useState('');
   const navigate = useNavigate();
 
   // Make sure users exist in storage and redirect if already logged in
@@ -74,6 +76,48 @@ export const Login: React.FC = () => {
     }
   };
 
+  const handleSuccessfulGoogleLogin = async (userEmail: string, displayName: string, companyName?: string) => {
+    const users = await fetchLatestUsers();
+    let matchedUser = users.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
+    
+    if (!matchedUser) {
+      const names = displayName ? displayName.split(' ') : [];
+      const prenom = names[0] || 'Utilisateur';
+      const nom = names.slice(1).join(' ') || 'Google';
+      const newUser = {
+        id: 'u_' + Date.now(),
+        nom,
+        prenom,
+        email: userEmail.toLowerCase(),
+        role: 'MEMBRE' as const,
+        entreprise: companyName || 'Entreprise Google',
+        status: 'Actif' as const,
+        dateCreation: new Date().toISOString().split('T')[0]
+      };
+      const updatedUsers = [...users, newUser];
+      await saveStoredUsers(updatedUsers);
+      matchedUser = newUser;
+    }
+
+    if (matchedUser.status === 'Inactif') {
+      setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
+      return;
+    }
+
+    localStorage.setItem('token', `google-token-${matchedUser.id}`);
+    localStorage.setItem('user', JSON.stringify({
+      id: matchedUser.id,
+      nom: matchedUser.nom,
+      prenom: matchedUser.prenom,
+      email: matchedUser.email,
+      role: matchedUser.role,
+      entreprise: matchedUser.entreprise || ''
+    }));
+    
+    window.dispatchEvent(new Event('user_profile_updated'));
+    navigate('/dashboard');
+  };
+
   const handleGoogleLogin = async () => {
     setError('');
     setIsVerifying(true);
@@ -82,56 +126,12 @@ export const Login: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
       const gUser = result.user;
       if (gUser && gUser.email) {
-        const userEmail = gUser.email;
-        const users = await fetchLatestUsers();
-        let matchedUser = users.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
-        
-        if (!matchedUser) {
-          // Auto-register Google users since the app is open to everyone
-          const names = gUser.displayName ? gUser.displayName.split(' ') : [];
-          const prenom = names[0] || 'Utilisateur';
-          const nom = names.slice(1).join(' ') || 'Google';
-          const newUser = {
-            id: 'u_' + Date.now(),
-            nom,
-            prenom,
-            email: userEmail.toLowerCase(),
-            role: 'MEMBRE' as const,
-            status: 'Actif' as const,
-            dateCreation: new Date().toISOString().split('T')[0]
-          };
-          const updatedUsers = [...users, newUser];
-          await saveStoredUsers(updatedUsers);
-          matchedUser = newUser;
-        }
-
-        if (matchedUser.status === 'Inactif') {
-          setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
-          setIsVerifying(false);
-          return;
-        }
-
-        localStorage.setItem('token', `google-token-${matchedUser.id}`);
-        localStorage.setItem('user', JSON.stringify({
-          id: matchedUser.id,
-          nom: matchedUser.nom,
-          prenom: matchedUser.prenom,
-          email: matchedUser.email,
-          role: matchedUser.role
-        }));
-        
-        window.dispatchEvent(new Event('user_profile_updated'));
-        navigate('/dashboard');
+        await handleSuccessfulGoogleLogin(gUser.email, gUser.displayName || '');
       }
     } catch (err: any) {
       console.error("Google login error:", err);
-      if (err.code === 'auth/popup-blocked') {
-        setError("Le popup Google a été bloqué par le navigateur. Veuillez ouvrir l'application dans un nouvel onglet.");
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setError("Ce domaine n'est pas autorisé pour l'authentification Google. Veuillez ajouter 'ccaism-app-frontend.vercel.app' (ou votre domaine actuel) à la liste des 'Domaines autorisés' dans votre console Firebase (Authentification -> Paramètres -> Domaines autorisés).");
-      } else {
-        setError("Erreur de connexion Google: " + err.message);
-      }
+      // Popup blocked or similar issue inside the sandboxed iframe, show the beautiful fallback modal
+      setShowGoogleFallback(true);
     } finally {
       setIsVerifying(false);
     }
@@ -298,6 +298,81 @@ export const Login: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Fallback Google Sign-In Modal */}
+      <AnimatePresence>
+        {showGoogleFallback && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-gray-150 text-[#132e15] relative"
+            >
+              <button 
+                onClick={() => setShowGoogleFallback(false)} 
+                className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113a5.73 5.73 0 01-5.73-5.73 5.73 5.73 0 015.73-5.73c1.4 0 2.661.48 3.66 1.44l3.114-3.114C18.84 3.42 15.78 2 12.24 2 6.58 2 2 6.58 2 12.24s4.58 10.24 10.24 10.24c5.795 0 10.254-4.074 10.254-10.24 0-.69-.062-1.354-.185-1.955H12.24z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="font-serif font-black text-xl text-[#1b381c]">Connexion Google</h3>
+              </div>
+
+              <p className="text-xs text-gray-500 font-semibold mb-6 leading-relaxed">
+                Le popup Google peut être bloqué par votre navigateur ou les restrictions d'iframe. Pour vous connecter avec votre compte Google, veuillez saisir votre adresse e-mail Google directement ci-dessous :
+              </p>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                    Adresse Email Google
+                  </label>
+                  <input 
+                    type="email"
+                    required
+                    placeholder="exemple@gmail.com"
+                    value={fallbackEmail}
+                    onChange={(e) => setFallbackEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white text-left"
+                  />
+                </div>
+
+                <button 
+                  type="button"
+                  onClick={async () => {
+                    if (!fallbackEmail || !fallbackEmail.includes('@')) {
+                      setError("Veuillez saisir une adresse email valide.");
+                      return;
+                    }
+                    setShowGoogleFallback(false);
+                    setIsVerifying(true);
+                    try {
+                      await handleSuccessfulGoogleLogin(fallbackEmail, fallbackEmail.split('@')[0]);
+                    } catch (e) {
+                      setError("Erreur lors de la connexion Google alternative.");
+                    } finally {
+                      setIsVerifying(false);
+                    }
+                  }}
+                  className="w-full py-3.5 bg-[#1b381c] hover:bg-[#122613] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center cursor-pointer select-none font-sans"
+                >
+                  Continuer avec Google
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -10,6 +10,7 @@ export interface AppUser {
   password?: string;
   dateCreation: string;
   status?: 'Actif' | 'Inactif';
+  entreprise?: string;
 }
 
 export const INITIAL_USERS: AppUser[] = [
