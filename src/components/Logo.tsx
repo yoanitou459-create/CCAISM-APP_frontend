@@ -21,7 +21,7 @@ export const Logo: React.FC<{ className?: string }> = ({ className }) => {
           )}
         </div>
       </div>
-      <h2 className="text-cscm-gold font-serif text-lg leading-tight">Chambre</h2>
+      <h2 className="text-cscm-gold font-sans text-lg leading-tight">Chambre</h2>
       <p className="text-cscm-gold/85 text-[10px] uppercase tracking-widest font-bold">Sénégalaise de Commerce au Maroc</p>
     </div>
   );
