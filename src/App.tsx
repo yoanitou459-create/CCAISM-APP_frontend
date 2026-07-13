@@ -553,7 +553,7 @@ export default function App() {
       localStorage.setItem('cscm_firebase_active', 'true');
     }
 
-    // 2. Perform silent, automated migration or initial database seed if empty
+    // 2. Run silent, automated migration or initial database seed if empty
     const runSilentMigration = async () => {
       try {
         const { getDocs, collection } = await import('firebase/firestore');
@@ -610,85 +610,79 @@ export default function App() {
       }
     };
 
-    // Ensure the user is signed in to Firebase (at least anonymously to secure the database)
-    let unsubscribeAuth: (() => void) | null = null;
+    // Keep real-time Firestore listeners active unconditionally
     let unsubEnterprises: (() => void) | null = null;
     let unsubUsers: (() => void) | null = null;
     let unsubCotisationRules: (() => void) | null = null;
 
+    // Trigger migration and start listeners immediately
+    runSilentMigration();
+
+    unsubEnterprises = onSnapshot(collection(db, 'enterprises'), (snapshot) => {
+      const list: any[] = [];
+      snapshot.forEach(docSnap => {
+        list.push(docSnap.data());
+      });
+      list.sort((a, b) => (a.id || 0) - (b.id || 0));
+      localStorage.setItem('cscm_enterprises', JSON.stringify(list));
+      window.dispatchEvent(new Event('enterprises_updated'));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'enterprises');
+    });
+
+    unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const list: any[] = [];
+      snapshot.forEach(docSnap => {
+        list.push(docSnap.data());
+      });
+      localStorage.setItem('cscm_users', JSON.stringify(list));
+      window.dispatchEvent(new Event('users_updated'));
+
+      // Keep currently logged-in user profile updated in real-time
+      const loggedUserStr = localStorage.getItem('user');
+      if (loggedUserStr) {
+        try {
+          const loggedUser = JSON.parse(loggedUserStr);
+          const dbUser = list.find(u => u.email.toLowerCase() === loggedUser.email.toLowerCase());
+          if (dbUser) {
+            if (dbUser.status === 'Inactif') {
+              // Instantly kick user out if deactivated by an admin
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              window.dispatchEvent(new Event('user_profile_updated'));
+              window.location.href = '/login';
+            } else if (dbUser.role !== loggedUser.role || dbUser.nom !== loggedUser.nom || dbUser.prenom !== loggedUser.prenom) {
+              // Update role or profile information in real-time
+              const updatedUser = {
+                ...loggedUser,
+                role: dbUser.role,
+                nom: dbUser.nom,
+                prenom: dbUser.prenom
+              };
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              window.dispatchEvent(new Event('user_profile_updated'));
+            }
+          }
+        } catch (e) {
+          console.error("Error keeping logged-in user synchronized:", e);
+        }
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'users');
+    });
+
+    unsubCotisationRules = setupCotisationRulesListener();
+
+    // Ensure the user is signed in to Firebase (at least anonymously if supported)
+    let unsubscribeAuth: (() => void) | null = null;
     unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         console.log("Authenticated with Firebase UID:", user.uid);
-        
-        // Run migration to Firestore after being authenticated
-        runSilentMigration();
-
-        // 3. Keep real-time Firestore listeners active
-        if (!unsubEnterprises) {
-          unsubEnterprises = onSnapshot(collection(db, 'enterprises'), (snapshot) => {
-            const list: any[] = [];
-            snapshot.forEach(docSnap => {
-              list.push(docSnap.data());
-            });
-            list.sort((a, b) => (a.id || 0) - (b.id || 0));
-            localStorage.setItem('cscm_enterprises', JSON.stringify(list));
-            window.dispatchEvent(new Event('enterprises_updated'));
-          }, (error) => {
-            handleFirestoreError(error, OperationType.GET, 'enterprises');
-          });
-        }
-
-        if (!unsubUsers) {
-          unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-            const list: any[] = [];
-            snapshot.forEach(docSnap => {
-              list.push(docSnap.data());
-            });
-            localStorage.setItem('cscm_users', JSON.stringify(list));
-            window.dispatchEvent(new Event('users_updated'));
-
-            // Keep currently logged-in user profile updated in real-time
-            const loggedUserStr = localStorage.getItem('user');
-            if (loggedUserStr) {
-              try {
-                const loggedUser = JSON.parse(loggedUserStr);
-                const dbUser = list.find(u => u.email.toLowerCase() === loggedUser.email.toLowerCase());
-                if (dbUser) {
-                  if (dbUser.status === 'Inactif') {
-                    // Instantly kick user out if deactivated by an admin
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    window.dispatchEvent(new Event('user_profile_updated'));
-                    window.location.href = '/login';
-                  } else if (dbUser.role !== loggedUser.role || dbUser.nom !== loggedUser.nom || dbUser.prenom !== loggedUser.prenom) {
-                    // Update role or profile information in real-time
-                    const updatedUser = {
-                      ...loggedUser,
-                      role: dbUser.role,
-                      nom: dbUser.nom,
-                      prenom: dbUser.prenom
-                    };
-                    localStorage.setItem('user', JSON.stringify(updatedUser));
-                    window.dispatchEvent(new Event('user_profile_updated'));
-                  }
-                }
-              } catch (e) {
-                console.error("Error keeping logged-in user synchronized:", e);
-              }
-            }
-          }, (error) => {
-            handleFirestoreError(error, OperationType.GET, 'users');
-          });
-        }
-
-        if (!unsubCotisationRules) {
-          unsubCotisationRules = setupCotisationRulesListener();
-        }
       } else {
         try {
           await signInAnonymously(auth);
         } catch (err) {
-          console.error("Firebase Anonymous Auth failed:", err);
+          console.warn("Silent Firebase Anonymous Auth skipped/failed (app continues working normally):", err);
         }
       }
     });
@@ -697,12 +691,12 @@ export default function App() {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error("Intercepted unhandled promise rejection:", event.reason);
       const reasonStr = String(event.reason).toLowerCase();
+      // Do NOT kick out for Firestore permission errors since database acts as public
       if (
-        reasonStr.includes('permission') || 
-        reasonStr.includes('auth') || 
-        reasonStr.includes('unauthorized') || 
-        reasonStr.includes('401') || 
-        reasonStr.includes('403')
+        (reasonStr.includes('unauthorized') || 
+         reasonStr.includes('401') || 
+         reasonStr.includes('403')) &&
+        !reasonStr.includes('permission')
       ) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');

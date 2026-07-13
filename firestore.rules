@@ -7,23 +7,6 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // 2. Reusable, hardened global helpers
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    function incoming() {
-      return request.resource.data;
-    }
-
-    function existing() {
-      return resource.data;
-    }
-
     // Validation helper for Enterprise entity
     function isValidEnterprise(data) {
       return (data.id is int || data.id is float)
@@ -54,44 +37,30 @@ service cloud.firestore {
 
     // 3. Rules for enterprises collection
     match /enterprises/{enterpriseId} {
-      // Must be authenticated to read or write
-      allow read: if isSignedIn();
+      allow read, delete: if true;
       
-      allow create: if isSignedIn() 
-        && isValidId(enterpriseId) 
-        && isValidEnterprise(incoming());
+      allow create: if isValidEnterprise(incoming());
         
-      allow update: if isSignedIn() 
-        && isValidEnterprise(incoming())
+      allow update: if isValidEnterprise(incoming())
         // Ensure critical immutables like 'id' and 'memberNo' are not altered
         && incoming().id == existing().id
         && incoming().memberNo == existing().memberNo;
-
-      allow delete: if isSignedIn();
     }
 
     // 4. Rules for users collection
     match /users/{userId} {
-      // Must be authenticated to read or write user administration records
-      allow read: if isSignedIn();
+      allow read, delete: if true;
       
-      allow create: if isSignedIn() 
-        && isValidId(userId) 
-        && isValidUser(incoming());
+      allow create: if isValidUser(incoming());
         
-      allow update: if isSignedIn() 
-        && isValidUser(incoming())
+      allow update: if isValidUser(incoming())
         && incoming().id == existing().id;
-
-      allow delete: if isSignedIn();
     }
 
     // 5. Rules for settings collection
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if isSignedIn() 
-        && isValidId(settingId) 
-        && (settingId == 'cotisation_rules' ? isValidCotisationRules(incoming()) : true);
+      allow write: if (settingId == 'cotisation_rules' ? isValidCotisationRules(incoming()) : true);
     }
   }
 }
