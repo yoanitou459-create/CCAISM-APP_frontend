@@ -133,7 +133,8 @@ const Dashboard = () => {
   
   const totalCotisations = enterprises.reduce((total, ent) => {
     const sum = (ent.cotisations || []).reduce((s: number, cot: any) => s + (Number(cot.amount) || 0), 0);
-    return total + sum;
+    const yearsSum = (Number(ent.cotisation_2023) || 0) + (Number(ent.cotisation_2024) || 0) + (Number(ent.cotisation_2025) || 0);
+    return total + sum + yearsSum;
   }, 0);
 
   // Compute stats for sector progress bars
@@ -227,14 +228,15 @@ const Dashboard = () => {
   const activePct = totalEnterprises > 0 ? Math.round((upToDateCount / totalEnterprises) * 100) : 100;
 
   // Average cotisation per member
-  const averageCotisation = totalEnterprises > 0 ? Math.round(totalCotisations / totalEnterprises) : 30606;
+  const averageCotisation = totalEnterprises > 0 ? Math.round(totalCotisations / totalEnterprises) : 0;
 
-  // Dominant sector text helper
-  const dominantSectorName = sortedSectors[0] || 'Autres';
-  const dominantSectorCount = sectorCounts[dominantSectorName] || 10;
+  const dominantSectorName = sortedSectors.find(s => (sectorCounts[s] || 0) > 0) || '—';
+  const dominantSectorCount = sectorCounts[dominantSectorName] || 0;
 
-  // New members of this month helper
-  const currentMonthRegistrations = monthlyStats[5].count; // June counts
+  const currentMonthIndex = new Date().getMonth();
+  const currentMonthRegistrations = enterprises.filter(e => getMonthFromDate(e.dateAdhesion) === currentMonthIndex).length;
+
+  const sectorsWithData = sortedSectors.filter(s => (sectorCounts[s] || 0) > 0);
 
   return (
     <SidebarLayout>
@@ -312,6 +314,15 @@ const Dashboard = () => {
           </motion.div>
         )}
 
+        {totalEnterprises === 0 && (
+          <div className="card-elevated p-5 border border-cscm-green/15 bg-cscm-green-soft/40 flex items-center gap-3">
+            <Database className="w-5 h-5 text-cscm-green shrink-0" />
+            <p className="text-sm text-[#22301C]/70 font-medium">
+              Aucune entreprise chargée pour le moment. Les données s'affichent automatiquement dès la synchronisation avec la base Firestore.
+            </p>
+          </div>
+        )}
+
         {/* 1. KPI cards row (exactly like the screenshot layout with specific color accents) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
           
@@ -323,7 +334,7 @@ const Dashboard = () => {
                 Entreprises membres
               </span>
               <span className="text-[2.4rem] leading-none text-blue-600 block mt-3 font-sans font-semibold tracking-tight">
-                {totalEnterprises || 33}
+                {totalEnterprises}
               </span>
               <span className="text-[10px] font-semibold text-gray-400 block mt-2">Total du réseau</span>
             </div>
@@ -340,7 +351,7 @@ const Dashboard = () => {
                 Entreprises actives
               </span>
               <span className="text-[2.4rem] leading-none text-emerald-600 block mt-3 font-sans font-semibold tracking-tight">
-                {activeEnterprises || 33}
+                {activeEnterprises}
               </span>
               <span className="text-[10px] font-semibold text-gray-400 block mt-2">Membres en règle</span>
             </div>
@@ -374,7 +385,7 @@ const Dashboard = () => {
                 Nouvelles ce mois
               </span>
               <span className="text-[2.4rem] leading-none text-purple-600 block mt-3 font-sans font-semibold tracking-tight">
-                {currentMonthRegistrations || 7}
+                {currentMonthRegistrations}
               </span>
               <span className="text-[10px] font-semibold text-gray-400 block mt-2">Adhésions récentes</span>
             </div>
@@ -406,7 +417,9 @@ const Dashboard = () => {
 
             {/* List with solid dark green circles and gradient fill indicators */}
             <div className="space-y-4 max-h-[380px] overflow-y-auto pr-2">
-              {sortedSectors.map((sect, index) => {
+              {sectorsWithData.length === 0 ? (
+                <p className="text-sm text-[#22301C]/45 font-medium italic py-6 text-center">Aucun secteur enregistré dans la base pour le moment.</p>
+              ) : sectorsWithData.map((sect, index) => {
                 const count = sectorCounts[sect] || 0;
                 const pct = totalEnterprises > 0 ? (count / totalEnterprises) * 100 : 0;
                 return (
@@ -425,7 +438,7 @@ const Dashboard = () => {
                     <div className="flex-1 bg-cscm-green/[0.07] h-2.5 rounded-full overflow-hidden relative">
                       <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: `${pct || 15}%` }}
+                        animate={{ width: `${pct}%` }}
                         transition={{ duration: 1.1, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
                         className="bg-gradient-to-r from-[#4B9040] via-[#6BAF56] to-[#E3C766] h-full rounded-full"
                       />
@@ -468,7 +481,7 @@ const Dashboard = () => {
                     {/* Rounded bar with linear gradient */}
                     <motion.div
                       initial={{ height: 0 }}
-                      animate={{ height: `${heightPct || 10}px` }}
+                      animate={{ height: `${Math.max(heightPct, 0)}px` }}
                       transition={{ duration: 0.8, delay: idx * 0.07, ease: [0.16, 1, 0.3, 1] }}
                       className="w-8 relative rounded-t-xl overflow-hidden flex items-end max-h-[140px] group-hover:opacity-90 transition-opacity"
                     >

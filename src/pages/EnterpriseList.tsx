@@ -7,6 +7,7 @@ import { EnterpriseDetailModal } from '../components/EnterpriseDetailModal';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { EnterpriseSummaryModal } from '../components/EnterpriseSummaryModal';
 import { getStoredEnterprises, saveStoredEnterprises, Enterprise } from '../utils/enterpriseStorage';
+import { getLocalCotisationRules } from '../utils/cotisationRules';
 import { getEffectiveApiKey } from '../utils/paymentConfig';
 
 const CURRENCIES = [
@@ -64,7 +65,7 @@ export const EnterpriseList = () => {
   const [quickPaymentEnt, setQuickPaymentEnt] = useState<any>(null);
   const [paymentMode, setPaymentMode] = useState<'manual' | 'online'>('manual');
   const [paymentRef, setPaymentRef] = useState('');
-  const [paymentAmount, setPaymentAmount] = useState('10000'); // Montant exact modifiable, par défaut 10000 FCFA
+  const [paymentAmount, setPaymentAmount] = useState(() => String(getLocalCotisationRules().amountPerSemester));
   const [paymentCurrency, setPaymentCurrency] = useState<string>('FCFA');
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -322,6 +323,9 @@ export const EnterpriseList = () => {
             <span className="badge-soft">Registre National</span>
             <h1 className="page-title md:text-4xl">Annuaire des Membres</h1>
             <p className="text-sm text-[#22301C]/55 font-medium">Consultez, filtrez et gérez l'ensemble des entreprises membres de la chambre.</p>
+            <p className="text-[10px] font-semibold text-cscm-green/80 uppercase tracking-wider">
+              {enterprises.length} entreprise{enterprises.length !== 1 ? 's' : ''} · données synchronisées Firestore
+            </p>
           </div>
         </div>
 
@@ -543,7 +547,7 @@ export const EnterpriseList = () => {
                             onClick={() => {
                               setQuickPaymentEnt(ent);
                               setPaymentMode('manual');
-                              setPaymentAmount('10000');
+                              setPaymentAmount(String(getLocalCotisationRules().amountPerSemester));
                               setCardName('');
                               setCardNumber('');
                               setCardExpiry('');

@@ -141,7 +141,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         payments.push({
           id: `custom-${index}`,
           label: cot.label || `Cotisation Annuelle`,
-          amount: Number(cot.amount) || 10000,
+          amount: Number(cot.amount) || 0,
           date: cot.date || new Date().toISOString().split('T')[0],
           reference: cot.reference || `REF-${Math.floor(Math.random() * 900000 + 100000)}`,
           method: 'Virement bancaire'

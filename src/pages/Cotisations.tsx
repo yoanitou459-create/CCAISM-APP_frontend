@@ -968,6 +968,9 @@ export const Cotisations: React.FC = () => {
               <p className="text-sm text-[#22301C]/55 font-medium max-w-2xl leading-relaxed">
                 Suivi officiel des cotisations membres, encaissements et actualisation du bilan financier de la Chambre.
               </p>
+              <p className="text-[10px] font-semibold text-cscm-green/80 uppercase tracking-wider">
+                {enterprises.length} entreprise{enterprises.length !== 1 ? 's' : ''} · données synchronisées Firestore
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto shrink-0">
