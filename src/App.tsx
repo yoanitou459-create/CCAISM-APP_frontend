@@ -4,7 +4,7 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { EnterpriseList } from './pages/EnterpriseList';
-import { Building2, Plus, Users, Landmark, ArrowRight, ArrowUpRight, Sparkles, Database, Coins, TrendingUp, BarChart3, DollarSign, Activity, ChevronRight, Check } from 'lucide-react';
+import { Building2, Plus, Users, Landmark, ArrowRight, ArrowUpRight, Sparkles, Database, Coins, TrendingUp, BarChart3, DollarSign, Activity, ChevronRight, Check, X, PartyPopper } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SidebarLayout } from './components/SidebarLayout';
 import { getStoredEnterprises, saveStoredEnterprises, INITIAL_ENTERPRISES } from './utils/enterpriseStorage';
@@ -104,6 +104,7 @@ const FallbackRedirect: React.FC = () => {
 const Dashboard = () => {
   const [enterprises, setEnterprises] = useState<any[]>([]);
   const [rules, setRules] = useState(() => getLocalCotisationRules());
+  const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
   const userName = JSON.parse(localStorage.getItem('user') || '{"prenom": "Moustapha"}').prenom;
 
@@ -118,6 +119,10 @@ const Dashboard = () => {
   useEffect(() => {
     loadData();
     loadRules();
+    if (localStorage.getItem('cscm_just_registered') === 'true') {
+      setShowWelcome(true);
+      localStorage.removeItem('cscm_just_registered');
+    }
     window.addEventListener('enterprises_updated', loadData);
     window.addEventListener('cotisation_rules_updated', loadRules);
     return () => {
@@ -251,6 +256,62 @@ const Dashboard = () => {
             </p>
           </div>
         </div>
+
+        {/* Welcome Banner */}
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="relative bg-gradient-to-r from-emerald-800 to-[#1e3d16] text-white rounded-[2rem] p-6 md:p-8 shadow-xl overflow-hidden border border-emerald-700/50"
+          >
+            {/* Background decorative patterns */}
+            <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none">
+              <svg className="w-full h-full text-white" viewBox="0 0 100 100" preserveAspectRatio="none" fill="currentColor">
+                <path d="M0,0 L100,0 L100,100 Z" />
+              </svg>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-5 relative z-10">
+              <div className="p-4 bg-white/10 rounded-2xl border border-white/20 shadow-inner text-cscm-gold shrink-0">
+                <PartyPopper className="w-8 h-8 text-amber-300 animate-bounce" />
+              </div>
+              <div className="space-y-2 text-left flex-1">
+                <h2 className="text-xl md:text-2xl font-serif font-black tracking-tight flex items-center gap-2">
+                  <span>Félicitations et bienvenue, {userName} !</span>
+                  <Sparkles className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
+                </h2>
+                <p className="text-xs md:text-sm text-emerald-100/90 leading-relaxed font-semibold max-w-4xl">
+                  Votre inscription a été finalisée avec succès et votre compte est désormais actif. Vous avez été connecté automatiquement. 
+                  En tant que membre de l'équipe de la <b>Chambre de Commerce et d'Industrie</b>, vous disposez maintenant d'un accès complet pour piloter les entreprises adhérentes, suivre et enregistrer les cotisations, importer des fichiers de données et gérer les profils utilisateurs.
+                </p>
+                <div className="pt-2 flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setShowWelcome(false)}
+                    className="bg-white hover:bg-emerald-50 text-emerald-900 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md flex items-center gap-1.5"
+                  >
+                    <span>Commencer à explorer</span>
+                    <ArrowRight className="w-4 h-4 shrink-0" />
+                  </button>
+                  <Link
+                    to="/enterprises/add"
+                    className="bg-emerald-700/60 hover:bg-emerald-700/80 text-white border border-white/15 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>Ajouter une entreprise</span>
+                    <Plus className="w-4 h-4 shrink-0" />
+                  </Link>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowWelcome(false)}
+                className="absolute top-0 right-0 md:relative md:top-auto md:right-auto p-2 bg-white/5 hover:bg-white/15 border border-white/10 rounded-xl transition-colors cursor-pointer shrink-0"
+                title="Fermer"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         {/* 1. KPI cards row (exactly like the screenshot layout with specific color accents) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

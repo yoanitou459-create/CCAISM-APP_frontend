@@ -79,6 +79,7 @@ export const Signup: React.FC = () => {
           email: finalUser.email,
           role: finalUser.role
         }));
+        localStorage.setItem('cscm_just_registered', 'true');
 
         // Notify app shell of profile update and navigate directly to dashboard
         window.dispatchEvent(new Event('user_profile_updated'));
