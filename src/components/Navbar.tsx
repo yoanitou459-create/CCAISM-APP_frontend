@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserCircle } from 'lucide-react';
+import { UserCircle, LogOut, Settings } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,12 +21,12 @@ export const Navbar = () => {
           className="flex items-center gap-3 cursor-pointer group" 
           onClick={() => navigate('/dashboard')}
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cscm-green to-[#16301E] flex items-center justify-center text-white font-sans font-bold text-sm shadow-md shadow-cscm-green/25 group-hover:scale-105 transition-transform duration-300">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cscm-green to-[#1e3818] flex items-center justify-center text-white font-serif font-black text-sm shadow-md shadow-cscm-green/20 group-hover:scale-105 transition-transform duration-300">
             CS
           </div>
           <div>
-            <h1 className="text-lg font-sans font-bold text-cscm-dark leading-none group-hover:text-cscm-green transition-colors duration-300">CSCM</h1>
-            <p className="text-[9px] text-cscm-gold uppercase tracking-widest font-bold mt-0.5">Chambre Sénégalaise</p>
+            <h1 className="text-lg font-serif font-black text-cscm-dark leading-none group-hover:text-cscm-green transition-colors">CSCM</h1>
+            <p className="text-[9px] text-[#A69371] uppercase tracking-widest font-black mt-0.5">Chambre Sénégalaise</p>
           </div>
         </div>
         
@@ -40,7 +40,7 @@ export const Navbar = () => {
           
           <button 
             onClick={() => setIsProfileOpen(true)} 
-            className="w-10 h-10 rounded-full bg-cscm-green-soft flex items-center justify-center text-cscm-green hover:scale-105 hover:shadow-md hover:shadow-cscm-green/15 transition-all duration-300 cursor-pointer relative border border-cscm-green/15"
+            className="w-10 h-10 rounded-full bg-cscm-green/10 flex items-center justify-center text-cscm-green hover:scale-105 transition-all cursor-pointer relative border border-cscm-green/10"
             title="Mon Profil"
           >
             <UserCircle className="w-6 h-6" />

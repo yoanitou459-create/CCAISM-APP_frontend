@@ -8,6 +8,7 @@ import { ConfirmationModal } from '../components/ConfirmationModal';
 import { EnterpriseSummaryModal } from '../components/EnterpriseSummaryModal';
 import { getStoredEnterprises, saveStoredEnterprises, Enterprise } from '../utils/enterpriseStorage';
 import { getEffectiveApiKey } from '../utils/paymentConfig';
+import { getLocalCotisationRules } from '../utils/cotisationRules';
 
 const CURRENCIES = [
   { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },
@@ -64,7 +65,8 @@ export const EnterpriseList = () => {
   const [quickPaymentEnt, setQuickPaymentEnt] = useState<any>(null);
   const [paymentMode, setPaymentMode] = useState<'manual' | 'online'>('manual');
   const [paymentRef, setPaymentRef] = useState('');
-  const [paymentAmount, setPaymentAmount] = useState('10000'); // Montant exact modifiable, par défaut 10000 FCFA
+  const [rules, setRules] = useState(() => getLocalCotisationRules());
+  const [paymentAmount, setPaymentAmount] = useState(() => String(getLocalCotisationRules().amountPerSemester)); // Montant exact modifiable, par défaut depuis les règles
   const [paymentCurrency, setPaymentCurrency] = useState<string>('FCFA');
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -75,6 +77,12 @@ export const EnterpriseList = () => {
 
   const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
   const [userRole, setUserRole] = useState<'ADMIN' | 'MODERATEUR' | 'MEMBRE'>('MEMBRE');
+
+  const loadRules = () => {
+    const activeRules = getLocalCotisationRules();
+    setRules(activeRules);
+    setPaymentAmount(String(activeRules.amountPerSemester));
+  };
 
   const loadData = () => {
     const freshList = getStoredEnterprises();
@@ -100,9 +108,12 @@ export const EnterpriseList = () => {
 
   useEffect(() => {
     loadData();
+    loadRules();
     window.addEventListener('enterprises_updated', loadData);
+    window.addEventListener('cotisation_rules_updated', loadRules);
     return () => {
       window.removeEventListener('enterprises_updated', loadData);
+      window.removeEventListener('cotisation_rules_updated', loadRules);
     };
   }, []);
 
@@ -305,10 +316,10 @@ export const EnterpriseList = () => {
               initial={{ opacity: 0, y: -40, x: '-50%' }}
               animate={{ opacity: 1, y: 20, x: '-50%' }}
               exit={{ opacity: 0, y: -40, x: '-50%' }}
-              className={`fixed top-4 left-1/2 z-[110] px-6 py-4 rounded-2xl shadow-[0_20px_50px_-16px_rgba(62,123,50,0.35)] font-bold flex items-center gap-3 border ${
+              className={`fixed top-4 left-1/2 z-[110] px-6 py-4 rounded-2xl shadow-xl font-bold flex items-center gap-3 border ${
                 feedbackMessage.type === 'success' 
-                  ? 'bg-white text-emerald-700 border-emerald-100' 
-                  : 'bg-white text-rose-600 border-rose-100'
+                  ? 'bg-emerald-500 text-white border-emerald-600' 
+                  : 'bg-rose-500 text-white border-rose-600'
               }`}
             >
               {feedbackMessage.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
@@ -318,43 +329,42 @@ export const EnterpriseList = () => {
         </AnimatePresence>
 
         {/* Header Block */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 pb-2">
-          <div className="space-y-2">
-            <span className="badge-soft">Registre National</span>
-            <h1 className="page-title md:text-4xl">Annuaire des Membres</h1>
-            <p className="text-sm text-[#22301C]/55 font-medium">Consultez, filtrez et gérez l'ensemble des entreprises membres de la chambre.</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div>
+            <span className="text-xs font-black uppercase tracking-widest text-cscm-green">Registre National</span>
+            <h1 className="text-3xl md:text-4xl font-serif font-black text-cscm-dark mt-1">Annuaire des Membres</h1>
           </div>
         </div>
 
         {/* Mini Stats Lineup */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="card-elevated p-6 flex items-center gap-4">
-            <div className="p-3.5 bg-cscm-green-soft rounded-2xl text-cscm-green shrink-0">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#132e15]/10 flex items-center gap-4">
+            <div className="p-3.5 bg-cscm-green/10 rounded-2xl text-cscm-green shrink-0">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[#22301C]/55 text-[10px] font-black uppercase tracking-wider">Membres totaux</p>
-              <h3 className="text-2xl font-sans font-bold text-[#274420] mt-0.5">{enterprises.length}</h3>
+              <p className="text-[#132e15]/75 text-[10px] font-black uppercase tracking-wider">Membres totaux</p>
+              <h3 className="text-2xl font-serif font-black text-cscm-dark mt-0.5">{enterprises.length}</h3>
             </div>
           </div>
           
-          <div className="card-elevated p-6 flex items-center gap-4">
-            <div className="p-3.5 bg-cscm-gold-light/40 rounded-2xl text-amber-500 shrink-0">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#132e15]/10 flex items-center gap-4">
+            <div className="p-3.5 bg-cscm-gold/15 rounded-2xl text-[#a8820c] shrink-0">
               <Landmark className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[#22301C]/55 text-[10px] font-black uppercase tracking-wider">Cotisations accumulées</p>
-              <h3 className="text-2xl font-sans font-bold text-[#274420] mt-0.5">{totalCotisations.toLocaleString()} FCFA</h3>
+              <p className="text-[#132e15]/75 text-[10px] font-black uppercase tracking-wider">Cotisations accumulées</p>
+              <h3 className="text-2xl font-serif font-black text-cscm-dark mt-0.5">{totalCotisations.toLocaleString()} FCFA</h3>
             </div>
           </div>
 
-          <div className="card-elevated p-6 flex items-center gap-4">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#132e15]/10 flex items-center gap-4">
             <div className="p-3.5 bg-indigo-500/10 rounded-2xl text-indigo-600 shrink-0">
               <Plus className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[#22301C]/55 text-[10px] font-black uppercase tracking-wider">Secteurs actifs</p>
-              <h3 className="text-2xl font-sans font-bold text-[#274420] mt-0.5">
+              <p className="text-[#132e15]/75 text-[10px] font-black uppercase tracking-wider">Secteurs actifs</p>
+              <h3 className="text-2xl font-serif font-black text-cscm-dark mt-0.5">
                 {Array.from(new Set(enterprises.map(e => e.secteur).filter(Boolean))).length}
               </h3>
             </div>
@@ -362,10 +372,10 @@ export const EnterpriseList = () => {
         </div>
 
         {/* Sectors count horizontal breakdown - interactive filters */}
-        <div className="card-elevated p-6 space-y-3.5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b pb-2.5 border-gray-100">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#274420]">Effectifs d'entreprises par secteur d'activité</span>
-            <span className="text-[10px] bg-cscm-green-soft text-cscm-green border border-cscm-green/15 font-black px-3 py-1 rounded-full uppercase tracking-wider">
+        <div className="bg-white p-6 rounded-3xl border border-gray-150 shadow-sm space-y-3.5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b pb-2.5 border-gray-50">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#132e15]">Effectifs d'entreprises par secteur d'activité</span>
+            <span className="text-[10px] bg-emerald-50 text-emerald-800 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
               {enterprises.length} Adhérents Enregistrés
             </span>
           </div>
@@ -377,14 +387,14 @@ export const EnterpriseList = () => {
                 <button 
                   key={sect}
                   onClick={() => setFilters(prev => ({ ...prev, secteur: isSelected ? '' : sect }))}
-                  className={`px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 border outline-none cursor-pointer flex items-center gap-2 select-none ${
+                  className={`px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all border outline-none cursor-pointer flex items-center gap-2 select-none ${
                     isSelected 
-                      ? 'bg-cscm-green text-white border-cscm-green shadow-md shadow-cscm-green/20' 
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-cscm-green/30 hover:bg-cscm-green-soft/50'
+                      ? 'bg-cscm-green text-white border-cscm-green shadow-md shadow-cscm-green/10' 
+                      : 'bg-[#FAF9F5] text-gray-700 border-gray-150 hover:bg-gray-100'
                   }`}
                 >
-                  <span className={isSelected ? 'text-cscm-gold-light font-bold' : 'text-[#274420] font-bold'}>{sect}</span>
-                  <span className={`text-[9px] font-black rounded-full px-2 py-0.5 ${isSelected ? 'bg-white/25 text-white' : 'bg-cscm-green-soft text-cscm-green'}`}>
+                  <span className={isSelected ? 'text-cscm-gold font-bold' : 'text-[#8c7015] font-bold'}>{sect}</span>
+                  <span className={`text-[9px] font-black rounded-full px-2 py-0.5 ${isSelected ? 'bg-white/25 text-white' : 'bg-[#e9e7e0] text-gray-800'}`}>
                     {count}
                   </span>
                 </button>
@@ -394,25 +404,25 @@ export const EnterpriseList = () => {
         </div>
 
         {/* Search, Filter Action Bar */}
-        <div className="card-elevated p-6 space-y-4">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#132e15]/10 space-y-4">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="relative flex-1 w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-cscm-green/60 w-5 h-5 pointer-events-none" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#132e15] w-5 h-5 pointer-events-none font-bold" />
               <input 
                 type="text" 
-                placeholder="Rechercher par nom, raison sociale, numéro de membre..."
+                placeholder="Saisissez un nom, une raison sociale ou un numéro de membre à rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-200 focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] outline-none bg-white focus:bg-white transition-all text-sm placeholder:text-gray-300 font-semibold text-gray-800"
+                className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-150 outline-none focus:border-cscm-green focus:ring-2 focus:ring-cscm-green/10 transition-all text-sm placeholder:text-[#132e15]/60 font-semibold text-[#132e15]"
               />
             </div>
 
             <button 
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`w-full md:w-auto px-6 py-3.5 rounded-2xl font-bold text-sm tracking-wide border cursor-pointer flex items-center justify-center gap-2.5 transition-all duration-300 ${
+              className={`w-full md:w-auto px-6 py-3.5 rounded-2xl font-bold text-sm tracking-wide border cursor-pointer flex items-center justify-center gap-2.5 transition-all ${
                 isFilterOpen 
-                ? 'bg-cscm-green text-white border-cscm-green shadow-lg shadow-cscm-green/25' 
-                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 shadow-sm hover:shadow-md'
+                ? 'bg-cscm-green text-white border-cscm-green' 
+                : 'bg-gray-55 bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
               }`}
             >
               <Filter className="w-4 h-4" />
@@ -431,7 +441,7 @@ export const EnterpriseList = () => {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="bg-cscm-green-soft/70/70 p-6 rounded-2xl border border-gray-100 flex flex-wrap gap-4 items-end mt-2">
+                <div className="bg-gray-50/70 p-6 rounded-2xl border border-gray-150 flex flex-wrap gap-4 items-end mt-2">
                   {[
                     { 
                       label: 'Pays d\'origine', 
@@ -452,7 +462,7 @@ export const EnterpriseList = () => {
                     { label: 'Taille', key: 'taille', options: ['Petite', 'Moyenne', 'Grande'] },
                   ].map((filter) => (
                     <div key={filter.key} className="flex flex-col gap-1.5 w-full sm:w-[185px]">
-                      <label className="text-[10px] font-black text-[#274420] uppercase tracking-widest leading-none">{filter.label}</label>
+                      <label className="text-[10px] font-black text-[#132e15] uppercase tracking-widest leading-none">{filter.label}</label>
                       <select 
                         value={(filters as any)[filter.key]}
                         onChange={(e) => {
@@ -465,7 +475,7 @@ export const EnterpriseList = () => {
                             return updated;
                           });
                         }}
-                        className="bg-white border border-gray-200 rounded-2xl px-3.5 py-2.5 text-xs font-semibold outline-none w-full shadow-sm text-gray-800 focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] transition-all"
+                        className="bg-white border border-gray-250 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none w-full shadow-sm text-gray-700 focus:border-cscm-green transition-colors"
                       >
                         <option value="">Tous</option>
                         {filter.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -486,50 +496,51 @@ export const EnterpriseList = () => {
         </div>
 
         {/* Grid-style list layout / Table */}
-        <div className="table-shell">
-            <table className="table-base lg:min-w-[1000px]">
-              <thead className="table-head">
-                <tr className="table-head-row">
-                  <th className="table-th">Nom de l'entreprise</th>
-                  <th className="table-th">N° Membre</th>
-                  <th className="table-th hidden lg:table-cell">Raison sociale</th>
-                  <th className="table-th hidden sm:table-cell">Localisation</th>
-                  <th className="table-th hidden md:table-cell">Secteur</th>
-                  <th className="table-th hidden md:table-cell">Effectif</th>
-                  <th className="table-th hidden sm:table-cell">Statut Adhésion</th>
-                  <th className="table-th text-right">Actions</th>
+        <div className="bg-white rounded-[2rem] shadow-sm border border-[#132e15]/20 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-full lg:min-w-[1000px]">
+              <thead>
+                <tr className="bg-[#132e15] border-b border-[#132e15]/20 text-white text-[11px] uppercase font-black tracking-widest">
+                  <th className="p-6">Nom de l'entreprise</th>
+                  <th className="p-6">N° Membre</th>
+                  <th className="p-6 hidden lg:table-cell">Raison sociale</th>
+                  <th className="p-6 hidden sm:table-cell">Localisation</th>
+                  <th className="p-6 hidden md:table-cell">Secteur</th>
+                  <th className="p-6 hidden md:table-cell">Effectif</th>
+                  <th className="p-6 hidden sm:table-cell">Statut Adhésion</th>
+                  <th className="p-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="table-body">
+              <tbody className="divide-y divide-[#132e15]/10 text-sm font-semibold text-[#132e15]">
                 {filteredEnterprises.map((ent, idx) => (
-                  <tr key={`${ent.id || idx}-${idx}`} className="table-row group">
-                    <td className="table-td text-cscm-dark flex items-center gap-3.5">
+                  <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all group">
+                    <td className="p-6 text-cscm-dark flex items-center gap-3.5">
                       {ent.logo ? (
                         <img src={ent.logo} alt={ent.name} className="w-11 h-11 rounded-2xl object-cover border border-gray-100 shadow-sm" />
                       ) : (
-                        <div className="w-11 h-11 rounded-2xl bg-cscm-green-soft text-cscm-green flex items-center justify-center font-sans font-bold text-center text-sm border border-cscm-green/15">
+                        <div className="w-11 h-11 rounded-2xl bg-cscm-green/10 text-cscm-green flex items-center justify-center font-serif font-black text-center text-sm border border-cscm-green/15">
                           {ent.name.charAt(0)}
                         </div>
                       )}
                       <div>
                         <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.name}</div>
-                        <div className="text-[10px] text-[#22301C]/55 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
+                        <div className="text-[10px] text-[#132e15]/75 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
                       </div>
                     </td>
-                    <td className="table-td text-cscm-dark/70 font-mono text-xs font-bold">{ent.memberNo}</td>
-                    <td className="table-td text-cscm-dark/80 font-bold hidden lg:table-cell">{ent.raisonSociale}</td>
-                    <td className="table-td hidden sm:table-cell">
-                      <div className="font-bold text-cscm-dark">{ent.ville}</div>
-                      <div className="text-[10px] text-cscm-dark/55 font-bold uppercase mt-0.5">{ent.pays}</div>
+                    <td className="p-6 text-[#132e15]/80 font-mono text-xs font-bold">{ent.memberNo}</td>
+                    <td className="p-6 text-[#132e15]/90 font-bold hidden lg:table-cell">{ent.raisonSociale}</td>
+                    <td className="p-6 text-[#132e15] hidden sm:table-cell">
+                      <div className="font-bold text-[#132e15]">{ent.ville}</div>
+                      <div className="text-[10px] text-[#132e15]/70 font-bold uppercase mt-0.5">{ent.pays}</div>
                     </td>
-                    <td className="table-td hidden md:table-cell">
+                    <td className="p-6 hidden md:table-cell">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${getSectorStyle(ent.secteur)}`}>
                         <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                         {ent.secteur}
                       </span>
                     </td>
-                    <td className="table-td text-cscm-dark font-black hidden md:table-cell">{ent.effectif} pers.</td>
-                    <td className="table-td hidden sm:table-cell">
+                    <td className="p-6 text-[#132e15] font-black hidden md:table-cell">{ent.effectif} pers.</td>
+                    <td className="p-6 hidden sm:table-cell">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${
                         ent.statutMembre === 'Actif' 
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
@@ -539,14 +550,14 @@ export const EnterpriseList = () => {
                         {ent.statutMembre}
                       </span>
                     </td>
-                    <td className="table-td">
+                    <td className="p-6">
                       <div className="flex items-center justify-end gap-2 text-right">
                         {userRole === 'ADMIN' && (
                           <button 
                             onClick={() => {
                               setQuickPaymentEnt(ent);
                               setPaymentMode('manual');
-                              setPaymentAmount('10000');
+                              setPaymentAmount(String(rules.amountPerSemester));
                               setCardName('');
                               setCardNumber('');
                               setCardExpiry('');
@@ -555,15 +566,15 @@ export const EnterpriseList = () => {
                               setPaymentProgressText('');
                               setPaymentRef(`VIR-${Math.floor(100000 + Math.random() * 900000)}`);
                             }}
-                            className="p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 border border-amber-100 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
-                            title="Ajouter Cotisation (10 000 FCFA)"
+                            className="p-2 text-[#a8820c] hover:text-amber-600 hover:bg-amber-50 border border-amber-100 rounded-xl transition-all"
+                            title={`Ajouter Cotisation (${rules.amountPerSemester.toLocaleString()} FCFA)`}
                           >
-                            <Coins className="w-4.5 h-4.5 text-amber-500" />
+                            <Coins className="w-4.5 h-4.5 text-amber-500 animate-pulse" />
                           </button>
                         )}
                         <button 
                           onClick={() => setEnterpriseToSummary(ent)}
-                          className="p-2 text-gray-500 hover:text-cscm-green hover:bg-cscm-green-soft/60 border border-gray-200 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                          className="p-2 text-[#132e15] hover:text-cscm-green hover:bg-[#FAF9F5] border border-gray-150 rounded-xl transition-all"
                           title="Fiche technique PDF"
                         >
                           <Eye className="w-4.5 h-4.5" />
@@ -571,7 +582,7 @@ export const EnterpriseList = () => {
                         {userRole === 'ADMIN' && (
                           <button 
                             onClick={() => setEnterpriseToDelete(ent)}
-                            className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 border border-rose-100 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                            className="p-2 text-rose-700 hover:text-rose-900 hover:bg-rose-50 border border-rose-100 rounded-xl transition-all"
                             title="Retirer"
                           >
                             <Trash2 className="w-4.5 h-4.5" />
@@ -580,7 +591,7 @@ export const EnterpriseList = () => {
                         {userRole !== 'MEMBRE' && (
                           <button 
                             onClick={() => setSelectedEnterprise(ent)}
-                            className="bg-cscm-green-soft text-cscm-green hover:bg-cscm-green hover:text-white hover:shadow-lg hover:shadow-cscm-green/25 px-4 py-2 rounded-xl text-xs font-black transition-all duration-300 flex items-center gap-1 cursor-pointer select-none"
+                            className="bg-cscm-green/10 text-cscm-green hover:bg-cscm-green hover:text-white px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer select-none"
                           >
                             Détails
                             <ChevronRight className="w-3.5 h-3.5" />
@@ -592,13 +603,14 @@ export const EnterpriseList = () => {
                 ))}
                 {filteredEnterprises.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="table-td p-16 text-center text-cscm-dark/45 italic font-bold">
+                    <td colSpan={8} className="p-16 text-center text-[#132e15]/60 italic font-bold">
                       Aucune entreprise ne correspond à vos critères de recherche.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+          </div>
         </div>
       </motion.div>
 
@@ -628,19 +640,19 @@ export const EnterpriseList = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden border border-gray-100"
+              className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden border border-gray-150"
             >
               {/* Header */}
-              <div className="modal-header">
+              <div className="p-6 bg-[#0a1208] text-white flex justify-between items-center border-b border-[#112310]">
                 <div>
-                  <h3 className="text-sm font-sans font-bold text-[#274420] tracking-wide">
+                  <h3 className="text-sm font-serif font-black text-cscm-gold tracking-wide">
                     {paymentMode === 'online' ? 'Paiement Sécurisé En Ligne' : 'Saisir Paiement Banque'}
                   </h3>
-                  <p className="text-[9px] text-[#22301C]/55 font-bold uppercase tracking-wider mt-0.5">{quickPaymentEnt.name}</p>
+                  <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider mt-0.5">{quickPaymentEnt.name}</p>
                 </div>
                 <button 
                   onClick={() => !isProcessingPayment && setQuickPaymentEnt(null)}
-                  className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors text-gray-500 cursor-pointer"
+                  className="p-1.5 hover:bg-white/10 rounded-xl transition-colors text-white cursor-pointer"
                   disabled={isProcessingPayment}
                 >
                   <X className="w-5 h-5" />
@@ -650,10 +662,10 @@ export const EnterpriseList = () => {
               {isProcessingPayment ? (
                 /* LOADER VIEW */
                 <div className="p-8 text-center space-y-4">
-                  <div className="w-16 h-16 bg-cscm-green-soft text-cscm-green rounded-full flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 bg-cscm-green/10 text-cscm-green rounded-full flex items-center justify-center mx-auto">
                     <Loader2 className="w-8 h-8 animate-spin" />
                   </div>
-                  <h4 className="text-sm font-black text-[#274420] uppercase tracking-wider">Traitement de la transaction...</h4>
+                  <h4 className="text-sm font-black text-cscm-dark uppercase tracking-wider">Traitement de la transaction...</h4>
                   <p className="text-xs text-gray-500 font-bold max-w-xs mx-auto animate-pulse">{paymentProgressText}</p>
                   <div className="pt-2">
                     <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Passerelle de Paiement CSCM</span>
@@ -663,14 +675,14 @@ export const EnterpriseList = () => {
                 /* MAIN FORM VIEW */
                 <form onSubmit={handleRegisterQuickPayment} className="p-6 space-y-4">
                   {/* Mode Tabs */}
-                  <div className="grid grid-cols-2 bg-cscm-green-soft/70 p-1 rounded-2xl border border-gray-100">
+                  <div className="grid grid-cols-2 bg-gray-100 p-1 rounded-2xl">
                     <button
                       type="button"
                       onClick={() => setPaymentMode('manual')}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         paymentMode === 'manual' 
-                          ? 'bg-white text-[#274420] shadow-sm' 
-                          : 'text-gray-500 hover:text-[#274420]'
+                          ? 'bg-white text-cscm-dark shadow-xs' 
+                          : 'text-gray-500 hover:text-cscm-dark'
                       }`}
                     >
                       Virement Banque
@@ -678,10 +690,10 @@ export const EnterpriseList = () => {
                     <button
                       type="button"
                       onClick={() => setPaymentMode('online')}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         paymentMode === 'online' 
-                          ? 'bg-cscm-green text-white shadow-sm shadow-cscm-green/25' 
-                          : 'text-gray-500 hover:text-[#274420]'
+                          ? 'bg-[#132e15] text-white shadow-xs' 
+                          : 'text-gray-500 hover:text-cscm-dark'
                       }`}
                     >
                       Paiement En Ligne
@@ -689,13 +701,13 @@ export const EnterpriseList = () => {
                   </div>
 
                   {/* Common editable amount input */}
-                  <div className="space-y-3 bg-white p-4 rounded-2xl border border-gray-100">
+                  <div className="space-y-3 bg-[#FAF9F5] p-4 rounded-2xl border border-gray-150">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black uppercase text-[#274420] tracking-wider block">Devise du versement</label>
+                      <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider block">Devise du versement</label>
                       <select
                         value={paymentCurrency}
                         onChange={(e) => setPaymentCurrency(e.target.value)}
-                        className="bg-white border border-gray-200 text-gray-800 font-sans font-bold text-xs py-1.5 px-3 rounded-2xl shadow-sm outline-none cursor-pointer focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] transition-all min-w-[150px]"
+                        className="bg-white border border-gray-200 text-[#132e15] font-serif font-black text-xs py-1.5 px-3 rounded-xl shadow-3xs outline-none cursor-pointer focus:border-[#132e15] transition-all min-w-[150px]"
                       >
                         {CURRENCIES.map(curr => (
                           <option key={curr.code} value={curr.code}>
@@ -715,10 +727,10 @@ export const EnterpriseList = () => {
                           required
                           min="1"
                           step="any"
-                          placeholder="Ex: 10000"
+                          placeholder="Saisissez le montant de la cotisation"
                           value={paymentAmount}
                           onChange={(e) => setPaymentAmount(e.target.value)}
-                          className="w-full pl-3 pr-12 py-2 rounded-2xl border border-gray-200 outline-none focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] transition-all text-sm font-black text-gray-800 bg-white placeholder:text-gray-300"
+                          className="w-full pl-3 pr-12 py-2 rounded-xl border border-gray-200 outline-none focus:border-cscm-green transition-all text-sm font-black text-[#132e15] bg-white"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 uppercase tracking-wider">
                           {paymentCurrency}
@@ -731,7 +743,7 @@ export const EnterpriseList = () => {
                       if (paymentCurrency === 'FCFA') {
                         const eurEquivalent = Number(paymentAmount) / 655.957;
                         return (
-                          <div className="bg-cscm-green-soft/60 border border-cscm-green/15 rounded-xl p-2.5 text-center text-xs">
+                          <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
                             <p className="text-xs text-gray-600 font-semibold">
                               Équivalent indicatif : <span className="font-mono text-xs font-black">{eurEquivalent.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
                             </p>
@@ -740,8 +752,8 @@ export const EnterpriseList = () => {
                       } else {
                         const convertedFCFA = Math.round(Number(paymentAmount) * selectedCurr.rate);
                         return (
-                          <div className="bg-cscm-green-soft/60 border border-cscm-green/15 rounded-xl p-2.5 text-center text-xs">
-                            <p className="text-xs text-cscm-green font-extrabold">
+                          <div className="bg-[#132e15]/5 border border-[#132e15]/10 rounded-xl p-2.5 text-center text-xs">
+                            <p className="text-xs text-emerald-800 font-extrabold">
                               Conversion automatique : <span className="font-mono text-sm font-black">{convertedFCFA.toLocaleString()} FCFA</span>
                             </p>
                           </div>
@@ -753,20 +765,20 @@ export const EnterpriseList = () => {
                   {paymentMode === 'manual' ? (
                     /* MANUAL BANK VIR PATH */
                     <div className="space-y-4">
-                      <div className="bg-cscm-green-soft text-[#274420] font-bold p-4 rounded-2xl border border-cscm-green/15 flex items-start gap-2.5 text-xs">
-                        <Landmark className="w-4.5 h-4.5 text-amber-500 shrink-0 mt-0.5" />
+                      <div className="bg-[#E1EADF] text-[#132e15] font-bold p-4 rounded-xl border border-emerald-100 flex items-start gap-2.5 text-xs">
+                        <Landmark className="w-4.5 h-4.5 text-cscm-gold shrink-0 mt-0.5" />
                         <p>Le versement de validation sera imputé manuellement à la caisse de la Chambre de Commerce pour ce membre.</p>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase text-[#274420] tracking-wider">Référence du Virement Bancaire</label>
+                        <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider">Référence du Virement Bancaire</label>
                         <input 
                           type="text" 
                           required
-                          placeholder="Ex: VR-719582-BOA"
+                          placeholder="Saisissez la référence du virement bancaire (Ex: VR-719582-BOA)"
                           value={paymentRef}
                           onChange={(e) => setPaymentRef(e.target.value)}
-                          className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 outline-none focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] bg-white focus:bg-white transition-all font-mono text-xs font-semibold text-gray-800 placeholder:text-gray-300"
+                          className="w-full px-4 py-3.5 rounded-xl border border-gray-250 outline-none focus:border-cscm-green transition-all font-mono text-xs text-cscm-dark bg-white font-semibold text-[#132e15]"
                         />
                       </div>
 
@@ -774,13 +786,13 @@ export const EnterpriseList = () => {
                         <button 
                           type="button"
                           onClick={() => setQuickPaymentEnt(null)}
-                          className="flex-1 py-3 text-xs font-bold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer text-center"
+                          className="flex-1 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer text-center"
                         >
                           Annuler
                         </button>
                         <button 
                           type="submit"
-                          className="flex-1 py-3 text-xs font-bold text-white btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] rounded-2xl shadow-lg shadow-cscm-green/25 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer text-center"
+                          className="flex-1 py-3 text-xs font-black text-white bg-cscm-green hover:bg-[#152e16] rounded-xl transition-colors cursor-pointer text-center shadow-md shadow-cscm-green/10"
                         >
                           Valider le versement
                         </button>
@@ -830,10 +842,10 @@ export const EnterpriseList = () => {
                               <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Nom sur la carte</label>
                               <input
                                 type="text"
-                                placeholder="M. Yoan ITOUA"
+                                placeholder="Saisissez le nom complet du titulaire de la carte"
                                 value={cardName}
                                 onChange={(e) => setCardName(e.target.value)}
-                                className="w-full px-3 py-2 bg-white focus:bg-white border border-gray-200 rounded-2xl outline-none focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] transition-all text-xs font-bold text-gray-800 placeholder:text-gray-300"
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-bold text-gray-850"
                                 required
                               />
                             </div>
@@ -844,14 +856,14 @@ export const EnterpriseList = () => {
                                 <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 <input
                                   type="text"
-                                  placeholder="4532 •••• •••• 8824"
+                                  placeholder="Saisissez le numéro de carte (4532 •••• •••• 8824)"
                                   value={cardNumber}
                                   onChange={(e) => {
                                     const raw = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
                                     const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
                                     setCardNumber(formatted.substring(0, 19));
                                   }}
-                                  className="w-full pl-9 pr-4 py-2 bg-white focus:bg-white border border-gray-200 rounded-2xl outline-none focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] transition-all text-xs font-mono font-black text-gray-800 placeholder:text-gray-300"
+                                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-gray-850"
                                   required
                                 />
                               </div>
@@ -862,14 +874,14 @@ export const EnterpriseList = () => {
                                 <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Expiration</label>
                                 <input
                                   type="text"
-                                  placeholder="MM/YY"
+                                  placeholder="Saisissez la date d'expiration (MM/YY)"
                                   value={cardExpiry}
                                   onChange={(e) => {
                                     let v = e.target.value.replace(/[^0-9]/g, '');
                                     if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2, 4);
                                     setCardExpiry(v.substring(0, 5));
                                   }}
-                                  className="w-full px-3 py-2 bg-white focus:bg-white border border-gray-200 rounded-2xl outline-none focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] transition-all text-xs font-mono font-black text-center text-gray-800 placeholder:text-gray-300"
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-center text-gray-850"
                                   required
                                 />
                               </div>
@@ -877,11 +889,11 @@ export const EnterpriseList = () => {
                                 <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">CVC (CVV)</label>
                                 <input
                                   type="password"
-                                  placeholder="•••"
+                                  placeholder="Saisissez le code de sécurité (CVV)"
                                   maxLength={3}
                                   value={cardCvv}
                                   onChange={(e) => setCardCvv(e.target.value.replace(/[^0-9]/g, ''))}
-                                  className="w-full px-3 py-2 bg-white focus:bg-white border border-gray-200 rounded-2xl outline-none focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] transition-all text-xs font-mono font-black text-center text-gray-800 placeholder:text-gray-300"
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-cscm-green text-xs font-mono font-black text-center text-gray-850"
                                   required
                                 />
                               </div>
@@ -892,13 +904,13 @@ export const EnterpriseList = () => {
                             <button 
                               type="button"
                               onClick={() => setQuickPaymentEnt(null)}
-                              className="flex-1 py-3 text-xs font-bold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer text-center"
+                              className="flex-1 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer text-center"
                             >
                               Annuler
                             </button>
                             <button 
                               type="submit"
-                              className="flex-1 py-3 text-xs font-bold text-white btn-sheen bg-gradient-to-b from-[#4B9040] to-[#3A7230] hover:from-[#529B46] hover:to-[#417F36] rounded-2xl shadow-lg shadow-cscm-green/25 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer text-center"
+                              className="flex-1 py-3 text-xs font-black text-[#ebd078] bg-[#132e15] hover:bg-emerald-950 rounded-xl transition-colors cursor-pointer text-center shadow-md border border-[#ebd078]/25"
                             >
                               <Lock className="w-3.5 h-3.5 inline shrink-0 mr-1" />
                               <span>Payer {Number(paymentAmount).toLocaleString()} FCFA</span>
