@@ -240,10 +240,10 @@ export const Cotisations: React.FC = () => {
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(60, 60, 60);
-    doc.text("Nom de l'entreprise :", 20, 72);
+    doc.text("Raison sociale :", 20, 72);
     doc.setFont('Helvetica', 'bold');
     doc.setTextColor(19, 46, 21);
-    doc.text(ent.name || ent.raisonSociale || '', 65, 72);
+    doc.text(ent.raisonSociale || ent.name || '', 65, 72);
 
     doc.setFont('Helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
@@ -804,7 +804,7 @@ export const Cotisations: React.FC = () => {
   const delayedCount = formattedEnterprises.filter(e => !e.isUpToDate).length;
 
   const filtered = formattedEnterprises.filter(ent => {
-    const matchesSearch = (ent.name || ent.raisonSociale || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = (ent.raisonSociale || ent.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                           ent.memberNo.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (statusFilter === 'up_to_date') return matchesSearch && ent.isUpToDate;
@@ -1196,7 +1196,7 @@ export const Cotisations: React.FC = () => {
               <tbody className="table-body">
                     {filtered.map((ent, idx) => {
                       const restToPay = Math.max(0, (ent.requiredAmount || 0) - (ent.sumPaid || 0));
-                      const displayName = ent.name || ent.raisonSociale || 'Entreprise';
+                      const displayName = ent.raisonSociale || ent.name || 'Entreprise';
                       return (
                         <tr key={`${ent.id || idx}-${idx}`} className="table-row">
                           <td className="table-td font-mono text-[#22301C]/50 text-xs font-bold">
@@ -1364,7 +1364,7 @@ export const Cotisations: React.FC = () => {
                     <Coins className="w-5 h-5" />
                   </div>
                   <h3 className="section-title text-xl">Enregistrer une cotisation</h3>
-                  <p className="text-[#22301C]/55 text-xs mt-1 font-medium">Créditer le compte de <strong className="text-cscm-dark">{selectedEnt.name || selectedEnt.raisonSociale}</strong></p>
+                  <p className="text-[#22301C]/55 text-xs mt-1 font-medium">Créditer le compte de <strong className="text-cscm-dark">{selectedEnt.raisonSociale || selectedEnt.name}</strong></p>
                 </div>
 
                 <div className="grid grid-cols-2 p-1 bg-cscm-green-soft/60 rounded-2xl border border-cscm-green/10">
@@ -1709,7 +1709,7 @@ export const Cotisations: React.FC = () => {
                   <span className="text-[10px] font-bold bg-cscm-green-soft text-cscm-green border border-cscm-green/15 uppercase px-2.5 py-1 rounded-full inline-block mb-2">
                     N° membre : {receiptModalEnt.memberNo}
                   </span>
-                  <h3 className="page-title text-2xl">{receiptModalEnt.name || receiptModalEnt.raisonSociale}</h3>
+                  <h3 className="page-title text-2xl">{receiptModalEnt.raisonSociale || receiptModalEnt.name}</h3>
                   <p className="text-[#22301C]/55 text-xs mt-1 font-medium">
                     Secteur : <strong className="text-cscm-dark">{receiptModalEnt.secteur}</strong>
                   </p>
@@ -1920,7 +1920,7 @@ export const Cotisations: React.FC = () => {
                 <div className="border-b border-cscm-green/10 pb-3">
                   <span className="text-[9px] font-bold uppercase text-[#22301C]/45 tracking-wider">Modification</span>
                   <h3 className="section-title text-xl">Modifier la cotisation</h3>
-                  <p className="text-xs text-[#22301C]/55 font-medium mt-0.5">Pour : <strong className="text-cscm-green">{editingPayment.ent.name || editingPayment.ent.raisonSociale}</strong></p>
+                  <p className="text-xs text-[#22301C]/55 font-medium mt-0.5">Pour : <strong className="text-cscm-green">{editingPayment.ent.raisonSociale || editingPayment.ent.name}</strong></p>
                 </div>
 
                 <form onSubmit={handleSaveEdit} className="space-y-4">

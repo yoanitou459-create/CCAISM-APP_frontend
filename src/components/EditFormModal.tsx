@@ -102,7 +102,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
             {[
               { label: "Date d'adhésion", key: 'dateAdhesion', type: 'date' },
               { label: "Statut membre", key: 'statutMembre', type: 'select', options: ['Actif', 'Suspendu', 'Radié'] },
-              { label: "Nom de l'entreprise", key: 'name', placeholder: "Ex: SARL Sénégal-Maroc Import" },
+              { label: "Raison sociale", key: 'raisonSociale', placeholder: "Ex: SARL Sénégal-Maroc Import" },
               { label: "Forme juridique", key: 'formeJuridique', type: 'select', options: ['SARL', 'SA', 'SNC', 'Auto-entrepreneur'] },
               { label: "Numéro RC", key: 'numRC', placeholder: "Saisir numéro d'inscription RC" },
               { label: "NINEA / ICE", key: 'ninea', placeholder: "Saisir NINEA ou code ICE" },
@@ -388,12 +388,12 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                   <img src={enterprise.logo} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-cscm-green-soft flex items-center justify-center font-bold text-cscm-green">
-                    {enterprise.name ? enterprise.name.charAt(0) : 'E'}
+                    {(enterprise.raisonSociale || enterprise.name || 'E').charAt(0)}
                   </div>
                 )}
               </div>
               <div className="text-xs space-y-1 text-gray-700 font-medium">
-                <p className="text-sm font-bold text-[#274420]">{enterprise.name || 'Afrikeys'}</p>
+                <p className="text-sm font-bold text-[#274420]">{enterprise.raisonSociale || enterprise.name || 'Afrikeys'}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
                   <p><span className="text-gray-400 font-bold">Numéro membre :</span> <span className="font-mono font-bold text-gray-800">{enterprise.memberNo || 'M001'}</span></p>
                 </div>

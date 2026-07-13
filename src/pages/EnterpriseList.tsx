@@ -147,7 +147,7 @@ export const EnterpriseList = () => {
   }, 0);
 
   const filteredEnterprises = enterprises.filter(ent => {
-    const matchesSearch = (ent.name || ent.raisonSociale || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = (ent.raisonSociale || ent.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                          (ent.memberNo || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesPays = !filters.pays || ent.pays === filters.pays;
@@ -399,7 +399,7 @@ export const EnterpriseList = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-cscm-green/60 w-5 h-5 pointer-events-none" />
               <input 
                 type="text" 
-                placeholder="Rechercher par nom ou numéro de membre..."
+                placeholder="Rechercher par raison sociale ou numéro de membre..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-200 focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] outline-none bg-white focus:bg-white transition-all text-sm placeholder:text-gray-300 font-semibold text-gray-800"
@@ -489,7 +489,7 @@ export const EnterpriseList = () => {
             <table className="table-base lg:min-w-[1000px]">
               <thead className="table-head">
                 <tr className="table-head-row">
-                  <th className="table-th">Nom de l'entreprise</th>
+                  <th className="table-th">Raison sociale</th>
                   <th className="table-th">N° Membre</th>
                   <th className="table-th hidden sm:table-cell">Localisation</th>
                   <th className="table-th hidden md:table-cell">Secteur</th>
@@ -503,14 +503,14 @@ export const EnterpriseList = () => {
                   <tr key={`${ent.id || idx}-${idx}`} className="table-row group">
                     <td className="table-td text-cscm-dark flex items-center gap-3.5">
                       {ent.logo ? (
-                        <img src={ent.logo} alt={ent.name} className="w-11 h-11 rounded-2xl object-cover border border-gray-100 shadow-sm" />
+                        <img src={ent.logo} alt={ent.raisonSociale || ent.name} className="w-11 h-11 rounded-2xl object-cover border border-gray-100 shadow-sm" />
                       ) : (
                         <div className="w-11 h-11 rounded-2xl bg-cscm-green-soft text-cscm-green flex items-center justify-center font-sans font-bold text-center text-sm border border-cscm-green/15">
-                          {ent.name.charAt(0)}
+                          {(ent.raisonSociale || ent.name || '').charAt(0)}
                         </div>
                       )}
                       <div>
-                        <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.name || ent.raisonSociale}</div>
+                        <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.raisonSociale || ent.name}</div>
                         <div className="text-[10px] text-[#22301C]/55 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
                       </div>
                     </td>

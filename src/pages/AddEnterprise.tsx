@@ -63,8 +63,8 @@ export const AddEnterprise: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
-      if (name === 'name') {
-        updated.raisonSociale = value;
+      if (name === 'raisonSociale') {
+        updated.name = value;
       }
       return updated;
     });
@@ -86,17 +86,17 @@ export const AddEnterprise: React.FC = () => {
     
     // Check duplicates
     const allEnterprises = getStoredEnterprises();
-    const cleanName = formData.name.trim().toLowerCase();
+    const cleanRaisonSociale = formData.raisonSociale.trim().toLowerCase();
     
     const isNameDup = allEnterprises.some(ent => 
-      (ent.name || ent.raisonSociale || '').trim().toLowerCase() === cleanName
+      (ent.raisonSociale || ent.name || '').trim().toLowerCase() === cleanRaisonSociale
     );
     
     const inputMemberNo = (formData.memberNo || '').trim().toLowerCase();
     const isMemberDup = inputMemberNo ? allEnterprises.some(ent => (ent.memberNo || '').trim().toLowerCase() === inputMemberNo) : false;
     
     if (isNameDup) {
-      setDupError(`L'entreprise "${formData.name}" existe déjà dans l'annuaire (Doublon détecté sur le nom).`);
+      setDupError(`L'entreprise "${formData.raisonSociale}" existe déjà dans l'annuaire (Doublon détecté sur la raison sociale).`);
       return;
     }
     
@@ -110,8 +110,8 @@ export const AddEnterprise: React.FC = () => {
     const generatedNo = formData.memberNo.trim() || `M${Math.floor(100 + Math.random() * 900)}`;
     const newEnterprise = {
       ...formData,
-      name: formData.name.trim(),
-      raisonSociale: formData.name.trim(),
+      name: formData.raisonSociale.trim(),
+      raisonSociale: formData.raisonSociale.trim(),
       id: Date.now(),
       memberNo: generatedNo,
       logo,
@@ -188,7 +188,7 @@ export const AddEnterprise: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-base font-sans font-bold text-[#274420]">Information Membre &amp; Identification</h3>
-                <p className="text-[10px] text-gray-500 font-medium">Type adhésion, nom de l'entreprise et informations juridiques</p>
+                <p className="text-[10px] text-gray-500 font-medium">Type adhésion, raison sociale et informations juridiques</p>
               </div>
             </div>
 
@@ -240,13 +240,13 @@ export const AddEnterprise: React.FC = () => {
                 </select>
               </div>
 
-              {/* Nom de l'entreprise */}
+              {/* Raison sociale */}
               <div className="space-y-2">
-                <label className="block text-[11px] font-bold uppercase text-gray-500 tracking-wider">Nom de l'entreprise *</label>
+                <label className="block text-[11px] font-bold uppercase text-gray-500 tracking-wider">Raison sociale *</label>
                 <input 
                   type="text" 
-                  name="name"
-                  value={formData.name}
+                  name="raisonSociale"
+                  value={formData.raisonSociale}
                   onChange={handleInputChange}
                   placeholder="Ex: Innov Sénégal SARL" 
                   required

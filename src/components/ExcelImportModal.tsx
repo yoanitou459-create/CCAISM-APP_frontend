@@ -384,7 +384,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                   <div>
                     <h4 className="text-xs font-bold text-[#274420] uppercase tracking-wider mb-1">Gabarit d'importation personnalisé</h4>
                     <p className="text-xs text-[#22301C]/55 leading-relaxed">
-                      Le gabarit d'importation inclut l'ensemble de la structure de vos colonnes requises : <strong>numero_membre, nom_commercial, cotisation_2023, cotisation_2024, ca_maroc, ca_senegal</strong>...
+                      Le gabarit d'importation inclut l'ensemble de la structure de vos colonnes requises : <strong>numero_membre, raison_sociale, cotisation_2023, cotisation_2024, ca_maroc, ca_senegal</strong>...
                     </p>
                     <button 
                       onClick={downloadTemplate}
@@ -514,7 +514,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                     <thead className="bg-cscm-green-soft/70 font-bold uppercase tracking-wider text-[#274420] sticky top-0">
                       <tr>
                         <th className="p-3">Numéro</th>
-                        <th className="p-3">Nom de l'entreprise</th>
+                        <th className="p-3">Raison sociale</th>
                         <th className="p-3">Secteur</th>
                         <th className="p-3">Cotisation 2024</th>
                         <th className="p-3">Ville</th>
@@ -524,7 +524,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                       {cleanParsedData.slice(0, 5).map((row, idx) => (
                         <tr key={idx} className="hover:bg-cscm-green-soft/60">
                           <td className="p-3 font-mono text-cscm-green font-bold">{row.memberNo}</td>
-                          <td className="p-3 font-semibold text-[#274420]">{row.name || row.raisonSociale}</td>
+                          <td className="p-3 font-semibold text-[#274420]">{row.raisonSociale || row.name}</td>
                           <td className="p-3">
                             <span className="bg-cscm-green-soft text-cscm-green border border-cscm-green/15 px-2 py-0.5 rounded-full uppercase text-[9px] font-bold">
                               {row.secteur}
