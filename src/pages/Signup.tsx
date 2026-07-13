@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AuthBrandPanel } from '../components/AuthBrandPanel';
 import { Eye, EyeOff } from 'lucide-react';
 import { saveStoredUsers, fetchLatestUsers } from '../utils/userStorage';
-import { auth } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 export const Signup: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -95,50 +93,6 @@ export const Signup: React.FC = () => {
     setError('Veuillez remplir tous les champs');
   };
 
-  const handleGoogleSignup = async () => {
-    setError('');
-    setSuccessMessage('');
-    setIsVerifying(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const gUser = result.user;
-      if (gUser && gUser.email) {
-        const email = gUser.email.toLowerCase();
-        const users = await fetchLatestUsers();
-        const matchedUser = users.find(u => u.email.toLowerCase() === email);
-        
-        const names = gUser.displayName ? gUser.displayName.split(' ') : [];
-        const prenom = names[0] || (matchedUser ? matchedUser.prenom : '');
-        const nom = names.slice(1).join(' ') || (matchedUser ? matchedUser.nom : '');
-
-        setFormData({
-          nom,
-          prenom,
-          email,
-          password: ''
-        });
-
-        if (!matchedUser) {
-          setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) a été injectée. Veuillez maintenant choisir votre mot de passe ci-dessous pour finaliser la création de votre compte.`);
-        } else {
-          setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) est déjà pré-autorisée. Veuillez maintenant choisir votre mot de passe ci-dessous pour finaliser l'inscription.`);
-        }
-      }
-    } catch (err: any) {
-      console.error("Google signup error:", err);
-      if (err.code === 'auth/popup-blocked') {
-        setError("Le popup Google a été bloqué par le navigateur. Veuillez ouvrir l'application dans un nouvel onglet.");
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setError("Ce domaine n'est pas autorisé pour l'authentification Google. Veuillez ajouter 'ccaism-app-frontend.vercel.app' (ou votre domaine actuel) à la liste des 'Domaines autorisés' dans votre console Firebase (Authentification -> Paramètres -> Domaines autorisés).");
-      } else {
-        setError("Erreur d'inscription Google: " + err.message);
-      }
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
   return (
     <div className="auth-shell auth-shell--decorated">
       <motion.div
@@ -153,27 +107,6 @@ export const Signup: React.FC = () => {
               <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cscm-gold">CCAISM</p>
               <h1 className="text-3xl font-bold text-cscm-green tracking-tight">Créer un compte</h1>
               <p className="text-sm text-gray-400 font-normal">Rejoignez le réseau de la Chambre Sénégalaise de Commerce au Maroc.</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleGoogleSignup}
-              disabled={isVerifying}
-              className="auth-google-btn disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.54 14.98 1 12 1 7.35 1 3.37 3.67 1.39 7.56l3.83 2.97c.9-2.7 3.42-4.49 6.78-4.49z" />
-                <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.43c-.28 1.44-1.1 2.66-2.33 3.49l3.62 2.81c2.12-1.95 3.77-4.83 3.77-8.45z" />
-                <path fill="#FBBC05" d="M5.22 14.73c-.23-.69-.36-1.42-.36-2.18s.13-1.49.36-2.18L1.39 7.56C.5 9.36 0 11.38 0 13.5s.5 4.14 1.39 5.94l3.83-2.97z" />
-                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.62-2.81c-1.1.74-2.51 1.18-4.34 1.18-3.36 0-5.88-1.79-6.78-4.49L1.39 16.94C3.37 20.33 7.35 23 12 23z" />
-              </svg>
-              S'inscrire avec Google
-            </button>
-
-            <div className="relative flex items-center">
-              <div className="flex-grow border-t border-gray-200" />
-              <span className="flex-shrink mx-4 text-gray-300 text-xs">ou</span>
-              <div className="flex-grow border-t border-gray-200" />
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
