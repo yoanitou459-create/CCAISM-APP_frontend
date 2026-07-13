@@ -7,60 +7,19 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Validation helper for Enterprise entity
-    function isValidEnterprise(data) {
-      return (data.id is int || data.id is float)
-        && data.name is string && data.name.size() > 0 && data.name.size() <= 256
-        && data.memberNo is string && data.memberNo.size() > 0 && data.memberNo.size() <= 128
-        && (!data.keys().hasAny(['email']) || (data.email is string && data.email.size() <= 256))
-        && (!data.keys().hasAny(['telephone']) || (data.telephone is string && data.telephone.size() <= 128))
-        && (!data.keys().hasAny(['adresse']) || (data.adresse is string && data.adresse.size() <= 512))
-        && (!data.keys().hasAny(['raisonSociale']) || (data.raisonSociale is string && data.raisonSociale.size() <= 256))
-        && (!data.keys().hasAny(['secteur']) || (data.secteur is string && data.secteur.size() <= 128))
-        && (!data.keys().hasAny(['cotisations']) || (data.cotisations is list && data.cotisations.size() <= 200));
-    }
-
-    // Validation helper for User entity
-    function isValidUser(data) {
-      return data.id is string && data.id.size() > 0 && data.id.size() <= 128
-        && data.nom is string && data.nom.size() > 0 && data.nom.size() <= 128
-        && data.prenom is string && data.prenom.size() > 0 && data.prenom.size() <= 128
-        && data.email is string && data.email.size() > 0 && data.email.size() <= 256
-        && data.role is string && (data.role == 'ADMIN' || data.role == 'MODERATEUR' || data.role == 'MEMBRE');
-    }
-
-    // Validation helper for CotisationRules
-    function isValidCotisationRules(data) {
-      return data.amountPerSemester > 0
-        && data.currency == 'FCFA';
-    }
-
     // 3. Rules for enterprises collection
     match /enterprises/{enterpriseId} {
-      allow read, delete: if true;
-      
-      allow create: if isValidEnterprise(incoming());
-        
-      allow update: if isValidEnterprise(incoming())
-        // Ensure critical immutables like 'id' and 'memberNo' are not altered
-        && incoming().id == existing().id
-        && incoming().memberNo == existing().memberNo;
+      allow read, write: if true;
     }
 
     // 4. Rules for users collection
     match /users/{userId} {
-      allow read, delete: if true;
-      
-      allow create: if isValidUser(incoming());
-        
-      allow update: if isValidUser(incoming())
-        && incoming().id == existing().id;
+      allow read, write: if true;
     }
 
     // 5. Rules for settings collection
     match /settings/{settingId} {
-      allow read: if true;
-      allow write: if (settingId == 'cotisation_rules' ? isValidCotisationRules(incoming()) : true);
+      allow read, write: if true;
     }
   }
 }

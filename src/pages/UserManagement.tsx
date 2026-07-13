@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SidebarLayout } from '../components/SidebarLayout';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 import { getStoredUsers, saveStoredUsers, AppUser } from '../utils/userStorage';
 import { 
   Users, 
@@ -41,6 +42,9 @@ export const UserManagement: React.FC = () => {
 
   // Current logged in user to avoid self-deletion
   const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Delete target state
+  const [deleteTargetUser, setDeleteTargetUser] = useState<AppUser | null>(null);
 
   // Toast
   const [toastText, setToastText] = useState('');
@@ -99,17 +103,20 @@ export const UserManagement: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteUser = (userId: string, userEmail: string) => {
-    if (currentUser && currentUser.email.toLowerCase() === userEmail.toLowerCase()) {
-      alert("Invalide: Vous ne pouvez pas supprimer votre propre compte administrateur en cours d'utilisation.");
+  const handleDeleteUser = (user: AppUser) => {
+    if (currentUser && currentUser.email.toLowerCase() === user.email.toLowerCase()) {
+      triggerToast("Invalide: Vous ne pouvez pas supprimer votre propre compte.");
       return;
     }
+    setDeleteTargetUser(user);
+  };
 
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement l'utilisateur ${userEmail} ?`)) {
-      const updated = users.filter(u => u.id !== userId);
-      saveStoredUsers(updated);
-      triggerToast('Utilisateur supprimé avec succès.');
-    }
+  const confirmDeleteUser = () => {
+    if (!deleteTargetUser) return;
+    const updated = users.filter(u => u.id !== deleteTargetUser.id);
+    saveStoredUsers(updated);
+    triggerToast('Utilisateur supprimé avec succès.');
+    setDeleteTargetUser(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -421,7 +428,7 @@ export const UserManagement: React.FC = () => {
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button 
-                              onClick={() => handleDeleteUser(u.id, u.email)}
+                              onClick={() => handleDeleteUser(u)}
                               disabled={isSelf}
                               className={`p-2 rounded-xl transition-all cursor-pointer border ${
                                 isSelf 
@@ -586,6 +593,13 @@ export const UserManagement: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={deleteTargetUser !== null}
+        onClose={() => setDeleteTargetUser(null)}
+        onConfirm={confirmDeleteUser}
+        title={`Voulez-vous vraiment supprimer définitivement l'utilisateur ${deleteTargetUser?.prenom} ${deleteTargetUser?.nom} (${deleteTargetUser?.email}) ?`}
+      />
     </SidebarLayout>
   );
 };

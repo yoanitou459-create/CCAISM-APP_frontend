@@ -127,6 +127,8 @@ export const Login: React.FC = () => {
       console.error("Google login error:", err);
       if (err.code === 'auth/popup-blocked') {
         setError("Le popup Google a été bloqué par le navigateur. Veuillez ouvrir l'application dans un nouvel onglet.");
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError("Ce domaine n'est pas autorisé pour l'authentification Google. Veuillez ajouter 'ccaism-app-frontend.vercel.app' (ou votre domaine actuel) à la liste des 'Domaines autorisés' dans votre console Firebase (Authentification -> Paramètres -> Domaines autorisés).");
       } else {
         setError("Erreur de connexion Google: " + err.message);
       }

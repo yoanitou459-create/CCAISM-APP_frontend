@@ -1031,15 +1031,15 @@ export const Cotisations: React.FC = () => {
           </div>
         </div>
 
-        {/* Panel de Configuration des Cotisations - Dynamique et Synchronisé via Firestore */}
+        {/* Panel de Configuration des Cotisations - Dynamique et Simplifié */}
         <div className="bg-[#FAF9F5] rounded-3xl p-6 border border-[#ebd078]/30 shadow-xs flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
           <div className="space-y-1 text-left">
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5 text-emerald-800" />
-              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">Règles des Cotisations (Synchronisé)</span>
+              <h3 className="text-base font-serif font-black text-cscm-dark">
+                Montant des cotisations par semestre : {rules.amountPerSemester.toLocaleString()} {rules.currency}
+              </h3>
             </div>
-            <h3 className="text-lg font-serif font-black text-cscm-dark">Règle active : {rules.amountPerSemester.toLocaleString()} {rules.currency} par semestre</h3>
-            <p className="text-xs text-gray-500 font-semibold">Tous les changements effectués ici sont appliqués immédiatement pour tous les utilisateurs de l'application.</p>
           </div>
           <form onSubmit={handleUpdateRules} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full xl:w-auto">
             <div className="relative flex-1 sm:w-60">
@@ -1889,18 +1889,30 @@ export const Cotisations: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <div className="flex flex-wrap md:flex-nowrap gap-3 pt-4 border-t border-gray-100">
                   <button
                     onClick={() => setSelectedReceipt(null)}
                     type="button"
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                    className="flex-1 min-w-[80px] bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
                   >
                     Retour
                   </button>
                   <button
+                    onClick={() => {
+                      handleDeleteCotisation(selectedReceipt.ent, selectedReceipt.payment);
+                      setSelectedReceipt(null);
+                    }}
+                    type="button"
+                    className="flex-1 min-w-[120px] bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    title="Supprimer définitivement ce reçu"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-700 shrink-0" />
+                    <span>Supprimer</span>
+                  </button>
+                  <button
                     onClick={() => downloadReceiptFile(selectedReceipt.ent, selectedReceipt.payment)}
                     type="button"
-                    className="flex-1 bg-cscm-green hover:bg-[#1a3814] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    className="flex-1 min-w-[140px] bg-cscm-green hover:bg-[#1a3814] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center"
                   >
                     <Download className="w-4 h-4 text-cscm-gold shrink-0" />
                     <span>Télécharger Officiel</span>
@@ -2096,7 +2108,7 @@ export const Cotisations: React.FC = () => {
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDeleteCotisation}
-        title={`Voulez-vous vraiment supprimer cette cotisation de ${deleteTarget?.payment?.amount?.toLocaleString() || 0} FCFA ?`}
+        title={`Voulez-vous vraiment supprimer définitivement ce reçu d'un montant de ${formatAmount(deleteTarget?.payment?.amount || 0)} ?`}
       />
     </SidebarLayout>
   );

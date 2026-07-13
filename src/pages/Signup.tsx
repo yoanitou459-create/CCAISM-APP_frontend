@@ -43,36 +43,46 @@ export const Signup: React.FC = () => {
         const matchedUser = users.find(u => u.email.toLowerCase() === trimmedEmail);
         let updatedUsers;
 
-        if (matchedUser) {
-          updatedUsers = users.map(u => {
-            if (u.email.toLowerCase() === trimmedEmail) {
-              return {
-                ...u,
-                nom: formData.nom.trim(),
-                prenom: formData.prenom.trim(),
-                password: formData.password,
-                status: 'Actif' as const
-              };
+        const finalUser = matchedUser 
+          ? {
+              ...matchedUser,
+              nom: formData.nom.trim(),
+              prenom: formData.prenom.trim(),
+              password: formData.password,
+              status: 'Actif' as const
             }
-            return u;
-          });
+          : {
+              id: 'u_' + Date.now(),
+              nom: formData.nom.trim(),
+              prenom: formData.prenom.trim(),
+              email: trimmedEmail,
+              role: 'MEMBRE' as const,
+              password: formData.password,
+              status: 'Actif' as const,
+              dateCreation: new Date().toISOString().split('T')[0]
+            };
+
+        if (matchedUser) {
+          updatedUsers = users.map(u => u.email.toLowerCase() === trimmedEmail ? finalUser : u);
         } else {
-          // If not matched, create a completely new user profile (open to all)
-          const newUser = {
-            id: 'u_' + Date.now(),
-            nom: formData.nom.trim(),
-            prenom: formData.prenom.trim(),
-            email: trimmedEmail,
-            role: 'MEMBRE' as const,
-            password: formData.password,
-            status: 'Actif' as const,
-            dateCreation: new Date().toISOString().split('T')[0]
-          };
-          updatedUsers = [...users, newUser];
+          updatedUsers = [...users, finalUser];
         }
 
         await saveStoredUsers(updatedUsers);
-        navigate('/login', { state: { message: 'Votre compte a été créé avec succès ! Connectez-vous avec votre mot de passe.' } });
+
+        // Immediate Auto-Login
+        localStorage.setItem('token', `mock-token-${finalUser.id}`);
+        localStorage.setItem('user', JSON.stringify({
+          id: finalUser.id,
+          nom: finalUser.nom,
+          prenom: finalUser.prenom,
+          email: finalUser.email,
+          role: finalUser.role
+        }));
+
+        // Notify app shell of profile update and navigate directly to dashboard
+        window.dispatchEvent(new Event('user_profile_updated'));
+        navigate('/dashboard', { replace: true });
       } catch (err: any) {
         setError("Une erreur est survenue lors de la création du compte. Veuillez réessayer.");
       } finally {
@@ -118,6 +128,8 @@ export const Signup: React.FC = () => {
       console.error("Google signup error:", err);
       if (err.code === 'auth/popup-blocked') {
         setError("Le popup Google a été bloqué par le navigateur. Veuillez ouvrir l'application dans un nouvel onglet.");
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError("Ce domaine n'est pas autorisé pour l'authentification Google. Veuillez ajouter 'ccaism-app-frontend.vercel.app' (ou votre domaine actuel) à la liste des 'Domaines autorisés' dans votre console Firebase (Authentification -> Paramètres -> Domaines autorisés).");
       } else {
         setError("Erreur d'inscription Google: " + err.message);
       }
