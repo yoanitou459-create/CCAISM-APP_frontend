@@ -64,8 +64,7 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
     doc.setTextColor(60, 60, 60);
 
     const details = [
-      { label: "Nom de l'entreprise :", val: enterprise.name },
-      { label: "Raison Sociale :", val: enterprise.raisonSociale || enterprise.name },
+      { label: "Nom de l'entreprise :", val: enterprise.name || enterprise.raisonSociale },
       { label: "Forme Juridique :", val: enterprise.formeJuridique || 'Société à Responsabilité Limitée' },
       { label: "Date de création :", val: enterprise.dateCreation || 'N/A' },
       { label: "N° Registre Commerce :", val: enterprise.numRC || 'Non Spécifié' },
@@ -262,12 +261,12 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="bg-white border border-cscm-green/[0.08] p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-cscm-dark/55">Dénomination</span>
-                    <span className="text-sm font-bold text-cscm-dark mt-1.5 leading-tight">{enterprise.name}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-cscm-dark/55">Nom de l'entreprise</span>
+                    <span className="text-sm font-bold text-cscm-dark mt-1.5 leading-tight">{enterprise.name || enterprise.raisonSociale}</span>
                   </div>
                   <div className="bg-white border border-cscm-green/[0.08] p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-cscm-dark/55">Raison Sociale</span>
-                    <span className="text-sm font-bold text-cscm-dark mt-1.5 leading-tight">{enterprise.raisonSociale || enterprise.name}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-cscm-dark/55">Date d'adhésion</span>
+                    <span className="text-sm font-bold text-cscm-dark mt-1.5 leading-tight">{enterprise.dateAdhesion || 'Non spécifiée'}</span>
                   </div>
                   <div className="bg-white border border-cscm-green/[0.08] p-4 rounded-2xl flex flex-col justify-between shadow-sm">
                     <span className="text-[9px] font-bold uppercase tracking-wider text-cscm-dark/55">Forme Juridique</span>

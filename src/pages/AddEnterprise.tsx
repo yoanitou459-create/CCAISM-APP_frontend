@@ -61,7 +61,13 @@ export const AddEnterprise: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'name') {
+        updated.raisonSociale = value;
+      }
+      return updated;
+    });
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,7 +88,9 @@ export const AddEnterprise: React.FC = () => {
     const allEnterprises = getStoredEnterprises();
     const cleanName = formData.name.trim().toLowerCase();
     
-    const isNameDup = allEnterprises.some(ent => (ent.name || '').trim().toLowerCase() === cleanName);
+    const isNameDup = allEnterprises.some(ent => 
+      (ent.name || ent.raisonSociale || '').trim().toLowerCase() === cleanName
+    );
     
     const inputMemberNo = (formData.memberNo || '').trim().toLowerCase();
     const isMemberDup = inputMemberNo ? allEnterprises.some(ent => (ent.memberNo || '').trim().toLowerCase() === inputMemberNo) : false;
@@ -102,6 +110,8 @@ export const AddEnterprise: React.FC = () => {
     const generatedNo = formData.memberNo.trim() || `M${Math.floor(100 + Math.random() * 900)}`;
     const newEnterprise = {
       ...formData,
+      name: formData.name.trim(),
+      raisonSociale: formData.name.trim(),
       id: Date.now(),
       memberNo: generatedNo,
       logo,
@@ -178,7 +188,7 @@ export const AddEnterprise: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-base font-sans font-bold text-[#274420]">Information Membre &amp; Identification</h3>
-                <p className="text-[10px] text-gray-500 font-medium">Type adhésion, Raison sociale et informations juridiques</p>
+                <p className="text-[10px] text-gray-500 font-medium">Type adhésion, nom de l'entreprise et informations juridiques</p>
               </div>
             </div>
 
@@ -230,27 +240,13 @@ export const AddEnterprise: React.FC = () => {
                 </select>
               </div>
 
-              {/* Nom commercial */}
+              {/* Nom de l'entreprise */}
               <div className="space-y-2">
-                <label className="block text-[11px] font-bold uppercase text-gray-500 tracking-wider">Nom commercial *</label>
+                <label className="block text-[11px] font-bold uppercase text-gray-500 tracking-wider">Nom de l'entreprise *</label>
                 <input 
                   type="text" 
                   name="name"
                   value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Innov Sénégal" 
-                  required
-                  className="w-full border border-gray-200 focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] text-gray-800 text-sm font-semibold p-3 rounded-2xl bg-white focus:bg-white outline-none placeholder:text-gray-300 transition-all" 
-                />
-              </div>
-
-              {/* Raison sociale */}
-              <div className="space-y-2">
-                <label className="block text-[11px] font-bold uppercase text-gray-500 tracking-wider">Raison sociale *</label>
-                <input 
-                  type="text" 
-                  name="raisonSociale"
-                  value={formData.raisonSociale}
                   onChange={handleInputChange}
                   placeholder="Ex: Innov Sénégal SARL" 
                   required

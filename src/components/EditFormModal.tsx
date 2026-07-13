@@ -102,7 +102,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
             {[
               { label: "Date d'adhésion", key: 'dateAdhesion', type: 'date' },
               { label: "Statut membre", key: 'statutMembre', type: 'select', options: ['Actif', 'Suspendu', 'Radié'] },
-              { label: "Raison sociale", key: 'raisonSociale', placeholder: "Ex: SARL Sénégal-Maroc Import" },
+              { label: "Nom de l'entreprise", key: 'name', placeholder: "Ex: SARL Sénégal-Maroc Import" },
               { label: "Forme juridique", key: 'formeJuridique', type: 'select', options: ['SARL', 'SA', 'SNC', 'Auto-entrepreneur'] },
               { label: "Numéro RC", key: 'numRC', placeholder: "Saisir numéro d'inscription RC" },
               { label: "NINEA / ICE", key: 'ninea', placeholder: "Saisir NINEA ou code ICE" },
@@ -396,7 +396,6 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                 <p className="text-sm font-bold text-[#274420]">{enterprise.name || 'Afrikeys'}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
                   <p><span className="text-gray-400 font-bold">Numéro membre :</span> <span className="font-mono font-bold text-gray-800">{enterprise.memberNo || 'M001'}</span></p>
-                  <p><span className="text-gray-400 font-bold">Nom commercial :</span> <span className="font-bold text-gray-800">{enterprise.raisonSociale || enterprise.name || 'Afrikeys'}</span></p>
                 </div>
               </div>
             </div>

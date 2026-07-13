@@ -218,8 +218,8 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
 
         // Check internal duplicates
         if (seenFileNames.has(nameLower)) {
-          duplicatesInFile.push(`Ligne ${rowNum} : Doublon de raison sociale "${raisonSociale}" dans le fichier.`);
-          warnings.push(`Ligne ${rowNum} : Entreprise "${raisonSociale}" existe déjà - non mise à jour`);
+          duplicatesInFile.push(`Ligne ${rowNum} : Doublon de nom d'entreprise "${name}" dans le fichier.`);
+          warnings.push(`Ligne ${rowNum} : Entreprise "${name}" existe déjà - non mise à jour`);
           isDup = true;
         } else if (seenFileMembers.has(memberLower)) {
           duplicatesInFile.push(`Ligne ${rowNum} : Doublon de numéro de membre "${memberNo}" dans le fichier.`);
@@ -230,8 +230,8 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
         // Check stored duplicates
         const alreadyStoredByName = stored.some(s => (s.raisonSociale || s.name || '').trim().toLowerCase() === nameLower);
         if (alreadyStoredByName) {
-          duplicatesWithStored.push(`Ligne ${rowNum} : "${raisonSociale}" existe déjà dans l'annuaire actuel.`);
-          warnings.push(`Ligne ${rowNum} : Entreprise "${raisonSociale}" existe déjà - non mise à jour`);
+          duplicatesWithStored.push(`Ligne ${rowNum} : "${name}" existe déjà dans l'annuaire actuel.`);
+          warnings.push(`Ligne ${rowNum} : Entreprise "${name}" existe déjà - non mise à jour`);
           isDup = true;
         } else {
           const alreadyStoredByNo = stored.some(s => (s.memberNo || '').trim().toLowerCase() === memberLower);
@@ -384,7 +384,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                   <div>
                     <h4 className="text-xs font-bold text-[#274420] uppercase tracking-wider mb-1">Gabarit d'importation personnalisé</h4>
                     <p className="text-xs text-[#22301C]/55 leading-relaxed">
-                      Le gabarit d'importation inclut l'ensemble de la structure de vos colonnes requises : <strong>numero_membre, raison_sociale, cotisation_2023, cotisation_2024, ca_maroc, ca_senegal</strong>...
+                      Le gabarit d'importation inclut l'ensemble de la structure de vos colonnes requises : <strong>numero_membre, nom_commercial, cotisation_2023, cotisation_2024, ca_maroc, ca_senegal</strong>...
                     </p>
                     <button 
                       onClick={downloadTemplate}
@@ -469,7 +469,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                       <h4 className="font-bold text-xs uppercase tracking-wider">Doublons d'entreprises détectés</h4>
                     </div>
                     <p className="text-xs text-amber-800">
-                      Voici les lignes qui posent problème (doublon de raison sociale ou de numéro de membre). Elles seront filtrées :
+                      Voici les lignes qui posent problème (doublon de nom d'entreprise ou de numéro de membre). Elles seront filtrées :
                     </p>
                     <div className="bg-white/80 border border-amber-200/30 rounded-xl p-2.5 max-h-[140px] overflow-y-auto space-y-1 font-mono text-[10px] text-amber-800">
                       {validationReport.duplicatesInFile.map((item, idx) => (
@@ -514,7 +514,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                     <thead className="bg-cscm-green-soft/70 font-bold uppercase tracking-wider text-[#274420] sticky top-0">
                       <tr>
                         <th className="p-3">Numéro</th>
-                        <th className="p-3">Raison Sociale</th>
+                        <th className="p-3">Nom de l'entreprise</th>
                         <th className="p-3">Secteur</th>
                         <th className="p-3">Cotisation 2024</th>
                         <th className="p-3">Ville</th>
@@ -524,7 +524,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                       {cleanParsedData.slice(0, 5).map((row, idx) => (
                         <tr key={idx} className="hover:bg-cscm-green-soft/60">
                           <td className="p-3 font-mono text-cscm-green font-bold">{row.memberNo}</td>
-                          <td className="p-3 font-semibold text-[#274420]">{row.raisonSociale}</td>
+                          <td className="p-3 font-semibold text-[#274420]">{row.name || row.raisonSociale}</td>
                           <td className="p-3">
                             <span className="bg-cscm-green-soft text-cscm-green border border-cscm-green/15 px-2 py-0.5 rounded-full uppercase text-[9px] font-bold">
                               {row.secteur}

@@ -243,28 +243,21 @@ export const Cotisations: React.FC = () => {
     doc.text("Nom de l'entreprise :", 20, 72);
     doc.setFont('Helvetica', 'bold');
     doc.setTextColor(19, 46, 21);
-    doc.text(ent.name, 65, 72);
+    doc.text(ent.name || ent.raisonSociale || '', 65, 72);
 
     doc.setFont('Helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    doc.text("Raison Sociale :", 20, 79);
+    doc.text("Numéro d'adhérent :", 20, 79);
     doc.setFont('Helvetica', 'bold');
     doc.setTextColor(19, 46, 21);
-    doc.text(ent.raisonSociale || ent.name, 65, 79);
+    doc.text(ent.memberNo || '-', 65, 79);
 
     doc.setFont('Helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    doc.text("Numéro d'adhérent :", 20, 86);
+    doc.text("Secteur d'activité :", 20, 86);
     doc.setFont('Helvetica', 'bold');
     doc.setTextColor(19, 46, 21);
-    doc.text(ent.memberNo || '-', 65, 86);
-
-    doc.setFont('Helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    doc.text("Secteur d'activité :", 20, 93);
-    doc.setFont('Helvetica', 'bold');
-    doc.setTextColor(19, 46, 21);
-    doc.text(ent.secteur || 'PME', 65, 93);
+    doc.text(ent.secteur || 'PME', 65, 86);
 
     // Section 2: Détails de la transaction
     doc.setFillColor(245, 245, 245);
@@ -811,8 +804,7 @@ export const Cotisations: React.FC = () => {
   const delayedCount = formattedEnterprises.filter(e => !e.isUpToDate).length;
 
   const filtered = formattedEnterprises.filter(ent => {
-    const matchesSearch = ent.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          ent.raisonSociale.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = (ent.name || ent.raisonSociale || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                           ent.memberNo.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (statusFilter === 'up_to_date') return matchesSearch && ent.isUpToDate;
@@ -956,280 +948,274 @@ export const Cotisations: React.FC = () => {
               initial={{ opacity: 0, y: -40, x: '-50%' }}
               animate={{ opacity: 1, y: 20, x: '-50%' }}
               exit={{ opacity: 0, y: -40, x: '-50%' }}
-              className="fixed top-4 left-1/2 z-[110] bg-cscm-dark border border-cscm-gold/30 text-white rounded-2xl px-6 py-4 shadow-2xl flex items-center gap-3"
+              className="fixed top-4 left-1/2 z-[110] px-6 py-4 rounded-2xl shadow-[0_20px_50px_-16px_rgba(62,123,50,0.35)] font-semibold flex items-center gap-3 border bg-white text-emerald-700 border-emerald-100"
             >
-              <CheckCircle2 className="w-5 h-5 text-cscm-gold" />
-              <span className="text-sm font-semibold">{toastText}</span>
+              <CheckCircle2 className="w-5 h-5 text-cscm-green" />
+              <span className="text-sm">{toastText}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Top Header Selector Panel - styled perfectly like Capture 1/4 */}
-        <div className="bg-white rounded-3xl p-6 border border-gray-150 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="flex items-center gap-4 text-left">
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-widest block">Chambre Sénégalaise de Commerce au Maroc</span>
-              <h1 className="text-2xl md:text-3xl font-serif font-black text-cscm-dark">Paiements & Trésorerie</h1>
-              <p className="text-xs text-gray-400 font-bold">Suivi officiel des cotisations et actualisation en temps réel du bilan financier.</p>
-            </div>
-          </div>
-
-          {/* Selective Dropdowns + Update Button block */}
-          <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-            {/* Month drop-down */}
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-250 rounded-2xl px-4 py-2.5">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Mois :</span>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="bg-transparent text-[#132e15] font-black text-xs md:text-sm outline-none cursor-pointer"
-              >
-                {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
+        {/* En-tête */}
+        <div className="hero-banner">
+          <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+            <div className="space-y-2 text-left">
+              <span className="badge-soft">
+                <Coins className="w-3.5 h-3.5" />
+                Trésorerie &amp; Cotisations
+              </span>
+              <h1 className="page-title md:text-4xl">Paiements &amp; Trésorerie</h1>
+              <p className="text-sm text-[#22301C]/55 font-medium max-w-2xl leading-relaxed">
+                Suivi officiel des cotisations membres, encaissements et actualisation du bilan financier de la Chambre.
+              </p>
             </div>
 
-            {/* Year drop-down */}
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-250 rounded-2xl px-4 py-2.5">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Année :</span>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="bg-transparent text-[#132e15] font-black text-xs md:text-sm outline-none cursor-pointer"
-              >
-                {['2023', '2024', '2025', '2026', '2027', '2028'].map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </div>
+            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto shrink-0">
+              <div className="flex items-center gap-2 bg-white border border-cscm-green/15 rounded-2xl px-4 py-2.5 shadow-sm">
+                <span className="text-[10px] font-bold text-[#22301C]/45 uppercase tracking-wider">Mois</span>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="bg-transparent text-cscm-dark font-semibold text-sm outline-none cursor-pointer"
+                >
+                  {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Actualiser Action */}
-            <button
-              onClick={() => {
-                setIsRefreshing(true);
-                setTimeout(() => {
-                  setIsRefreshing(false);
-                  setToastText("Données de cotisations actualisées avec succès.");
-                  setShowToast(true);
-                  setTimeout(() => setShowToast(false), 2000);
-                }, 750);
-              }}
-              className="bg-[#132e15] hover:bg-[#204923] text-white border border-[#ebd078]/20 px-6 py-3 rounded-2xl font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-xs"
-            >
-              <svg 
-                className={`w-4 h-4 text-[#ebd078] ${isRefreshing ? 'animate-spin' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="3" 
-                viewBox="0 0 24 24"
+              <div className="flex items-center gap-2 bg-white border border-cscm-green/15 rounded-2xl px-4 py-2.5 shadow-sm">
+                <span className="text-[10px] font-bold text-[#22301C]/45 uppercase tracking-wider">Année</span>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  className="bg-transparent text-cscm-dark font-semibold text-sm outline-none cursor-pointer"
+                >
+                  {['2023', '2024', '2025', '2026', '2027', '2028'].map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRefreshing(true);
+                  setTimeout(() => {
+                    setIsRefreshing(false);
+                    setToastText("Données de cotisations actualisées avec succès.");
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 2000);
+                  }, 750);
+                }}
+                className="btn-submit px-5 py-3 flex items-center gap-2 text-xs uppercase tracking-wider shrink-0"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-              <span>Actualiser</span>
-            </button>
+                <svg
+                  className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                Actualiser
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Panel de Configuration des Cotisations - Dynamique et Synchronisé via Firestore */}
-        <div className="bg-[#FAF9F5] rounded-3xl p-6 border border-[#ebd078]/30 shadow-xs flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div className="space-y-1 text-left">
-            <div className="flex items-center gap-2">
-              <Settings className="w-5 h-5 text-emerald-800" />
-              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">Règles des Cotisations (Synchronisé)</span>
+        {/* Règles des cotisations */}
+        <div className="card-elevated p-6 md:p-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+          <div className="space-y-2 text-left">
+            <div className="flex items-center gap-2 text-cscm-green">
+              <Settings className="w-5 h-5" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Règles des cotisations</span>
             </div>
-            <h3 className="text-lg font-serif font-black text-cscm-dark">Règle active : {rules.amountPerSemester.toLocaleString()} {rules.currency} par semestre</h3>
-            <p className="text-xs text-gray-500 font-semibold">Tous les changements effectués ici sont appliqués immédiatement pour tous les utilisateurs de l'application.</p>
+            <h3 className="section-title text-lg">
+              Règle active : {rules.amountPerSemester.toLocaleString()} {rules.currency} par semestre
+            </h3>
+            <p className="text-xs text-[#22301C]/55 font-medium">Les modifications sont appliquées immédiatement pour tous les utilisateurs.</p>
           </div>
-          <form onSubmit={handleUpdateRules} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full xl:w-auto">
-            <div className="relative flex-1 sm:w-60">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-black tracking-wider">XOF (FCFA)</span>
+          <form onSubmit={handleUpdateRules} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#22301C]/40 text-[10px] font-bold tracking-wider">XOF</span>
               <input
                 type="number"
                 value={newRuleAmount}
                 onChange={(e) => setNewRuleAmount(e.target.value)}
-                placeholder="Saisissez le montant de la cotisation..."
-                className="w-full pl-24 pr-4 py-3 bg-white border-2 border-gray-200 focus:border-[#132e15] rounded-xl outline-none text-xs font-black text-[#132e15] transition-all text-center"
+                placeholder="Montant semestriel..."
+                className="input-light pl-14 text-center font-semibold"
                 required
                 min="1"
               />
             </div>
-
-            <button
-              type="submit"
-              className="bg-[#132e15] hover:bg-[#204923] text-[#ebd078] border border-[#ebd078]/20 px-6 py-3 rounded-xl font-black text-xs tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap shadow-xs active:scale-95"
-            >
+            <button type="submit" className="btn-submit px-6 py-3 text-xs uppercase tracking-wider whitespace-nowrap">
               Enregistrer
             </button>
           </form>
         </div>
 
-        {/* Dashboard 4 KPI Cards Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Card 1: En Retard Code Block */}
-          <div className="bg-rose-50/65 border-2 border-rose-100 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-rose-600 tracking-wider">Membres Insolvables</span>
-              <h3 className="text-4xl font-serif font-black text-rose-700">{delayedCount}</h3>
-              <p className="text-xs text-rose-950/70 font-semibold">Sociétés en attente de cotisation fixe</p>
+        {/* KPI */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          <div className="card-elevated p-6 flex justify-between items-start relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-rose-500/[0.06] group-hover:scale-125 transition-transform duration-500" />
+            <div className="relative space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#274420]/40 block">Membres insolvables</span>
+              <span className="text-[2.4rem] leading-none text-rose-600 block mt-3 font-sans font-semibold tracking-tight">{delayedCount}</span>
+              <span className="text-[10px] font-semibold text-gray-400 block mt-2">En attente de cotisation</span>
             </div>
-            <div className="p-4 bg-rose-100/50 rounded-2xl text-rose-600 border border-rose-200">
-              <AlertCircle className="w-8 h-8" />
-            </div>
-          </div>
-
-          {/* Card 2: À Jour Code Block */}
-          <div className="bg-emerald-50/65 border-2 border-emerald-100 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Membres Réguliers</span>
-              <h3 className="text-4xl font-serif font-black text-emerald-700">{upToDateCount}</h3>
-              <p className="text-xs text-emerald-950/70 font-semibold">Sociétés en règle</p>
-            </div>
-            <div className="p-4 bg-emerald-100/50 rounded-2xl text-emerald-600 border border-emerald-200">
-              <ShieldCheck className="w-8 h-8" />
+            <div className="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shrink-0 relative">
+              <AlertCircle className="w-5 h-5" />
             </div>
           </div>
 
-          {/* Card 3: Période Code Block */}
-          <div className="bg-amber-50/50 border-2 border-amber-100/50 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider">Exercice &amp; Période</span>
-              <h3 className="text-2xl font-serif font-black text-[#132e15] truncate">{selectedMonth} {selectedYear}</h3>
-              <p className="text-xs text-amber-900/70 font-semibold">Période d'évaluation courante</p>
+          <div className="card-elevated p-6 flex justify-between items-start relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-emerald-500/[0.06] group-hover:scale-125 transition-transform duration-500" />
+            <div className="relative space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#274420]/40 block">Membres réguliers</span>
+              <span className="text-[2.4rem] leading-none text-emerald-600 block mt-3 font-sans font-semibold tracking-tight">{upToDateCount}</span>
+              <span className="text-[10px] font-semibold text-gray-400 block mt-2">Cotisations à jour</span>
             </div>
-            <div className="p-4 bg-amber-100/55 rounded-2xl text-amber-800 border border-amber-200">
-              <Calendar className="w-8 h-8" />
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 shrink-0 relative">
+              <ShieldCheck className="w-5 h-5" />
             </div>
           </div>
 
-          {/* Card 4: Total de la Caisse dynamically formatted in selected currency */}
-          <div className="bg-emerald-50 border-2 border-emerald-100 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">Total de la Caisse</span>
-              <h3 className="text-2xl font-serif font-black text-emerald-950 truncate">{formatAmount(totalTreasury)}</h3>
-              <p className="text-xs text-emerald-900/70 font-semibold">Devise courante : {displayCurrency}</p>
+          <div className="card-elevated p-6 flex justify-between items-start relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-amber-500/[0.07] group-hover:scale-125 transition-transform duration-500" />
+            <div className="relative space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#274420]/40 block">Exercice &amp; période</span>
+              <span className="text-xl md:text-2xl leading-none text-amber-700 block mt-4 font-sans font-semibold tracking-tight truncate">{selectedMonth} {selectedYear}</span>
+              <span className="text-[10px] font-semibold text-gray-400 block mt-2.5">Période d'évaluation</span>
             </div>
-            <div className="p-4 bg-emerald-100/50 rounded-2xl text-emerald-800 border border-emerald-200">
-              <Coins className="w-8 h-8" />
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 shrink-0 relative">
+              <Calendar className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="card-elevated p-6 flex justify-between items-start relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-cscm-green/[0.06] group-hover:scale-125 transition-transform duration-500" />
+            <div className="relative space-y-1 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#274420]/40 block">Total de la caisse</span>
+              <span className="text-lg md:text-xl leading-none text-cscm-green block mt-4 font-sans font-semibold tracking-tight truncate">{formatAmount(totalTreasury)}</span>
+              <span className="text-[10px] font-semibold text-gray-400 block mt-2.5">Devise : {displayCurrency}</span>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-cscm-green-soft border border-cscm-green/15 flex items-center justify-center text-cscm-green shrink-0 relative">
+              <Coins className="w-5 h-5" />
             </div>
           </div>
         </div>
 
-        {/* Interactive workspace - full width */}
-        <div className="w-full space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-gray-150 shadow-xs space-y-6 text-left">
-              
-              {/* Header inside table workspace: containing Search Input, Currency display selector, and tabs */}
-              <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 border-b border-gray-100 pb-4">
-                
-                {/* Tab select group */}
-                <div className="flex flex-wrap sm:inline-flex items-center gap-1.5 bg-gray-100 p-1 rounded-2xl border border-gray-200">
-                  <button
-                    onClick={() => setStatusFilter('delayed')}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${
-                      statusFilter === 'delayed'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'text-gray-500 hover:text-rose-600'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${statusFilter === 'delayed' ? 'bg-white' : 'bg-rose-600'}`} />
-                    En retard ({delayedCount})
-                  </button>
+        {/* Tableau des membres */}
+        <div className="card-elevated p-6 md:p-8 space-y-6">
+          <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 border-b border-gray-100 pb-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('delayed')}
+                className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 border flex items-center gap-2 cursor-pointer ${
+                  statusFilter === 'delayed'
+                    ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300 hover:bg-rose-50/50'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${statusFilter === 'delayed' ? 'bg-white' : 'bg-rose-500'}`} />
+                En retard ({delayedCount})
+              </button>
 
-                  <button
-                    onClick={() => setStatusFilter('up_to_date')}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${
-                      statusFilter === 'up_to_date'
-                      ? 'bg-emerald-700 text-white shadow-xs'
-                      : 'text-gray-500 hover:text-emerald-700'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${statusFilter === 'up_to_date' ? 'bg-white' : 'bg-emerald-700'}`} />
-                    À jour ({upToDateCount})
-                  </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('up_to_date')}
+                className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 border flex items-center gap-2 cursor-pointer ${
+                  statusFilter === 'up_to_date'
+                    ? 'bg-cscm-green text-white border-cscm-green shadow-md shadow-cscm-green/20'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-cscm-green/30 hover:bg-cscm-green-soft/50'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${statusFilter === 'up_to_date' ? 'bg-cscm-gold-light' : 'bg-cscm-green'}`} />
+                À jour ({upToDateCount})
+              </button>
 
-                  <button
-                    onClick={() => setStatusFilter('all')}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all cursor-pointer ${
-                      statusFilter === 'all'
-                      ? 'bg-slate-800 text-white shadow-xs'
-                      : 'text-gray-500 hover:text-slate-800'
-                    }`}
-                  >
-                    Tous ({formattedEnterprises.length})
-                  </button>
-                </div>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 border cursor-pointer ${
+                  statusFilter === 'all'
+                    ? 'bg-[#274420] text-white border-[#274420] shadow-md'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50/80'
+                }`}
+              >
+                Tous ({formattedEnterprises.length})
+              </button>
+            </div>
 
-                {/* Devise drop-down & search wrapper */}
-                <div className="flex items-center gap-3 w-full lg:w-auto">
-                  <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold font-semibold shrink-0">
-                    <span className="text-[9px] font-black text-gray-400">DEVISE :</span>
-                    <select
-                      value={displayCurrency}
-                      onChange={(e) => setDisplayCurrency(e.target.value as any)}
-                      className="bg-transparent text-gray-700 font-bold outline-none cursor-pointer"
-                    >
-                      <option value="FCFA">FCFA (XOF)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="MAD">MAD (Dirham)</option>
-                      <option value="AED">AED (Emirats)</option>
-                      <option value="GBP">GBP (£)</option>
-                      <option value="QAR">QAR (Qatar)</option>
-                    </select>
-                  </div>
-
-                  <div className="relative flex-1 lg:max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-                    <input
-                      type="text"
-                      placeholder="Saisissez un membre à rechercher..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 outline-none focus:border-emerald-700 text-xs font-semibold text-gray-700 placeholder:text-gray-400"
-                    />
-                  </div>
-                </div>
+            <div className="flex items-center gap-3 w-full lg:w-auto">
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-3.5 py-2.5 text-xs font-semibold shrink-0 shadow-sm">
+                <span className="text-[9px] font-bold text-[#22301C]/40 uppercase">Devise</span>
+                <select
+                  value={displayCurrency}
+                  onChange={(e) => setDisplayCurrency(e.target.value as any)}
+                  className="bg-transparent text-cscm-dark font-semibold outline-none cursor-pointer"
+                >
+                  <option value="FCFA">FCFA (XOF)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="MAD">MAD (Dirham)</option>
+                  <option value="AED">AED (Emirats)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="QAR">QAR (Qatar)</option>
+                </select>
               </div>
 
-              {/* Members workspace table */}
-              <div className="overflow-x-auto rounded-2xl border border-gray-150">
-                <table className="w-full text-left border-collapse min-w-[850px] bg-white">
-                  <thead>
-                    <tr className="bg-[#132e15] border-b border-emerald-950 text-white text-[10px] uppercase font-black tracking-wider">
-                      <th className="p-4">N° membre</th>
-                      <th className="p-4">Entreprise</th>
-                      <th className="p-4">Statut</th>
-                      <th className="p-4">Payé ({displayCurrency})</th>
-                      <th className="p-4">Reste à payer ({displayCurrency})</th>
-                      <th className="p-4">Paiements</th>
-                      <th className="p-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 text-xs font-semibold text-gray-700">
+              <div className="relative flex-1 lg:max-w-xs">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-cscm-green/60 w-4 h-4 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Rechercher un membre..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 outline-none focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] text-sm font-semibold text-gray-800 placeholder:text-gray-300 bg-white transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="table-shell">
+            <table className="table-base min-w-[850px]">
+              <thead className="table-head">
+                <tr className="table-head-row">
+                  <th className="table-th">N° membre</th>
+                  <th className="table-th">Entreprise</th>
+                  <th className="table-th">Statut</th>
+                  <th className="table-th">Payé ({displayCurrency})</th>
+                  <th className="table-th">Reste à payer</th>
+                  <th className="table-th">Paiements</th>
+                  <th className="table-th text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="table-body">
                     {filtered.map((ent, idx) => {
                       const restToPay = Math.max(0, (ent.requiredAmount || 0) - (ent.sumPaid || 0));
+                      const displayName = ent.name || ent.raisonSociale || 'Entreprise';
                       return (
-                        <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all font-semibold">
-                          {/* Member ID */}
-                          <td className="p-4 font-mono font-black text-gray-400">
+                        <tr key={`${ent.id || idx}-${idx}`} className="table-row">
+                          <td className="table-td font-mono text-[#22301C]/50 text-xs font-bold">
                             {ent.memberNo || 'CSCM-00'}
                           </td>
 
-                          {/* Member Entity Details */}
-                          <td className="p-4">
+                          <td className="table-td">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-800 font-serif font-black flex items-center justify-center shrink-0 border border-emerald-100">
-                                {ent.name.charAt(0)}
+                              <div className="w-10 h-10 rounded-2xl bg-cscm-green-soft text-cscm-green font-bold flex items-center justify-center shrink-0 border border-cscm-green/15">
+                                {displayName.charAt(0)}
                               </div>
-                              <div className="space-y-0.5">
-                                <span className="font-extrabold text-[#132e15] text-sm block">{ent.name}</span>
-                                <span className="text-[9px] text-[#A69371] uppercase font-black tracking-widest block">{ent.secteur || 'PME'}</span>
+                              <div className="space-y-0.5 min-w-0">
+                                <span className="font-bold text-cscm-dark text-sm block truncate">{displayName}</span>
+                                <span className="text-[9px] text-cscm-gold uppercase font-bold tracking-wider block">{ent.secteur || 'PME'}</span>
                               </div>
                             </div>
                           </td>
 
-                          {/* Status - displays elegant cotisation status */}
-                          <td className="p-4">
+                          <td className="table-td">
                             {ent.isExempt ? (
                               <span className="inline-flex items-center gap-1.5 bg-gray-50 text-gray-500 text-[10px] px-2.5 py-1 rounded-full font-black border border-gray-200 uppercase tracking-wide" title={`Adhésion le ${ent.dateAdhesion || ent.dateCreation || 'N/A'}`}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
@@ -1263,18 +1249,16 @@ export const Cotisations: React.FC = () => {
                             )}
                           </td>
 
-                          {/* Amount Paid */}
-                          <td className="p-4 font-mono text-emerald-800 font-extrabold text-left">
+                          <td className="table-td font-mono text-emerald-700 font-bold text-left">
                             <div className="flex flex-col">
                               <span>{formatAmount(ent.sumPaid || 0)}</span>
-                              <span className="text-[9px] text-[#A69371] font-semibold mt-0.5">
+                              <span className="text-[9px] text-[#22301C]/45 font-semibold mt-0.5">
                                 Période: {formatAmount(ent.periodPaid || 0)}
                               </span>
                             </div>
                           </td>
 
-                          {/* Rest to Pay */}
-                          <td className="p-4 font-mono font-extrabold">
+                          <td className="table-td font-mono font-bold">
                             {restToPay === 0 ? (
                               <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[10px] font-black uppercase">Soldé</span>
                             ) : (
@@ -1282,33 +1266,31 @@ export const Cotisations: React.FC = () => {
                             )}
                           </td>
 
-                          {/* Contributions Count */}
-                          <td className="p-4">
-                            <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-mono text-xs font-black">
+                          <td className="table-td">
+                            <span className="bg-cscm-green-soft text-cscm-green border border-cscm-green/15 px-2.5 py-1 rounded-lg font-mono text-xs font-bold">
                               {getPaymentsList(ent).length}
                             </span>
                           </td>
 
-                          {/* Custom Actions */}
-                          <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {/* Receipts list trigger */}
+                          <td className="table-td text-right">
+                            <div className="flex items-center justify-end gap-2">
                               <button
+                                type="button"
                                 onClick={() => setReceiptModalEnt(ent)}
-                                className="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 text-blue-700 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
                                 title="Reçus et Bilan"
                               >
-                                <FileText className="w-3.5 h-3.5 text-blue-600" />
+                                <FileText className="w-3.5 h-3.5" />
                                 Reçus ({getPaymentsList(ent).length})
                               </button>
 
-                              {/* Credit context modifier uploader template */}
                               <button
+                                type="button"
                                 onClick={() => handleOpenPayment(ent)}
-                                className="inline-flex items-center gap-1 bg-[#FAF9F5] hover:bg-cscm-green/10 border border-[#A69371]/40 hover:border-cscm-green text-[#132e15] hover:text-cscm-green px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                                className="btn-submit px-3 py-2 flex items-center gap-1.5 text-[10px] uppercase tracking-wider"
                                 title="Enregistrer Versement"
                               >
-                                <Coins className="w-3.5 h-3.5 text-cscm-gold" />
+                                <Coins className="w-3.5 h-3.5" />
                                 Créditer
                               </button>
                             </div>
@@ -1317,19 +1299,17 @@ export const Cotisations: React.FC = () => {
                       );
                     })}
 
-                    {/* Fallback empty view */}
                     {filtered.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="p-16 text-center text-gray-450 italic font-bold">
+                        <td colSpan={7} className="table-td p-16 text-center text-[#22301C]/45 italic font-medium">
                           Aucun membre ne correspond à ce filtre pour la période sélectionnée.
                         </td>
                       </tr>
                     )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+              </tbody>
+            </table>
           </div>
+        </div>
         </motion.div>
 
       {/* Add Direct Payment Modal Dialog */}
@@ -1350,7 +1330,7 @@ export const Cotisations: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-lg p-6 md:p-8 relative z-10 shadow-2xl border border-[#a69371]/20 font-sans overflow-hidden"
+              className="bg-white rounded-[1.75rem] w-full max-w-lg p-6 md:p-8 relative z-10 shadow-[0_30px_80px_-24px_rgba(62,123,50,0.3)] ring-1 ring-black/5 font-sans overflow-hidden"
             >
               {!isProcessingPayment && (
                 <button 
@@ -1379,45 +1359,43 @@ export const Cotisations: React.FC = () => {
               )}
 
               <div className="space-y-6">
-                <div className="text-left border-b pb-4">
-                  <div className="w-10 h-10 bg-cscm-green/10 text-cscm-green rounded-xl flex items-center justify-center mb-3">
+                <div className="text-left border-b border-cscm-green/10 pb-4">
+                  <div className="w-11 h-11 bg-cscm-green-soft text-cscm-green rounded-2xl flex items-center justify-center mb-3 border border-cscm-green/15">
                     <Coins className="w-5 h-5" />
                   </div>
-                  <h3 className="text-xl font-serif font-black text-cscm-dark">Enregistrer une Cotisation</h3>
-                  <p className="text-[#132e15]/80 text-xs mt-1 font-bold">Créditer le compte de <b>{selectedEnt.name}</b></p>
+                  <h3 className="section-title text-xl">Enregistrer une cotisation</h3>
+                  <p className="text-[#22301C]/55 text-xs mt-1 font-medium">Créditer le compte de <strong className="text-cscm-dark">{selectedEnt.name || selectedEnt.raisonSociale}</strong></p>
                 </div>
 
-                {/* Tabs Selector */}
-                <div className="grid grid-cols-2 p-1 bg-gray-100 rounded-2xl border border-gray-200">
+                <div className="grid grid-cols-2 p-1 bg-cscm-green-soft/60 rounded-2xl border border-cscm-green/10">
                   <button
                     type="button"
                     onClick={() => setPaymentMode('manual')}
-                    className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       paymentMode === 'manual'
-                        ? 'bg-[#132e15] text-[#ebd078] shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'bg-cscm-green text-white shadow-md'
+                        : 'text-gray-500 hover:text-cscm-dark'
                     }`}
                   >
-                    Saisie Manuelle
+                    Saisie manuelle
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMode('online')}
-                    className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       paymentMode === 'online'
-                        ? 'bg-[#132e15] text-[#ebd078] shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'bg-cscm-green text-white shadow-md'
+                        : 'text-gray-500 hover:text-cscm-dark'
                     }`}
                   >
-                    Paiement en Ligne (API)
+                    Paiement en ligne
                   </button>
                 </div>
 
                 <form onSubmit={handleRegisterPayment} className="space-y-4 text-left">
-                  {/* Common Fields */}
-                  <div className="space-y-3 bg-[#FAF9F5] p-4 rounded-2xl border border-gray-150">
+                  <div className="space-y-3 bg-cscm-green-soft/50 p-4 rounded-2xl border border-cscm-green/10">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider block">Devise du versement</label>
+                      <label className="text-[10px] font-bold uppercase text-cscm-dark tracking-wider block">Devise du versement</label>
                       <select
                         value={paymentCurrency}
                         onChange={(e) => setPaymentCurrency(e.target.value)}
@@ -1525,7 +1503,7 @@ export const Cotisations: React.FC = () => {
                         </button>
                         <button
                           type="submit"
-                          className="flex-1 bg-cscm-green hover:bg-[#1a3814] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                          className="flex-1 btn-submit py-3 text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
                         >
                           <CheckCircle2 className="w-4 h-4 text-cscm-gold shrink-0" />
                           <span>Confirmer le versement</span>
@@ -1717,7 +1695,7 @@ export const Cotisations: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-3xl p-6 md:p-8 relative z-10 shadow-2xl border border-[#a69371]/20 font-sans max-h-[90vh] flex flex-col overflow-hidden"
+              className="bg-white rounded-[1.75rem] w-full max-w-3xl p-6 md:p-8 relative z-10 shadow-[0_30px_80px_-24px_rgba(62,123,50,0.3)] ring-1 ring-black/5 font-sans max-h-[90vh] flex flex-col overflow-hidden"
             >
               <button 
                 onClick={() => setReceiptModalEnt(null)}
@@ -1727,13 +1705,13 @@ export const Cotisations: React.FC = () => {
               </button>
 
               <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
-                <div className="text-left border-b pb-4 shrink-0">
-                  <span className="text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200 uppercase px-2.5 py-1 rounded-full inline-block mb-2">
-                    N° MEMBRE: {receiptModalEnt.memberNo}
+                <div className="text-left border-b border-cscm-green/10 pb-4 shrink-0">
+                  <span className="text-[10px] font-bold bg-cscm-green-soft text-cscm-green border border-cscm-green/15 uppercase px-2.5 py-1 rounded-full inline-block mb-2">
+                    N° membre : {receiptModalEnt.memberNo}
                   </span>
-                  <h3 className="text-2xl font-serif font-black text-cscm-dark">{receiptModalEnt.name}</h3>
-                  <p className="text-gray-500 text-xs mt-0.5">
-                    Raison sociale: <b>{receiptModalEnt.raisonSociale}</b> • Secteur: <b>{receiptModalEnt.secteur}</b>
+                  <h3 className="page-title text-2xl">{receiptModalEnt.name || receiptModalEnt.raisonSociale}</h3>
+                  <p className="text-[#22301C]/55 text-xs mt-1 font-medium">
+                    Secteur : <strong className="text-cscm-dark">{receiptModalEnt.secteur}</strong>
                   </p>
                 </div>
 
@@ -1749,7 +1727,7 @@ export const Cotisations: React.FC = () => {
                       {getPaymentsList(receiptModalEnt).map((pay: any, idx: number) => (
                         <div 
                           key={`${pay.id || idx}-${idx}`} 
-                          className="bg-gray-50 hover:bg-gray-100/50 border border-gray-200 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors"
+                          className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -1771,8 +1749,8 @@ export const Cotisations: React.FC = () => {
 
                             {/* Beautiful visual chosen currency badge */}
                             <div className="flex flex-wrap gap-1.5 mt-2">
-                              <span className="bg-[#132e15]/5 text-[#132e15] border border-[#132e15]/10 text-xs px-2.5 py-1 rounded-full font-extrabold flex items-center gap-1.5 shadow-3xs bg-emerald-50 text-emerald-950">
-                                🪙 Montant : {formatAmount(pay.amount)}
+                              <span className="bg-cscm-green-soft text-cscm-green border border-cscm-green/15 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
+                                Montant : {formatAmount(pay.amount)}
                               </span>
                             </div>
                           </div>
@@ -1840,7 +1818,7 @@ export const Cotisations: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-xl p-6 md:p-8 relative z-10 shadow-2xl border-2 border-[#132e15] font-sans"
+              className="bg-white rounded-[1.75rem] w-full max-w-xl p-6 md:p-8 relative z-10 shadow-[0_30px_80px_-24px_rgba(62,123,50,0.3)] ring-1 ring-cscm-green/15 font-sans"
             >
               <button 
                 onClick={() => setSelectedReceipt(null)}
@@ -1851,12 +1829,12 @@ export const Cotisations: React.FC = () => {
               </button>
 
               <div className="space-y-6">
-                <div className="text-center border-b pb-4">
-                  <div className="w-12 h-12 bg-cscm-green/10 text-cscm-green rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-black">
-                    ★
+                <div className="text-center border-b border-cscm-green/10 pb-4">
+                  <div className="w-12 h-12 bg-cscm-green-soft text-cscm-green rounded-2xl flex items-center justify-center mx-auto mb-2 border border-cscm-green/15">
+                    <FileText className="w-6 h-6" />
                   </div>
-                  <h3 className="text-base font-serif font-black text-cscm-dark uppercase tracking-wide leading-tight">Chambre Sénégalaise de Commerce au Maroc CSCM</h3>
-                  <p className="text-[#a69371] text-2xs font-black tracking-widest uppercase">Reçu de paiement officiel</p>
+                  <h3 className="section-title uppercase tracking-wide">Chambre Sénégalaise de Commerce au Maroc</h3>
+                  <p className="text-cscm-gold text-[10px] font-bold tracking-widest uppercase mt-1">Reçu de paiement officiel</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-xs">
@@ -1874,9 +1852,9 @@ export const Cotisations: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-[#e1eadf]/70 border-2 border-[#132e15]/45 rounded-3xl p-5 text-center">
-                  <p className="text-[10px] uppercase font-black tracking-wider text-gray-500 mb-1">Montant Encaissé ({displayCurrency})</p>
-                  <p className="text-2xl font-black text-emerald-950">{formatAmount(selectedReceipt.payment.amount)}</p>
+                <div className="bg-cscm-green-soft/70 border border-cscm-green/20 rounded-2xl p-5 text-center">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#22301C]/45 mb-1">Montant encaissé ({displayCurrency})</p>
+                  <p className="text-2xl font-bold text-cscm-green">{formatAmount(selectedReceipt.payment.amount)}</p>
                 </div>
 
                 <div className="flex gap-4 items-center justify-between pt-2">
@@ -1900,7 +1878,7 @@ export const Cotisations: React.FC = () => {
                   <button
                     onClick={() => downloadReceiptFile(selectedReceipt.ent, selectedReceipt.payment)}
                     type="button"
-                    className="flex-1 bg-cscm-green hover:bg-[#1a3814] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    className="flex-1 btn-submit py-3 text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
                   >
                     <Download className="w-4 h-4 text-cscm-gold shrink-0" />
                     <span>Télécharger Officiel</span>
@@ -1928,21 +1906,21 @@ export const Cotisations: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-md p-6 relative z-10 shadow-2xl border border-gray-150 font-sans text-left"
+              className="bg-white rounded-[1.75rem] w-full max-w-md p-6 relative z-10 shadow-[0_30px_80px_-24px_rgba(62,123,50,0.3)] ring-1 ring-black/5 font-sans text-left"
             >
               <button 
                 onClick={() => setEditingPayment(null)}
-                className="absolute top-5 right-5 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+                className="absolute top-5 right-5 p-2 hover:bg-cscm-green-soft rounded-xl cursor-pointer transition-colors"
                 title="Fermer"
               >
                 <X className="w-5 h-5 text-cscm-dark" />
               </button>
 
               <div className="space-y-4">
-                <div className="border-b pb-3">
-                  <span className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Modification</span>
-                  <h3 className="text-xl font-serif font-black text-cscm-dark">Modifier la Cotisation</h3>
-                  <p className="text-xs text-gray-400 font-bold mt-0.5">Pour : <b className="text-cscm-green">{editingPayment.ent.name}</b></p>
+                <div className="border-b border-cscm-green/10 pb-3">
+                  <span className="text-[9px] font-bold uppercase text-[#22301C]/45 tracking-wider">Modification</span>
+                  <h3 className="section-title text-xl">Modifier la cotisation</h3>
+                  <p className="text-xs text-[#22301C]/55 font-medium mt-0.5">Pour : <strong className="text-cscm-green">{editingPayment.ent.name || editingPayment.ent.raisonSociale}</strong></p>
                 </div>
 
                 <form onSubmit={handleSaveEdit} className="space-y-4">

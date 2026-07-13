@@ -147,9 +147,8 @@ export const EnterpriseList = () => {
   }, 0);
 
   const filteredEnterprises = enterprises.filter(ent => {
-    const matchesSearch = (ent.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (ent.memberNo || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (ent.raisonSociale || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (ent.name || ent.raisonSociale || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (ent.memberNo || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesPays = !filters.pays || ent.pays === filters.pays;
     const matchesVille = !filters.ville || ent.ville === filters.ville;
@@ -400,7 +399,7 @@ export const EnterpriseList = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-cscm-green/60 w-5 h-5 pointer-events-none" />
               <input 
                 type="text" 
-                placeholder="Rechercher par nom, raison sociale, numéro de membre..."
+                placeholder="Rechercher par nom ou numéro de membre..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-200 focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/[0.08] outline-none bg-white focus:bg-white transition-all text-sm placeholder:text-gray-300 font-semibold text-gray-800"
@@ -492,7 +491,6 @@ export const EnterpriseList = () => {
                 <tr className="table-head-row">
                   <th className="table-th">Nom de l'entreprise</th>
                   <th className="table-th">N° Membre</th>
-                  <th className="table-th hidden lg:table-cell">Raison sociale</th>
                   <th className="table-th hidden sm:table-cell">Localisation</th>
                   <th className="table-th hidden md:table-cell">Secteur</th>
                   <th className="table-th hidden md:table-cell">Effectif</th>
@@ -512,12 +510,11 @@ export const EnterpriseList = () => {
                         </div>
                       )}
                       <div>
-                        <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.name}</div>
+                        <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.name || ent.raisonSociale}</div>
                         <div className="text-[10px] text-[#22301C]/55 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
                       </div>
                     </td>
                     <td className="table-td text-cscm-dark/70 font-mono text-xs font-bold">{ent.memberNo}</td>
-                    <td className="table-td text-cscm-dark/80 font-bold hidden lg:table-cell">{ent.raisonSociale}</td>
                     <td className="table-td hidden sm:table-cell">
                       <div className="font-bold text-cscm-dark">{ent.ville}</div>
                       <div className="text-[10px] text-cscm-dark/55 font-bold uppercase mt-0.5">{ent.pays}</div>

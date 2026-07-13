@@ -215,28 +215,21 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
     doc.text("Nom de l'entreprise :", 20, 72);
     doc.setFont('Helvetica', 'bold');
     doc.setTextColor(19, 46, 21);
-    doc.text(ent.name, 65, 72);
+    doc.text(ent.name || ent.raisonSociale || '', 65, 72);
 
     doc.setFont('Helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    doc.text("Raison Sociale :", 20, 79);
+    doc.text("Numéro d'adhérent :", 20, 79);
     doc.setFont('Helvetica', 'bold');
     doc.setTextColor(19, 46, 21);
-    doc.text(ent.raisonSociale || ent.name, 65, 79);
+    doc.text(ent.memberNo || '-', 65, 79);
 
     doc.setFont('Helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    doc.text("Numéro d'adhérent :", 20, 86);
+    doc.text("Secteur d'activité :", 20, 86);
     doc.setFont('Helvetica', 'bold');
     doc.setTextColor(19, 46, 21);
-    doc.text(ent.memberNo || '-', 65, 86);
-
-    doc.setFont('Helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    doc.text("Secteur d'activité :", 20, 93);
-    doc.setFont('Helvetica', 'bold');
-    doc.setTextColor(19, 46, 21);
-    doc.text(ent.secteur || 'PME', 65, 93);
+    doc.text(ent.secteur || 'PME', 65, 86);
 
     // Section 2: Détails de la transaction
     doc.setFillColor(245, 245, 245);
@@ -656,7 +649,11 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
         }
         updatedEnterprise = { ...enterprise, contacts: newContacts };
       } else {
-        updatedEnterprise = { ...enterprise, ...data };
+        const merged = { ...enterprise, ...data };
+        if (merged.name) {
+          merged.raisonSociale = merged.name;
+        }
+        updatedEnterprise = merged;
       }
       onUpdate(updatedEnterprise);
     }
@@ -683,7 +680,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
               {[
                 { label: "Date d'adhésion", value: enterprise.dateAdhesion || '' },
                 { label: "Statut membre", value: enterprise.statutMembre || '' },
-                { label: "Raison sociale", value: enterprise.raisonSociale || '' },
+                { label: "Nom de l'entreprise", value: enterprise.name || enterprise.raisonSociale || '' },
                 { label: "Forme Juridique", value: enterprise.formeJuridique || '' },
                 { label: "Numéro RC", value: enterprise.numRC || '' },
                 { label: "NINEA / ICE", value: enterprise.ninea || '' },
@@ -1595,8 +1592,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 <p><span className="font-bold text-[#274420]">Numéro membre :</span> {enterprise.memberNo}</p>
                 <p><span className="font-bold text-[#274420]">Statut membre :</span> {enterprise.statutMembre}</p>
                 <p><span className="font-bold text-[#274420]">Date d'adhésion :</span> {enterprise.dateAdhesion}</p>
-                <p><span className="font-bold text-[#274420]">Nom commercial :</span> {enterprise.name}</p>
-                <p><span className="font-bold text-[#274420]">Raison sociale :</span> {enterprise.raisonSociale}</p>
+                <p><span className="font-bold text-[#274420]">Nom de l'entreprise :</span> {enterprise.name || enterprise.raisonSociale}</p>
                 <p><span className="font-bold text-[#274420]">Secteur principal :</span> {enterprise.secteur}</p>
                 <p><span className="font-bold text-[#274420]">Pays + ville :</span> {enterprise.pays} - {enterprise.ville}</p>
               </div>
