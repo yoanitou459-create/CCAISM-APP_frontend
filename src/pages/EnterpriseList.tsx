@@ -410,7 +410,7 @@ export const EnterpriseList = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#132e15] w-5 h-5 pointer-events-none font-bold" />
               <input 
                 type="text" 
-                placeholder="Saisissez un nom, une raison sociale ou un numéro de membre à rechercher..."
+                placeholder="Saisissez le nom d'une entreprise ou son numéro de membre à rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-150 outline-none focus:border-cscm-green focus:ring-2 focus:ring-cscm-green/10 transition-all text-sm placeholder:text-[#132e15]/60 font-semibold text-[#132e15]"
@@ -503,7 +503,6 @@ export const EnterpriseList = () => {
                 <tr className="bg-[#132e15] border-b border-[#132e15]/20 text-white text-[11px] uppercase font-black tracking-widest">
                   <th className="p-6">Nom de l'entreprise</th>
                   <th className="p-6">N° Membre</th>
-                  <th className="p-6 hidden lg:table-cell">Raison sociale</th>
                   <th className="p-6 hidden sm:table-cell">Localisation</th>
                   <th className="p-6 hidden md:table-cell">Secteur</th>
                   <th className="p-6 hidden md:table-cell">Effectif</th>
@@ -516,19 +515,18 @@ export const EnterpriseList = () => {
                   <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all group">
                     <td className="p-6 text-cscm-dark flex items-center gap-3.5">
                       {ent.logo ? (
-                        <img src={ent.logo} alt={ent.name} className="w-11 h-11 rounded-2xl object-cover border border-gray-100 shadow-sm" />
+                        <img src={ent.logo} alt={ent.raisonSociale || ent.name} className="w-11 h-11 rounded-2xl object-cover border border-gray-100 shadow-sm" />
                       ) : (
                         <div className="w-11 h-11 rounded-2xl bg-cscm-green/10 text-cscm-green flex items-center justify-center font-serif font-black text-center text-sm border border-cscm-green/15">
-                          {ent.name.charAt(0)}
+                          {(ent.raisonSociale || ent.name || '').charAt(0)}
                         </div>
                       )}
                       <div>
-                        <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.name}</div>
+                        <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.raisonSociale || ent.name}</div>
                         <div className="text-[10px] text-[#132e15]/75 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
                       </div>
                     </td>
                     <td className="p-6 text-[#132e15]/80 font-mono text-xs font-bold">{ent.memberNo}</td>
-                    <td className="p-6 text-[#132e15]/90 font-bold hidden lg:table-cell">{ent.raisonSociale}</td>
                     <td className="p-6 text-[#132e15] hidden sm:table-cell">
                       <div className="font-bold text-[#132e15]">{ent.ville}</div>
                       <div className="text-[10px] text-[#132e15]/70 font-bold uppercase mt-0.5">{ent.pays}</div>

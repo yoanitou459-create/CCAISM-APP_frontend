@@ -1555,8 +1555,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 <p><span className="font-bold">Numéro membre :</span> {enterprise.memberNo}</p>
                 <p><span className="font-bold">Statut membre :</span> {enterprise.statutMembre}</p>
                 <p><span className="font-bold">Date d'adhésion :</span> {enterprise.dateAdhesion}</p>
-                <p><span className="font-bold">Nom commercial :</span> {enterprise.name}</p>
-                <p><span className="font-bold">Raison sociale :</span> {enterprise.raisonSociale}</p>
+                <p><span className="font-bold">Nom de l'entreprise (Raison sociale) :</span> {enterprise.raisonSociale || enterprise.name}</p>
                 <p><span className="font-bold">Secteur principal :</span> {enterprise.secteur}</p>
                 <p><span className="font-bold">Pays + ville :</span> {enterprise.pays} - {enterprise.ville}</p>
               </div>

@@ -58,8 +58,8 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
     doc.setTextColor(60, 60, 60);
 
     const details = [
-      { label: "Nom de l'entreprise :", val: enterprise.name },
-      { label: "Raison Sociale :", val: enterprise.raisonSociale || enterprise.name },
+      { label: "Nom de l'entreprise (Raison sociale) :", val: enterprise.raisonSociale || enterprise.name },
+      { label: "Date d'adhésion :", val: enterprise.dateAdhesion || 'N/A' },
       { label: "Forme Juridique :", val: enterprise.formeJuridique || 'Société à Responsabilité Limitée' },
       { label: "Date de création :", val: enterprise.dateCreation || 'N/A' },
       { label: "N° Registre Commerce :", val: enterprise.numRC || 'Non Spécifié' },
@@ -238,16 +238,16 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {/* Dénomination info card (soft blue) */}
-                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Dénomination</span>
-                  <span className="text-sm font-black text-[#132e15] mt-1.5 leading-tight">{enterprise.name}</span>
-                </div>
-
                 {/* Raison Sociale card (soft green) */}
                 <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Raison Sociale</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Nom de l'entreprise (Raison sociale)</span>
                   <span className="text-sm font-black text-[#132e15] mt-1.5 leading-tight">{enterprise.raisonSociale || enterprise.name}</span>
+                </div>
+
+                {/* Date d'adhésion card */}
+                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Date d'adhésion</span>
+                  <span className="text-sm font-black text-[#132e15] mt-1.5 leading-tight">{enterprise.dateAdhesion || 'Non spécifiée'}</span>
                 </div>
 
                 {/* Forme Juridique card (soft purple) */}

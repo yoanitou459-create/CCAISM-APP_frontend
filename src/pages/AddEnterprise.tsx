@@ -61,7 +61,13 @@ export const AddEnterprise: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'raisonSociale') {
+        updated.name = value;
+      }
+      return updated;
+    });
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,15 +86,17 @@ export const AddEnterprise: React.FC = () => {
     
     // Check duplicates
     const allEnterprises = getStoredEnterprises();
-    const cleanName = formData.name.trim().toLowerCase();
+    const cleanRaisonSociale = formData.raisonSociale.trim().toLowerCase();
     
-    const isNameDup = allEnterprises.some(ent => (ent.name || '').trim().toLowerCase() === cleanName);
+    const isNameDup = allEnterprises.some(ent => 
+      (ent.raisonSociale || ent.name || '').trim().toLowerCase() === cleanRaisonSociale
+    );
     
     const inputMemberNo = (formData.memberNo || '').trim().toLowerCase();
     const isMemberDup = inputMemberNo ? allEnterprises.some(ent => (ent.memberNo || '').trim().toLowerCase() === inputMemberNo) : false;
     
     if (isNameDup) {
-      setDupError(`L'entreprise "${formData.name}" existe déjà dans l'annuaire (Doublon détecté sur le nom).`);
+      setDupError(`L'entreprise "${formData.raisonSociale}" existe déjà dans l'annuaire (Doublon détecté sur la raison sociale).`);
       return;
     }
     
@@ -227,20 +235,6 @@ export const AddEnterprise: React.FC = () => {
                   <option value="Suspendu">Suspendu</option>
                   <option value="Radié">Radié</option>
                 </select>
-              </div>
-
-              {/* Nom commercial */}
-              <div className="space-y-2">
-                <label className="block text-xs font-black uppercase text-[#132e15] tracking-wider">Nom commercial *</label>
-                <input 
-                  type="text" 
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Saisissez le nom commercial (Ex: Innov Sénégal)" 
-                  required
-                  className="w-full border-2 border-[#132e15]/15 focus:border-[#132e15] text-[#132e15] text-sm font-extrabold p-3 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-[#132e15]/10 transition-all" 
-                />
               </div>
 
               {/* Raison sociale */}
