@@ -387,7 +387,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
         {/* Top Header Bar for Desktop - Elegant & High Contrast */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200/85 shadow-xs shrink-0">
+        <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-white/95 backdrop-blur-xs border-b border-gray-200/85 shadow-xs shrink-0 sticky top-0 z-40">
           <div>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse border border-white" />
@@ -413,7 +413,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
         </header>
 
         {/* Mobile Header Bar */}
-        <header className="lg:hidden bg-[#070d06] border-b border-[#112310] text-white p-4 flex items-center justify-between shrink-0">
+        <header className="lg:hidden bg-[#070d06]/95 backdrop-blur-xs border-b border-[#112310] text-white p-4 flex items-center justify-between shrink-0 sticky top-0 z-40">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsMobileOpen(true)}
