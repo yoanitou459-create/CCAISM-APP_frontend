@@ -136,7 +136,8 @@ const Dashboard = () => {
   
   const totalCotisations = enterprises.reduce((total, ent) => {
     const sum = (ent.cotisations || []).reduce((s: number, cot: any) => s + (Number(cot.amount) || 0), 0);
-    return total + sum;
+    const yearsSum = (Number(ent.cotisation_2023) || 0) + (Number(ent.cotisation_2024) || 0) + (Number(ent.cotisation_2025) || 0);
+    return total + sum + yearsSum;
   }, 0);
 
   // Compute stats for sector progress bars
