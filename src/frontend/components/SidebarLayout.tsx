@@ -247,11 +247,11 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
           className={`p-4 mx-3 mt-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer relative z-10 flex items-center ${isExpanded ? 'gap-3.5 mx-4 p-5 justify-start' : 'justify-center'}`}
           title="Mon Profil Utilisateur"
         >
-          <div className="w-10 h-10 rounded-full bg-cscm-green/20 text-cscm-gold border border-cscm-green/35 flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="w-10 h-10 rounded-full border-2 border-cscm-gold/40 bg-white/5 p-0.5 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-cscm-green/20">
             {profilePhoto ? (
-              <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
+              <img src={profilePhoto} alt="Profil" className="w-full h-full rounded-full object-cover" />
             ) : (
-              <UserCircle className="w-6 h-6" />
+              <UserCircle className="w-full h-full text-cscm-gold p-0.5" />
             )}
           </div>
           {isExpanded && (
@@ -429,12 +429,12 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
 
           <div 
             onClick={() => setIsProfileOpen(true)}
-            className="w-8 h-8 rounded-full bg-cscm-green/20 text-cscm-gold border border-cscm-green/45 flex items-center justify-center shrink-0 cursor-pointer overflow-hidden"
+            className="w-8 h-8 rounded-full border border-cscm-gold/40 bg-white/5 p-0.5 flex items-center justify-center shrink-0 cursor-pointer overflow-hidden ring-2 ring-cscm-green/20"
           >
             {profilePhoto ? (
-              <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
+              <img src={profilePhoto} alt="Profil" className="w-full h-full rounded-full object-cover" />
             ) : (
-              <UserCircle className="w-5 h-5" />
+              <UserCircle className="w-full h-full text-cscm-gold" />
             )}
           </div>
         </header>
@@ -492,11 +492,11 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
                   className="p-6 flex items-center gap-3 border-b border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
                   title="Modifier mon profil"
                 >
-                  <div className="w-10 h-10 rounded-full bg-cscm-green/20 text-cscm-gold border border-cscm-green/30 flex items-center justify-center shrink-0 overflow-hidden">
+                  <div className="w-10 h-10 rounded-full border-2 border-cscm-gold/40 bg-white/5 p-0.5 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-cscm-green/20">
                     {profilePhoto ? (
-                      <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
+                      <img src={profilePhoto} alt="Profil" className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <UserCircle className="w-6 h-6" />
+                      <UserCircle className="w-full h-full text-cscm-gold p-0.5" />
                     )}
                   </div>
                   <div className="overflow-hidden">
@@ -681,11 +681,11 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
                 isProfileOpen ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
               }`}
             >
-              <div className="w-5 h-5 rounded-full bg-cscm-green/20 text-cscm-gold border border-cscm-green/35 flex items-center justify-center overflow-hidden">
+              <div className="w-6 h-6 rounded-full border border-cscm-gold/40 bg-white/5 p-0.5 flex items-center justify-center overflow-hidden ring-2 ring-cscm-green/20">
                 {profilePhoto ? (
-                  <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
+                  <img src={profilePhoto} alt="Profil" className="w-full h-full rounded-full object-cover" />
                 ) : (
-                  <UserCircle className="w-4 h-4" />
+                  <UserCircle className="w-full h-full text-cscm-gold" />
                 )}
               </div>
               <span className="text-[10px] tracking-tight">Profil</span>

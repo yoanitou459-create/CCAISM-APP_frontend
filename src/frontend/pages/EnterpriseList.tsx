@@ -514,13 +514,15 @@ export const EnterpriseList = () => {
                 {filteredEnterprises.map((ent, idx) => (
                   <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all group">
                     <td className="p-6 text-cscm-dark flex items-center gap-3.5">
-                      {ent.logo ? (
-                        <img src={ent.logo} alt={ent.raisonSociale || ent.name} className="w-11 h-11 rounded-2xl object-cover border border-gray-100 shadow-sm" />
-                      ) : (
-                        <div className="w-11 h-11 rounded-2xl bg-cscm-green/10 text-cscm-green flex items-center justify-center font-serif font-black text-center text-sm border border-cscm-green/15">
-                          {(ent.raisonSociale || ent.name || '').charAt(0)}
-                        </div>
-                      )}
+                      <div className="w-12 h-12 rounded-2xl border-2 border-cscm-gold/40 bg-white p-0.5 flex items-center justify-center shadow-xs relative shrink-0 ring-2 ring-cscm-green/5 transition-all group-hover:ring-cscm-green/15 group-hover:border-cscm-gold/80 overflow-hidden">
+                        {ent.logo ? (
+                          <img src={ent.logo} alt={ent.raisonSociale || ent.name} className="w-full h-full rounded-xl object-cover" />
+                        ) : (
+                          <div className="w-full h-full rounded-xl bg-gradient-to-br from-cscm-green/10 to-cscm-green/5 text-cscm-green flex items-center justify-center font-serif font-black text-center text-sm">
+                            {(ent.raisonSociale || ent.name || '').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
                       <div>
                         <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.raisonSociale || ent.name}</div>
                         <div className="text-[10px] text-[#132e15]/75 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
