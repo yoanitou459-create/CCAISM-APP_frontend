@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Camera, Pencil } from 'lucide-react';
-import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 const PencilIcon = ({ size }: { size: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

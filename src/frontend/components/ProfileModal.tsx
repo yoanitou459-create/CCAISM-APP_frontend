@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Camera, X, CheckSquare } from 'lucide-react';
-import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface ProfileModalProps {
   isOpen: boolean;

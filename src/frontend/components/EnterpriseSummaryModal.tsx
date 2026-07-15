@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Download, Shield, MapPin, Phone, Mail, Award, CheckCircle2, Star, FileText, AlertCircle } from 'lucide-react';
-import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { jsPDF } from 'jspdf';
 
 interface EnterpriseSummaryModalProps {

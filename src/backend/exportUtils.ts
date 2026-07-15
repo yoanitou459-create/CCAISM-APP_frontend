@@ -1,4 +1,4 @@
-import { Enterprise } from './enterpriseStorage';
+import { Enterprise } from '../database/enterpriseStorage';
 
 export const exportEnterprisesToCSV = (enterprises: Enterprise[]) => {
   if (enterprises.length === 0) return;

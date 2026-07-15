@@ -23,8 +23,8 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { ExcelImportModal } from './ExcelImportModal';
 import { ProfileModal } from './ProfileModal';
-import { getStoredEnterprises, saveStoredEnterprises } from '../utils/enterpriseStorage';
-import { exportEnterprisesToCSV } from '../utils/exportUtils';
+import { getStoredEnterprises, saveStoredEnterprises } from '../../database/enterpriseStorage';
+import { exportEnterprisesToCSV } from '../../backend/exportUtils';
 import logoImg from './logo.png';
 
 export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {

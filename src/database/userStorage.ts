@@ -1,4 +1,4 @@
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType } from './firebase';
 import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 
 export interface AppUser {
@@ -13,41 +13,12 @@ export interface AppUser {
   entreprise?: string;
 }
 
-export const INITIAL_USERS: AppUser[] = [
-  {
-    id: 'u1',
-    nom: 'Diop',
-    prenom: 'Ibrahima',
-    email: 'admin@cscm.com',
-    role: 'ADMIN',
-    password: 'admin',
-    dateCreation: '2024-01-15'
-  },
-  {
-    id: 'u2',
-    nom: 'Sow',
-    prenom: 'Mariama',
-    email: 'mod@cscm.com',
-    role: 'MODERATEUR',
-    password: 'mod',
-    dateCreation: '2024-02-10'
-  },
-  {
-    id: 'u3',
-    nom: 'Ndiaye',
-    prenom: 'Cheikh',
-    email: 'membre@cscm.com',
-    role: 'MEMBRE',
-    password: 'member',
-    dateCreation: '2024-03-01'
-  }
-];
+export const INITIAL_USERS: AppUser[] = [];
 
 export const getStoredUsers = (): AppUser[] => {
   const data = localStorage.getItem('cscm_users');
   if (!data) {
-    localStorage.setItem('cscm_users', JSON.stringify(INITIAL_USERS));
-    return INITIAL_USERS;
+    return [];
   }
   return JSON.parse(data);
 };

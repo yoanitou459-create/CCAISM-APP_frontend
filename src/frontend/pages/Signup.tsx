@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Logo } from '../components/Logo';
 import { Building2, Sparkles, User, Lock, Mail, Eye, EyeOff, X } from 'lucide-react';
-import { getStoredUsers, saveStoredUsers, fetchLatestUsers } from '../utils/userStorage';
-import { auth } from '../firebase';
+import { getStoredUsers, saveStoredUsers, fetchLatestUsers } from '../../database/userStorage';
+import { auth } from '../../database/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 export const Signup: React.FC = () => {
@@ -60,7 +60,7 @@ export const Signup: React.FC = () => {
               nom: formData.nom.trim(),
               prenom: formData.prenom.trim(),
               email: trimmedEmail,
-              role: 'MEMBRE' as const,
+              role: (users.length === 0 ? 'ADMIN' : 'MEMBRE') as 'ADMIN' | 'MODERATEUR' | 'MEMBRE',
               password: formData.password,
               entreprise: formData.entreprise.trim(),
               status: 'Actif' as const,

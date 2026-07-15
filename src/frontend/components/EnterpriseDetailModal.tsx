@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldCheck, Landmark, Lightbulb, Contact, Coins } from 'lucide-react';
 import { EditFormModal } from './EditFormModal';
-import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { jsPDF } from 'jspdf';
-import { getLocalCotisationRules } from '../utils/cotisationRules';
+import { getLocalCotisationRules } from '../../database/cotisationRules';
 
 const CURRENCIES = [
   { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },

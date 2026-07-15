@@ -1,5 +1,5 @@
 import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType } from './firebase';
 
 export interface CotisationRules {
   amountPerSemester: number;

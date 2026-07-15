@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, CheckCircle2, FileSpreadsheet, ShieldAlert, ArrowRight, Table, AlertTriangle } from 'lucide-react';
-import { getStoredEnterprises, saveStoredEnterprises } from '../utils/enterpriseStorage';
+import { getStoredEnterprises, saveStoredEnterprises } from '../../database/enterpriseStorage';
 
 interface ExcelImportModalProps {
   isOpen: boolean;

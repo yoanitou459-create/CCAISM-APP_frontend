@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SidebarLayout } from '../components/SidebarLayout';
 import { Camera, Pencil, Check, ArrowLeft, Building2, ShieldCheck, MapPin, Contact, AlertCircle } from 'lucide-react';
-import { getStoredEnterprises, saveStoredEnterprises } from '../utils/enterpriseStorage';
+import { getStoredEnterprises, saveStoredEnterprises } from '../../database/enterpriseStorage';
 
 // Automatic member number generator
 const generateMemberNo = () => {

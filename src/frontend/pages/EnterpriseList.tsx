@@ -6,9 +6,9 @@ import { SidebarLayout } from '../components/SidebarLayout';
 import { EnterpriseDetailModal } from '../components/EnterpriseDetailModal';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { EnterpriseSummaryModal } from '../components/EnterpriseSummaryModal';
-import { getStoredEnterprises, saveStoredEnterprises, Enterprise } from '../utils/enterpriseStorage';
-import { getEffectiveApiKey } from '../utils/paymentConfig';
-import { getLocalCotisationRules } from '../utils/cotisationRules';
+import { getStoredEnterprises, saveStoredEnterprises, Enterprise } from '../../database/enterpriseStorage';
+import { getEffectiveApiKey } from '../../backend/paymentConfig';
+import { getLocalCotisationRules } from '../../database/cotisationRules';
 
 const CURRENCIES = [
   { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },
@@ -815,7 +815,7 @@ export const EnterpriseList = () => {
                           <div className="border-t border-rose-150 pt-2.5 space-y-2">
                             <p className="text-[10px] font-black uppercase text-rose-800 tracking-wider">Comment la configurer directement ?</p>
                             <p className="text-[10px] text-rose-700 font-bold leading-relaxed">
-                              Ouvrez le fichier <code className="bg-rose-100 px-1 py-0.5 rounded font-mono text-rose-950 font-semibold">src/utils/paymentConfig.ts</code> et insérez votre clé API Stripe ou Paytech à l'emplacement indiqué :
+                              Ouvrez le fichier <code className="bg-rose-100 px-1 py-0.5 rounded font-mono text-rose-950 font-semibold">src/backend/paymentConfig.ts</code> et insérez votre clé API Stripe ou Paytech à l'emplacement indiqué :
                             </p>
                             <div className="bg-rose-950 text-rose-100 font-mono text-[9px] p-2 rounded-lg font-black select-all">
                               export const PAYMENT_API_KEY = "votre_cle_api_directe";

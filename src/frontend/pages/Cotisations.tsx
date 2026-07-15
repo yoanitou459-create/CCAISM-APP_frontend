@@ -5,13 +5,13 @@ import { jsPDF } from 'jspdf';
 import { 
   getStoredEnterprises, 
   saveStoredEnterprises 
-} from '../utils/enterpriseStorage';
-import { getEffectiveApiKey } from '../utils/paymentConfig';
+} from '../../database/enterpriseStorage';
+import { getEffectiveApiKey } from '../../backend/paymentConfig';
 import { 
   getLocalCotisationRules, 
   saveCotisationRules, 
   fetchLatestCotisationRules 
-} from '../utils/cotisationRules';
+} from '../../database/cotisationRules';
 import { 
   Coins, 
   Search, 

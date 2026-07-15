@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
-import { Login } from './pages/Login';
-import { Signup } from './pages/Signup';
-import { ForgotPassword } from './pages/ForgotPassword';
-import { EnterpriseList } from './pages/EnterpriseList';
+import { Login } from './frontend/pages/Login';
+import { Signup } from './frontend/pages/Signup';
+import { ForgotPassword } from './frontend/pages/ForgotPassword';
+import { EnterpriseList } from './frontend/pages/EnterpriseList';
 import { Building2, Plus, Users, Landmark, ArrowRight, ArrowUpRight, Sparkles, Database, Coins, TrendingUp, BarChart3, DollarSign, Activity, ChevronRight, Check, X, PartyPopper } from 'lucide-react';
 import { motion } from 'motion/react';
-import { SidebarLayout } from './components/SidebarLayout';
-import { getStoredEnterprises, saveStoredEnterprises, INITIAL_ENTERPRISES } from './utils/enterpriseStorage';
-import { getStoredUsers, saveStoredUsers, INITIAL_USERS } from './utils/userStorage';
+import { SidebarLayout } from './frontend/components/SidebarLayout';
+import { getStoredEnterprises, saveStoredEnterprises, INITIAL_ENTERPRISES } from './database/enterpriseStorage';
+import { getStoredUsers, saveStoredUsers, INITIAL_USERS } from './database/userStorage';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import { db, handleFirestoreError, OperationType, auth } from './firebase';
+import { db, handleFirestoreError, OperationType, auth } from './database/firebase';
 
-import { Cotisations } from './pages/Cotisations';
-import { UserManagement } from './pages/UserManagement';
-import { AddEnterprise } from './pages/AddEnterprise';
-import { setupCotisationRulesListener, getLocalCotisationRules } from './utils/cotisationRules';
+import { Cotisations } from './frontend/pages/Cotisations';
+import { UserManagement } from './frontend/pages/UserManagement';
+import { AddEnterprise } from './frontend/pages/AddEnterprise';
+import { setupCotisationRulesListener, getLocalCotisationRules } from './database/cotisationRules';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -618,55 +618,8 @@ export default function App() {
     // 2. Run silent, automated migration or initial database seed if empty
     const runSilentMigration = async () => {
       try {
-        const { getDocs, collection } = await import('firebase/firestore');
-
-        // Check if Enterprises collection on Firestore is empty before seeding
-        const enterprisesSnap = await getDocs(collection(db, 'enterprises'));
-        if (enterprisesSnap.empty) {
-          console.log("Firestore enterprises collection is empty. Seeding initial enterprises...");
-          const localEnts = INITIAL_ENTERPRISES;
-          for (const ent of localEnts) {
-            try {
-              await setDoc(doc(db, 'enterprises', String(ent.id)), ent);
-            } catch (err) {
-              handleFirestoreError(err, OperationType.WRITE, `enterprises/${ent.id}`);
-            }
-          }
-        } else {
-          console.log("Firestore enterprises collection already populated. Syncing database entries to local cache...");
-          const list: any[] = [];
-          enterprisesSnap.forEach(docSnap => {
-            list.push(docSnap.data());
-          });
-          list.sort((a, b) => (a.id || 0) - (b.id || 0));
-          localStorage.setItem('cscm_enterprises', JSON.stringify(list));
-          window.dispatchEvent(new Event('enterprises_updated'));
-        }
-
-        // Check if Users collection on Firestore is empty before seeding
-        const usersSnap = await getDocs(collection(db, 'users'));
-        if (usersSnap.empty) {
-          console.log("Firestore users collection is empty. Seeding initial users...");
-          const localUsers = INITIAL_USERS;
-          for (const user of localUsers) {
-            try {
-              await setDoc(doc(db, 'users', String(user.id)), user);
-            } catch (err) {
-              handleFirestoreError(err, OperationType.WRITE, `users/${user.id}`);
-            }
-          }
-        } else {
-          console.log("Firestore users collection already populated. Syncing database entries to local cache...");
-          const list: any[] = [];
-          usersSnap.forEach(docSnap => {
-            list.push(docSnap.data());
-          });
-          localStorage.setItem('cscm_users', JSON.stringify(list));
-          window.dispatchEvent(new Event('users_updated'));
-        }
-
-        localStorage.setItem('cscm_firebase_migrated', 'true');
         console.log("Silent Firestore alignment and synchronization completed successfully!");
+        localStorage.setItem('cscm_firebase_migrated', 'true');
       } catch (error) {
         console.error("Silent Firestore alignment/seed error:", error);
       }
