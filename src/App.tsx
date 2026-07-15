@@ -7,8 +7,8 @@ import { EnterpriseList } from './frontend/pages/EnterpriseList';
 import { Building2, Plus, Users, Landmark, ArrowRight, ArrowUpRight, Sparkles, Database, Coins, TrendingUp, BarChart3, DollarSign, Activity, ChevronRight, Check, X, PartyPopper } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SidebarLayout } from './frontend/components/SidebarLayout';
-import { getStoredEnterprises, saveStoredEnterprises, INITIAL_ENTERPRISES } from './database/enterpriseStorage';
-import { getStoredUsers, saveStoredUsers, INITIAL_USERS } from './database/userStorage';
+import { getStoredEnterprises, saveStoredEnterprises } from './database/enterpriseStorage';
+import { getStoredUsers, saveStoredUsers } from './database/userStorage';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { db, handleFirestoreError, OperationType, auth } from './database/firebase';
@@ -615,23 +615,12 @@ export default function App() {
       localStorage.setItem('cscm_firebase_active', 'true');
     }
 
-    // 2. Run silent, automated migration or initial database seed if empty
-    const runSilentMigration = async () => {
-      try {
-        console.log("Silent Firestore alignment and synchronization completed successfully!");
-        localStorage.setItem('cscm_firebase_migrated', 'true');
-      } catch (error) {
-        console.error("Silent Firestore alignment/seed error:", error);
-      }
-    };
+    localStorage.setItem('cscm_firebase_migrated', 'true');
 
     // Keep real-time Firestore listeners active unconditionally
     let unsubEnterprises: (() => void) | null = null;
     let unsubUsers: (() => void) | null = null;
     let unsubCotisationRules: (() => void) | null = null;
-
-    // Trigger migration and start listeners immediately
-    runSilentMigration();
 
     unsubEnterprises = onSnapshot(collection(db, 'enterprises'), (snapshot) => {
       const list: any[] = [];
