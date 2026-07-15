@@ -377,14 +377,19 @@ export const UserManagement: React.FC = () => {
                 ) : (
                   filteredUsers.map((u, idx) => {
                     const isSelf = currentUser && currentUser.email.toLowerCase() === u.email.toLowerCase();
+                    const userPhoto = u.photo || (isSelf ? localStorage.getItem('profile_photo') : null);
                     return (
                       <tr key={`${u.id || idx}-${idx}`} className="hover:bg-[#FAF9F5]/50 transition-colors">
                         <td className="p-5">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full border-2 border-cscm-gold/40 bg-white p-0.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-cscm-green/5 overflow-hidden">
-                              <div className="w-full h-full rounded-full bg-gradient-to-br from-cscm-green/10 to-cscm-green/5 text-cscm-green flex items-center justify-center font-bold text-xs uppercase">
-                                {u.prenom[0]}{u.nom[0]}
-                              </div>
+                              {userPhoto ? (
+                                <img src={userPhoto} alt={`${u.prenom} ${u.nom}`} className="w-full h-full rounded-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full rounded-full bg-gradient-to-br from-cscm-green/10 to-cscm-green/5 text-cscm-green flex items-center justify-center font-bold text-xs uppercase">
+                                  {u.prenom[0]}{u.nom[0]}
+                                </div>
+                              )}
                             </div>
                             <div>
                               <p className="text-xs font-black text-[#132e15]">{u.prenom} {u.nom}</p>

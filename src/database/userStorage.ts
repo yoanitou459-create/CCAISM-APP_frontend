@@ -11,6 +11,7 @@ export interface AppUser {
   dateCreation: string;
   status?: 'Actif' | 'Inactif';
   entreprise?: string;
+  photo?: string;
 }
 
 export const INITIAL_USERS: AppUser[] = [];

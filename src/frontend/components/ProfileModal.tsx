@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Camera, X, CheckSquare } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { getStoredUsers, saveStoredUsers } from '../../database/userStorage';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -37,6 +38,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
         const result = reader.result as string;
         setProfilePhoto(result);
         localStorage.setItem('profile_photo', result);
+        
+        // Update user in users list
+        const storedUsers = getStoredUsers();
+        const updatedUsersList = storedUsers.map(u => {
+          if (u.email.toLowerCase() === user.email.toLowerCase()) {
+            return { ...u, photo: result };
+          }
+          return u;
+        });
+        saveStoredUsers(updatedUsersList);
+
         window.dispatchEvent(new Event('user_profile_updated'));
       };
       reader.readAsDataURL(file);
@@ -52,6 +64,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
       entreprise: formData.entreprise
     };
     localStorage.setItem('user', JSON.stringify(updatedUser));
+    
+    // Update user in users list
+    const storedUsers = getStoredUsers();
+    const currentPhoto = localStorage.getItem('profile_photo');
+    const updatedUsersList = storedUsers.map(u => {
+      if (u.email.toLowerCase() === user.email.toLowerCase()) {
+        return { 
+          ...u, 
+          nom: formData.nom, 
+          prenom: formData.prenom, 
+          email: formData.email,
+          entreprise: formData.entreprise,
+          photo: currentPhoto || u.photo
+        };
+      }
+      return u;
+    });
+    saveStoredUsers(updatedUsersList);
+
     // Save appearance preference
     localStorage.setItem('appearance_theme', formData.apparence);
     
