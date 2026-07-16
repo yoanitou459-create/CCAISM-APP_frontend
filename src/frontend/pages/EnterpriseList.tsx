@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Filter, Search, Trash2, Eye, Plus, ChevronRight, X, Building2, Landmark, CheckCircle2, AlertCircle, Coins, AlertTriangle, Loader2, Lock, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SidebarLayout } from '../components/SidebarLayout';
-import { EnterpriseDetailModal } from '../components/EnterpriseDetailModal';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { EnterpriseSummaryModal } from '../components/EnterpriseSummaryModal';
 import { getStoredEnterprises, saveStoredEnterprises, Enterprise } from '../../database/enterpriseStorage';
@@ -590,7 +589,7 @@ export const EnterpriseList = () => {
                         )}
                         {userRole !== 'MEMBRE' && (
                           <button 
-                            onClick={() => setSelectedEnterprise(ent)}
+                            onClick={() => navigate(`/enterprises/${ent.id}`)}
                             className="bg-cscm-green/10 text-cscm-green hover:bg-cscm-green hover:text-white px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer select-none"
                           >
                             Détails
@@ -615,12 +614,6 @@ export const EnterpriseList = () => {
       </motion.div>
 
       {/* Modals */}
-      <EnterpriseDetailModal 
-        isOpen={!!selectedEnterprise}
-        onClose={() => setSelectedEnterprise(null)}
-        enterprise={selectedEnterprise || {}}
-        onUpdate={handleUpdateEnterprise}
-      />
       <ConfirmationModal 
         isOpen={!!enterpriseToDelete}
         onClose={() => setEnterpriseToDelete(null)}

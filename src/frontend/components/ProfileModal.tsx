@@ -94,9 +94,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div key="profile-modal-root">
           {/* Backdrop */}
           <motion.div
+            key="profile-modal-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -105,8 +106,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
           />
           
           {/* Modal Container */}
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-[90] pointer-events-none">
+          <div key="profile-modal-container" className="fixed inset-0 flex items-center justify-center p-4 z-[90] pointer-events-none">
             <motion.div
+              key="profile-modal-body"
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
@@ -258,7 +260,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
               </div>
             </motion.div>
           </div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );

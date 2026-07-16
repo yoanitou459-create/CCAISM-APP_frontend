@@ -65,8 +65,6 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
     }
   }, [isOpen, enterprise, type, mode, itemIndex]);
 
-  if (!isOpen || !type) return null;
-
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -670,23 +668,26 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        {/* Modal Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-        />
-        
-        {/* Modal Body Container */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 25 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 25 }}
-          className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh] border border-gray-200/80"
-        >
+      {isOpen && type && (
+        <div key="edit-form-modal-container" className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          {/* Modal Backdrop */}
+          <motion.div
+            key="edit-form-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          />
+          
+          {/* Modal Body Container */}
+          <motion.div
+            key="edit-form-modal-body"
+            initial={{ scale: 0.95, opacity: 0, y: 25 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 25 }}
+            className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh] border border-gray-200/80"
+          >
           {/* Header */}
           <div className="p-6 text-center bg-gradient-to-r from-[#122410] to-[#1c3a19] text-white border-b border-[#234c20] relative flex flex-col items-center justify-center">
             <h2 className="text-xl md:text-2xl font-serif font-black text-cscm-gold tracking-tight leading-snug">
@@ -729,6 +730,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    )}
+  </AnimatePresence>
   );
 };

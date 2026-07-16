@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldCheck, Landmark, Lightbulb, Contact, Coins } from 'lucide-react';
-import { EditFormModal } from './EditFormModal';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { EditFormModal } from '../components/EditFormModal';
 import { jsPDF } from 'jspdf';
 import { getLocalCotisationRules } from '../../database/cotisationRules';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getStoredEnterprises, saveStoredEnterprises } from '../../database/enterpriseStorage';
+import { SidebarLayout } from '../components/SidebarLayout';
 
 const CURRENCIES = [
   { code: 'FCFA', name: 'FCFA (XOF) - Franc CFA', rate: 1, symbol: 'XOF' },
@@ -39,15 +41,10 @@ const getTabIcon = (tab: string) => {
   }
 };
 
-interface EnterpriseDetailModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  enterprise: any;
-  onUpdate?: (updatedEnterprise: any) => void;
-}
-
-export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ isOpen, onClose, enterprise, onUpdate }) => {
-  useBodyScrollLock(isOpen);
+export const EnterpriseDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [enterprise, setEnterprise] = useState<any>(null);
 
   const [activeTab, setActiveTab] = useState('Informations générales');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -89,7 +86,30 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
     }
   }, [previewCert]);
 
-  if (!isOpen) return null;
+  const loadEnterprise = () => {
+    const freshList = getStoredEnterprises();
+    const found = freshList.find(e => String(e.id) === String(id));
+    if (found) {
+      setEnterprise(found);
+    } else {
+      navigate('/enterprises');
+    }
+  };
+
+  useEffect(() => {
+    loadEnterprise();
+    window.addEventListener('enterprises_updated', loadEnterprise);
+    return () => {
+      window.removeEventListener('enterprises_updated', loadEnterprise);
+    };
+  }, [id]);
+
+  useEffect(() => {
+    setActiveTab('Informations générales');
+    setSelectedItemIndex(null);
+    setFeedbackMessage(null);
+    setPreviewCert(null);
+  }, [id]);
 
   const getPaymentsList = (ent: any) => {
     const payments: any[] = [];
@@ -601,54 +621,59 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
     setIsEditModalOpen(true);
   };
 
+  const handleUpdateEnterprise = (updatedEnterprise: any) => {
+    const list = getStoredEnterprises();
+    const updated = list.map(e => String(e.id) === String(updatedEnterprise.id) ? updatedEnterprise : e);
+    saveStoredEnterprises(updated);
+    setEnterprise(updatedEnterprise);
+  };
+
   const handleSave = (data: any) => {
-    if (onUpdate) {
-      let updatedEnterprise;
-      if (editType === 'Cotisations') {
-        const newCotisations = [...(enterprise.cotisations || [])];
-        if (editMode === 'add') {
-          newCotisations.push(data);
-        } else if (selectedItemIndex !== null) {
-          newCotisations[selectedItemIndex] = data;
-        }
-        updatedEnterprise = { ...enterprise, cotisations: newCotisations };
-      } else if (editType === 'Besoins') {
-        const newBesoins = [...(enterprise.besoins || [])];
-        if (editMode === 'add') {
-          newBesoins.push(data);
-        } else if (selectedItemIndex !== null) {
-          newBesoins[selectedItemIndex] = data;
-        }
-        updatedEnterprise = { ...enterprise, besoins: newBesoins };
-      } else if (editType === 'Certifications') {
-        const newCerts = [...(enterprise.certifications || [])];
-        if (editMode === 'add') {
-          newCerts.push(data);
-        } else if (selectedItemIndex !== null) {
-          newCerts[selectedItemIndex] = data;
-        }
-        updatedEnterprise = { ...enterprise, certifications: newCerts };
-      } else if (editType === 'Données financières') {
-        const newFinancials = [...(enterprise.financialData || [])];
-        if (editMode === 'add') {
-          newFinancials.push(data);
-        } else if (selectedItemIndex !== null) {
-          newFinancials[selectedItemIndex] = data;
-        }
-        updatedEnterprise = { ...enterprise, financialData: newFinancials };
-      } else if (editType === 'Contacts') {
-        const newContacts = [...(enterprise.contacts || [])];
-        if (editMode === 'add') {
-          newContacts.push(data);
-        } else if (selectedItemIndex !== null) {
-          newContacts[selectedItemIndex] = data;
-        }
-        updatedEnterprise = { ...enterprise, contacts: newContacts };
-      } else {
-        updatedEnterprise = { ...enterprise, ...data };
+    let updatedEnterprise;
+    if (editType === 'Cotisations') {
+      const newCotisations = [...(enterprise.cotisations || [])];
+      if (editMode === 'add') {
+        newCotisations.push(data);
+      } else if (selectedItemIndex !== null) {
+        newCotisations[selectedItemIndex] = data;
       }
-      onUpdate(updatedEnterprise);
+      updatedEnterprise = { ...enterprise, cotisations: newCotisations };
+    } else if (editType === 'Besoins') {
+      const newBesoins = [...(enterprise.besoins || [])];
+      if (editMode === 'add') {
+        newBesoins.push(data);
+      } else if (selectedItemIndex !== null) {
+        newBesoins[selectedItemIndex] = data;
+      }
+      updatedEnterprise = { ...enterprise, besoins: newBesoins };
+    } else if (editType === 'Certifications') {
+      const newCerts = [...(enterprise.certifications || [])];
+      if (editMode === 'add') {
+        newCerts.push(data);
+      } else if (selectedItemIndex !== null) {
+        newCerts[selectedItemIndex] = data;
+      }
+      updatedEnterprise = { ...enterprise, certifications: newCerts };
+    } else if (editType === 'Données financières') {
+      const newFinancials = [...(enterprise.financialData || [])];
+      if (editMode === 'add') {
+        newFinancials.push(data);
+      } else if (selectedItemIndex !== null) {
+        newFinancials[selectedItemIndex] = data;
+      }
+      updatedEnterprise = { ...enterprise, financialData: newFinancials };
+    } else if (editType === 'Contacts') {
+      const newContacts = [...(enterprise.contacts || [])];
+      if (editMode === 'add') {
+        newContacts.push(data);
+      } else if (selectedItemIndex !== null) {
+        newContacts[selectedItemIndex] = data;
+      }
+      updatedEnterprise = { ...enterprise, contacts: newContacts };
+    } else {
+      updatedEnterprise = { ...enterprise, ...data };
     }
+    handleUpdateEnterprise(updatedEnterprise);
     showFeedback('success', `Les modifications pour "${editType}" ont été enregistrées avec succès.`);
     setIsEditModalOpen(false);
   };
@@ -1497,21 +1522,24 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
     }
   };
 
+  if (!enterprise) {
+    return (
+      <SidebarLayout>
+        <div className="flex items-center justify-center min-h-screen bg-[#FAF9F5]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#132e15]" />
+        </div>
+      </SidebarLayout>
+    );
+  }
+
   return (
-    <AnimatePresence>
-      <div className="fixed lg:inset-0 top-16 bottom-16 lg:bottom-0 left-0 right-0 z-30 lg:z-50 bg-[#FAF9F5] flex flex-col overflow-hidden shadow-xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ type: "spring", damping: 28, stiffness: 220 }}
-          className="bg-white w-full h-full flex flex-col overflow-y-auto"
-        >
-          {/* Header Section */}
-          <div className="p-4 md:p-8 border-b border-[#132e15]/10 bg-white relative flex flex-col items-center">
-            <button onClick={onClose} className="absolute top-4 left-4 md:top-8 md:left-8 p-2 hover:bg-gray-55 bg-gray-50 md:bg-transparent rounded-full transition-colors cursor-pointer" title="Retour">
-              <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-[#132e15]" />
-            </button>
+    <SidebarLayout>
+      <div key="enterprise-detail-wrapper" className="w-full min-h-screen bg-[#FAF9F5] flex flex-col overflow-y-auto pb-24">
+        {/* Header Section */}
+        <div className="p-4 md:p-8 border-b border-[#132e15]/10 bg-white relative flex flex-col items-center">
+          <button onClick={() => navigate('/enterprises')} className="absolute top-4 left-4 md:top-8 md:left-8 p-2 hover:bg-gray-55 bg-gray-50 md:bg-transparent rounded-full transition-colors cursor-pointer" title="Retour">
+            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-[#132e15]" />
+          </button>
 
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-10 md:mt-4 w-full max-w-4xl">
               <label 
@@ -1540,11 +1568,11 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file && onUpdate) {
+                  if (file) {
                     const reader = new FileReader();
                     reader.onloadend = () => {
                       const updated = { ...enterprise, logo: reader.result as string };
-                      onUpdate(updated);
+                      handleUpdateEnterprise(updated);
                       showFeedback('success', "Le logo de l'entreprise a été mis à jour !");
                     };
                     reader.readAsDataURL(file);
@@ -1598,6 +1626,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             <AnimatePresence>
               {feedbackMessage && (
                 <motion.div
+                  key="feedback-message"
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
@@ -1624,7 +1653,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
               </motion.div>
             </AnimatePresence>
           </div>
-        </motion.div>
       </div>
 
       <EditFormModal 
@@ -1640,8 +1668,9 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
       {/* Certification Document Preview Modal */}
       <AnimatePresence>
         {previewCert && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <div key="cert-preview-container" className="fixed inset-0 z-[120] flex items-center justify-center p-4">
             <motion.div
+              key="cert-preview-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.7 }}
               exit={{ opacity: 0 }}
@@ -1649,6 +1678,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
               onClick={() => setPreviewCert(null)}
             />
             <motion.div
+              key="cert-preview-body"
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -1741,6 +1771,6 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
           </div>
         )}
       </AnimatePresence>
-    </AnimatePresence>
+    </SidebarLayout>
   );
 };

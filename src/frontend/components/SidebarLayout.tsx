@@ -603,24 +603,30 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
         </AnimatePresence>
 
         {/* Dynamic page main container - Independent Scrollable Area */}
-        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto pb-24 lg:pb-6 relative scroll-smooth">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full h-full"
-            >
-              {children || <Outlet />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        {children ? (
+          <div className="flex-1 relative overflow-hidden w-full h-full">
+            {children}
+          </div>
+        ) : (
+          <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto pb-24 lg:pb-6 relative scroll-smooth">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full h-full"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {/* Mobile Bottom Navigation Bar (Instagram/Facebook format) */}
-      <div className="lg:hidden absolute bottom-0 left-0 right-0 z-40 bg-[#070d06]/95 backdrop-blur-md border-t border-[#112310] pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.4)]">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070d06]/95 backdrop-blur-md border-t border-[#112310] pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.4)]">
         <div className="flex justify-around items-center h-16 px-2">
           {/* Dashboard tab */}
           <button

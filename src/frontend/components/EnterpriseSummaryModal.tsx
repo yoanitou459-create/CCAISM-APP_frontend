@@ -13,8 +13,6 @@ interface EnterpriseSummaryModalProps {
 export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ isOpen, onClose, enterprise }) => {
   useBodyScrollLock(isOpen);
 
-  if (!isOpen || !enterprise) return null;
-
   const handleDownloadPDF = () => {
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -164,21 +162,24 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto selection:bg-[#132e15] selection:text-[#ebd078]">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-        />
-        
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-[#FAF9F5] w-full max-w-4xl rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[95vh] border-2 border-[#132e15] font-sans text-[#132e15]"
-        >
+      {isOpen && enterprise && (
+        <div key="summary-modal-container" className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto selection:bg-[#132e15] selection:text-[#ebd078]">
+          <motion.div
+            key="summary-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+          />
+          
+          <motion.div
+            key="summary-modal-body"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-[#FAF9F5] w-full max-w-4xl rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[95vh] border-2 border-[#132e15] font-sans text-[#132e15]"
+          >
           {/* 1. Header with Dark Green Top Bar */}
           <div className="p-6 bg-[#132e15] text-white flex justify-between items-center relative overflow-hidden shrink-0">
             {/* Ambient luxury light overlay */}
@@ -425,6 +426,7 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
           
         </motion.div>
       </div>
-    </AnimatePresence>
+    )}
+  </AnimatePresence>
   );
 };

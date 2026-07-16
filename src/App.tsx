@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Login } from './frontend/pages/Login';
 import { Signup } from './frontend/pages/Signup';
 import { ForgotPassword } from './frontend/pages/ForgotPassword';
@@ -16,6 +16,7 @@ import { db, handleFirestoreError, OperationType, auth } from './database/fireba
 import { Cotisations } from './frontend/pages/Cotisations';
 import { UserManagement } from './frontend/pages/UserManagement';
 import { AddEnterprise } from './frontend/pages/AddEnterprise';
+import { EnterpriseDetail } from './frontend/pages/EnterpriseDetail';
 import { setupCotisationRulesListener, getLocalCotisationRules } from './database/cotisationRules';
 
 // Protected Route Component
@@ -132,7 +133,7 @@ const Dashboard = () => {
   }, []);
 
   const totalEnterprises = enterprises.length;
-  const activeEnterprises = enterprises.filter(e => e.statutMembre === 'Actif').length;
+  const activeEnterprises = enterprises.filter(e => (e.statutMembre || '').trim().toLowerCase() === 'actif').length;
   
   const totalCotisations = enterprises.reduce((total, ent) => {
     const sum = (ent.cotisations || []).reduce((s: number, cot: any) => s + (Number(cot.amount) || 0), 0);
@@ -230,14 +231,14 @@ const Dashboard = () => {
   });
   const upToDateCount = upToDateList.length;
   const delayedCount = Math.max(0, totalEnterprises - upToDateCount);
-  const activePct = totalEnterprises > 0 ? Math.round((upToDateCount / totalEnterprises) * 100) : 100;
+  const activePct = totalEnterprises > 0 ? Math.round((activeEnterprises / totalEnterprises) * 100) : 100;
 
   // Average cotisation per member
   const averageCotisation = totalEnterprises > 0 ? Math.round(totalCotisations / totalEnterprises) : 30606;
 
   // Dominant sector text helper
   const dominantSectorName = sortedSectors[0] || 'Autres';
-  const dominantSectorCount = sectorCounts[dominantSectorName] || 10;
+  const dominantSectorCount = sectorCounts[dominantSectorName] || 0;
 
   // New members of this month helper
   const currentMonthRegistrations = monthlyStats[5].count; // June counts
@@ -324,7 +325,7 @@ const Dashboard = () => {
                 Entreprises membres
               </span>
               <span className="text-3xl font-black text-blue-600 block mt-2 font-serif font-black">
-                {totalEnterprises || 33}
+                {totalEnterprises}
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-center text-blue-500 shrink-0">
@@ -339,7 +340,7 @@ const Dashboard = () => {
                 Entreprises actives
               </span>
               <span className="text-3xl font-black text-emerald-600 block mt-2 font-serif font-black">
-                {activeEnterprises || 33}
+                {activeEnterprises}
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-center text-emerald-500 shrink-0">
@@ -369,7 +370,7 @@ const Dashboard = () => {
                 Nouvelles ce mois
               </span>
               <span className="text-3xl font-black text-purple-600 block mt-2 font-serif font-black">
-                {currentMonthRegistrations || 7}
+                {currentMonthRegistrations}
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-purple-50/50 border border-purple-100 flex items-center justify-center text-purple-500 shrink-0">
@@ -601,9 +602,43 @@ const Dashboard = () => {
 };
 
 const ProtectedLayout = () => {
+  const location = useLocation();
+
   return (
     <ProtectedRoute>
-      <SidebarLayout />
+      <SidebarLayout>
+        <div className="flex-1 relative overflow-hidden h-full w-full">
+          {/* Dashboard */}
+          <div key="layout-dashboard" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/dashboard' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
+            <Dashboard />
+          </div>
+
+          {/* Enterprises */}
+          <div key="layout-enterprises" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/enterprises' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
+            <EnterpriseList />
+          </div>
+
+          {/* Add Enterprise */}
+          <div key="layout-enterprises-add" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/enterprises/add' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
+            <AddEnterprise />
+          </div>
+
+          {/* Enterprise Detail */}
+          <div key="layout-enterprises-detail" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname.startsWith('/enterprises/') && location.pathname !== '/enterprises/add' && location.pathname !== '/enterprises' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
+            <EnterpriseDetail />
+          </div>
+
+          {/* Cotisations */}
+          <div key="layout-cotisations" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/cotisations' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
+            <Cotisations />
+          </div>
+
+          {/* Users */}
+          <div key="layout-users" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/users' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
+            <UserManagement />
+          </div>
+        </div>
+      </SidebarLayout>
     </ProtectedRoute>
   );
 };
@@ -732,6 +767,7 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/enterprises" element={<EnterpriseList />} />
             <Route path="/enterprises/add" element={<AddEnterprise />} />
+            <Route path="/enterprises/:id" element={<EnterpriseDetail />} />
             <Route path="/cotisations" element={<Cotisations />} />
             <Route path="/users" element={<UserManagement />} />
           </Route>

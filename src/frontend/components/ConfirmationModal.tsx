@@ -17,25 +17,26 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 }) => {
   useBodyScrollLock(isOpen);
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-        />
-        
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-[#E5E5E5] w-full max-w-md rounded-lg shadow-2xl relative z-10 border-2 border-black p-8 text-center"
-        >
+      {isOpen && (
+        <div key="confirmation-modal-container" className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <motion.div
+            key="confirmation-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+          />
+          
+          <motion.div
+            key="confirmation-modal-body"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-[#E5E5E5] w-full max-w-md rounded-lg shadow-2xl relative z-10 border-2 border-black p-8 text-center"
+          >
           <h3 className="text-2xl font-serif font-bold text-[#4A3728] mb-8">
             {title}
           </h3>
@@ -56,6 +57,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    )}
+  </AnimatePresence>
   );
 };
