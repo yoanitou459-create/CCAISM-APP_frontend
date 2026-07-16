@@ -150,21 +150,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                   </div>
                   
                   {/* Camera Float Action Icon */}
-                  <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-2 right-2 bg-[#ebd078] hover:bg-amber-400 p-3.5 rounded-full shadow-lg transition-transform hover:scale-105 cursor-pointer border-2 border-white flex items-center justify-center text-cscm-dark shrink-0"
+                  <label 
+                    className="absolute bottom-2 right-2 bg-[#ebd078] hover:bg-amber-400 p-3.5 rounded-full shadow-lg transition-transform hover:scale-105 cursor-pointer border-2 border-white flex items-center justify-center text-cscm-dark shrink-0 relative"
                     title="Changer de photo"
                   >
                     <Camera className="w-5 h-5" />
-                  </button>
-
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handlePhotoChange} 
-                    className="hidden" 
-                    accept="image/*" 
-                  />
+                    <input 
+                      type="file" 
+                      onChange={handlePhotoChange} 
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
+                      accept="image/*" 
+                    />
+                  </label>
                 </div>
 
                 {/* Form Inputs based on Screenshot */}

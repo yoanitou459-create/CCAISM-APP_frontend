@@ -196,7 +196,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
 
   return (
     <SidebarLayoutContext.Provider value={true}>
-      <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-[#f5faef] via-[#FAF9F5] to-[#fefbe3] flex font-sans">
+      <div className="h-[100dvh] w-full overflow-hidden bg-gradient-to-br from-[#f5faef] via-[#FAF9F5] to-[#fefbe3] flex font-sans">
       {/* Toast Alert */}
       <AnimatePresence>
         {showToast && (
@@ -384,7 +384,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
       </aside>
 
       {/* Main Container including Top Header Bar */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-[100dvh] relative overflow-hidden">
         
         {/* Top Header Bar for Desktop - Elegant & High Contrast */}
         <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-white/95 backdrop-blur-xs border-b border-gray-200/85 shadow-xs shrink-0 sticky top-0 z-40">
@@ -620,7 +620,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
       </div>
 
       {/* Mobile Bottom Navigation Bar (Instagram/Facebook format) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070d06]/95 backdrop-blur-md border-t border-[#112310] pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.4)]">
+      <div className="lg:hidden absolute bottom-0 left-0 right-0 z-40 bg-[#070d06]/95 backdrop-blur-md border-t border-[#112310] pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.4)]">
         <div className="flex justify-around items-center h-16 px-2">
           {/* Dashboard tab */}
           <button

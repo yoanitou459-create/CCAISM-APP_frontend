@@ -1514,9 +1514,8 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
             </button>
 
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-10 md:mt-4 w-full max-w-4xl">
-              <div 
+              <label 
                 className="w-32 h-32 rounded-2xl border-2 border-gray-300 flex items-center justify-center text-center p-2 text-xs font-black overflow-hidden bg-white text-black cursor-pointer relative group shadow-sm transition-all hover:border-[#132e15]"
-                onClick={() => document.getElementById(`upload-ent-logo-${enterprise.id}`)?.click()} 
                 title="Cliquer pour changer le logo de l'entreprise"
               >
                 {enterprise.logo ? (
@@ -1535,7 +1534,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 <input 
                   type="file" 
                   id={`upload-ent-logo-${enterprise.id}`}
-                  className="hidden" 
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
                   accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -1550,7 +1549,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                     }
                   }}
                 />
-              </div>
+              </label>
               <div className="text-sm space-y-1 text-[#132e15] font-semibold">
                 <p><span className="font-bold">Numéro membre :</span> {enterprise.memberNo}</p>
                 <p><span className="font-bold">Statut membre :</span> {enterprise.statutMembre}</p>
