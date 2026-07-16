@@ -644,14 +644,13 @@ export const AddEnterprise: React.FC = () => {
                 <div className="relative group shrink-0">
                   <input 
                     type="file" 
-                    ref={fileInputRef} 
+                    id="add-ent-logo"
                     onChange={handleLogoChange} 
                     className="hidden" 
                     accept="image/*"
                   />
-                  <button 
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                  <label 
+                    htmlFor="add-ent-logo"
                     className="w-20 h-20 rounded-2xl bg-white flex flex-col items-center justify-center border-2 border-dashed border-gray-200 hover:border-[#132e15] hover:bg-cscm-green/5 transition-all overflow-hidden cursor-pointer shrink-0"
                   >
                     {logo ? (
@@ -662,15 +661,14 @@ export const AddEnterprise: React.FC = () => {
                         <span className="text-[9px] text-[#132e15]/60 mt-1 font-bold">Logo</span>
                       </>
                     )}
-                  </button>
+                  </label>
                   {logo && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute -top-1.5 -right-1.5 bg-[#ebd078] p-1.5 rounded-lg border border-[#132e15]/20 shadow-md cursor-pointer hover:scale-105 transition-all"
+                    <label
+                      htmlFor="add-ent-logo"
+                      className="absolute -top-1.5 -right-1.5 bg-[#ebd078] p-1.5 rounded-lg border border-[#132e15]/20 shadow-md cursor-pointer hover:scale-105 transition-all flex items-center justify-center"
                     >
                       <Pencil className="w-3.5 h-3.5 text-[#132e15]" />
-                    </button>
+                    </label>
                   )}
                 </div>
                 <div className="text-left">

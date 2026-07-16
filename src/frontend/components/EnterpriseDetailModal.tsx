@@ -1515,6 +1515,7 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
 
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-10 md:mt-4 w-full max-w-4xl">
               <label 
+                htmlFor={`upload-ent-logo-${enterprise.id}`}
                 className="w-32 h-32 rounded-2xl border-2 border-gray-300 flex items-center justify-center text-center p-2 text-xs font-black overflow-hidden bg-white text-black cursor-pointer relative group shadow-sm transition-all hover:border-[#132e15]"
                 title="Cliquer pour changer le logo de l'entreprise"
               >
@@ -1530,26 +1531,26 @@ export const EnterpriseDetailModal: React.FC<EnterpriseDetailModalProps> = ({ is
                 <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-black text-xs font-black flex-col gap-1 shadow-inner">
                   <span className="tracking-wide">Changer Logo</span>
                 </div>
-                
-                <input 
-                  type="file" 
-                  id={`upload-ent-logo-${enterprise.id}`}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file && onUpdate) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        const updated = { ...enterprise, logo: reader.result as string };
-                        onUpdate(updated);
-                        showFeedback('success', "Le logo de l'entreprise a été mis à jour !");
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                />
               </label>
+              
+              <input 
+                type="file" 
+                id={`upload-ent-logo-${enterprise.id}`}
+                className="hidden" 
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file && onUpdate) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      const updated = { ...enterprise, logo: reader.result as string };
+                      onUpdate(updated);
+                      showFeedback('success', "Le logo de l'entreprise a été mis à jour !");
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
               <div className="text-sm space-y-1 text-[#132e15] font-semibold">
                 <p><span className="font-bold">Numéro membre :</span> {enterprise.memberNo}</p>
                 <p><span className="font-bold">Statut membre :</span> {enterprise.statutMembre}</p>

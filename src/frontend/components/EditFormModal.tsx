@@ -92,10 +92,19 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                     <Camera className="w-10 h-10 text-gray-400" />
                   )}
                 </div>
-                <label className="absolute -bottom-2 -right-2 bg-cscm-green text-white p-2.5 rounded-xl border border-white cursor-pointer hover:bg-[#132e15] shadow-md transition-colors">
+                <label 
+                  htmlFor="edit-logo-input"
+                  className="absolute -bottom-2 -right-2 bg-cscm-green text-white p-2.5 rounded-xl border border-white cursor-pointer hover:bg-[#132e15] shadow-md transition-colors flex items-center justify-center"
+                >
                   <PencilIcon size={14} />
-                  <input type="file" className="hidden" accept="image/*" onChange={handleLogoChange} />
                 </label>
+                <input 
+                  type="file" 
+                  id="edit-logo-input"
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleLogoChange} 
+                />
               </div>
             </div>
             {[
