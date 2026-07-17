@@ -27,6 +27,64 @@ import { getStoredEnterprises, saveStoredEnterprises } from '../../database/ente
 import { exportEnterprisesToCSV } from '../../backend/exportUtils';
 import logoImg from './logo.png';
 
+interface NavIconButtonProps {
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+  expanded?: boolean;
+  label?: string;
+  badge?: string | null;
+}
+
+const NavIconButton: React.FC<NavIconButtonProps> = ({
+  active,
+  onClick,
+  title,
+  children,
+  expanded,
+  label,
+  badge,
+}) => (
+  <button
+    onClick={onClick}
+    title={title}
+    className={`w-full flex items-center transition-all duration-300 cursor-pointer select-none ${
+      expanded ? 'justify-between gap-2 px-3 py-2.5 rounded-2xl' : 'justify-center p-0'
+    } ${
+      active
+        ? expanded
+          ? 'glass-nav-active font-bold'
+          : ''
+        : expanded
+          ? 'text-white/65 hover:text-white hover:bg-white/10 rounded-2xl'
+          : ''
+    }`}
+  >
+    <div className={`flex items-center ${expanded ? 'gap-3 min-w-0' : ''}`}>
+      <span
+        className={`inline-flex items-center justify-center transition-all duration-300 ${
+          expanded
+            ? `w-9 h-9 rounded-xl shrink-0 ${active ? 'bg-[#1A3D18]/8 text-white' : 'bg-white/5 text-white/70'}`
+            : `w-11 h-11 rounded-2xl ${active ? 'glass-nav-active' : 'text-white/70 hover:bg-white/10 hover:text-white'}`
+        }`}
+      >
+        {children}
+      </span>
+      {expanded && label && (
+        <span className={`text-xs truncate ${active ? 'text-[#1A3D18]' : ''}`}>{label}</span>
+      )}
+    </div>
+    {expanded && badge && (
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+        active ? 'bg-[#1A3D18]/10 text-[#1A3D18]' : 'bg-white/15 text-white/80'
+      }`}>
+        {badge}
+      </span>
+    )}
+  </button>
+);
+
 export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const hasParent = useContext(SidebarLayoutContext);
   const navigate = useNavigate();
@@ -161,62 +219,6 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
       { label: 'Gestion Utilisateurs', path: '/users', icon: Users, badge: null as string | null },
     ] : [])
   ];
-
-  const NavIconButton = ({
-    active,
-    onClick,
-    title,
-    children,
-    expanded,
-    label,
-    badge,
-  }: {
-    active: boolean;
-    onClick: () => void;
-    title: string;
-    children: React.ReactNode;
-    expanded?: boolean;
-    label?: string;
-    badge?: string | null;
-  }) => (
-    <button
-      onClick={onClick}
-      title={title}
-      className={`w-full flex items-center transition-all duration-300 cursor-pointer select-none ${
-        expanded ? 'justify-between gap-2 px-3 py-2.5 rounded-2xl' : 'justify-center p-0'
-      } ${
-        active
-          ? expanded
-            ? 'glass-nav-active font-bold'
-            : ''
-          : expanded
-            ? 'text-white/65 hover:text-white hover:bg-white/10 rounded-2xl'
-            : ''
-      }`}
-    >
-      <div className={`flex items-center ${expanded ? 'gap-3 min-w-0' : ''}`}>
-        <span
-          className={`inline-flex items-center justify-center transition-all duration-300 ${
-            expanded
-              ? `w-9 h-9 rounded-xl shrink-0 ${active ? 'bg-[#1A3D18]/8 text-white' : 'bg-white/5 text-white/70'}`
-              : `w-11 h-11 rounded-2xl ${active ? 'glass-nav-active' : 'text-white/70 hover:bg-white/10 hover:text-white'}`
-          }`}
-        >
-          {children}
-        </span>
-        {expanded && label && (
-          <span className={`text-xs truncate ${active ? 'text-[#1A3D18]' : ''}`}>{label}</span>
-        )}
-      </div>
-      {expanded && badge && (
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-          active ? 'bg-[#1A3D18]/10 text-[#1A3D18]' : 'bg-white/15 text-white/80'
-        }`}>
-          {badge}
-        </span>
-      )}
-    </button>
-  );
 
   return (
     <SidebarLayoutContext.Provider value={true}>

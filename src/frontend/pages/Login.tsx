@@ -35,7 +35,8 @@ export const Login: React.FC = () => {
   const finishGoogleSession = async (userEmail: string, displayName: string) => {
     const result = await establishAppSessionFromGoogle(userEmail, displayName, { allowCreate: false });
     if (!result.ok) {
-      if (result.reason === 'not_found') {
+      const errorResult = result as { ok: false; reason: 'inactive' | 'not_found' };
+      if (errorResult.reason === 'not_found') {
         setError("Ce compte Google n'est pas inscrit. Créez un compte d'abord ou choisissez un autre compte.");
       } else {
         setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
