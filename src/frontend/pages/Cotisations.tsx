@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SidebarLayout } from '../components/SidebarLayout';
 import { ConfirmationModal } from '../components/ConfirmationModal';
+import { ModalPortal } from '../components/ModalPortal';
 import { jsPDF } from 'jspdf';
 import { 
   getStoredEnterprises, 
@@ -946,7 +947,7 @@ export const Cotisations: React.FC = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="max-w-[1440px] mx-auto p-4 md:p-8 font-sans space-y-8 bg-transparent min-h-screen"
+        className="max-w-7xl mx-auto w-full p-4 md:p-8 font-sans space-y-8 bg-transparent min-h-screen"
       >
         
         {/* Toast Feedbacks */}
@@ -965,19 +966,22 @@ export const Cotisations: React.FC = () => {
         </AnimatePresence>
 
         {/* Top Header Selector Panel - styled perfectly like Capture 1/4 */}
-        <div className="bg-white rounded-3xl p-6 border border-gray-150 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="surface-card p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div className="flex items-center gap-4 text-left">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#132e15] to-[#1b381c] text-cscm-gold flex items-center justify-center shrink-0 shadow-lg shadow-cscm-green/20 ring-1 ring-cscm-gold/20">
+              <Coins className="w-7 h-7" />
+            </div>
             <div className="space-y-0.5">
-              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-widest block">Chambre Sénégalaise de Commerce au Maroc</span>
-              <h1 className="text-2xl md:text-3xl font-serif font-black text-cscm-dark">Paiements & Trésorerie</h1>
-              <p className="text-xs text-gray-400 font-bold">Suivi officiel des cotisations et actualisation en temps réel du bilan financier.</p>
+              <span className="text-[10px] font-black uppercase text-cscm-green tracking-widest block">Chambre Sénégalaise de Commerce au Maroc</span>
+              <h1 className="page-title">Paiements & Trésorerie</h1>
+              <p className="page-subtitle">Suivi officiel des cotisations et actualisation en temps réel du bilan financier.</p>
             </div>
           </div>
 
           {/* Selective Dropdowns + Update Button block */}
           <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
             {/* Month drop-down */}
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-250 rounded-2xl px-4 py-2.5">
+            <div className="flex items-center gap-2 bg-[#FAF9F5] border border-gray-200 rounded-xl px-4 py-2.5 transition-all hover:border-cscm-green/40">
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Mois :</span>
               <select
                 value={selectedMonth}
@@ -991,7 +995,7 @@ export const Cotisations: React.FC = () => {
             </div>
 
             {/* Year drop-down */}
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-250 rounded-2xl px-4 py-2.5">
+            <div className="flex items-center gap-2 bg-[#FAF9F5] border border-gray-200 rounded-xl px-4 py-2.5 transition-all hover:border-cscm-green/40">
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Année :</span>
               <select
                 value={selectedYear}
@@ -1015,7 +1019,7 @@ export const Cotisations: React.FC = () => {
                   setTimeout(() => setShowToast(false), 2000);
                 }, 750);
               }}
-              className="bg-[#132e15] hover:bg-[#204923] text-white border border-[#ebd078]/20 px-6 py-3 rounded-2xl font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-xs"
+              className="btn-gold px-6 py-3 font-black uppercase tracking-wider shrink-0"
             >
               <svg 
                 className={`w-4 h-4 text-[#ebd078] ${isRefreshing ? 'animate-spin' : ''}`} 
@@ -1032,16 +1036,19 @@ export const Cotisations: React.FC = () => {
         </div>
 
         {/* Panel de Configuration des Cotisations - Dynamique et Simplifié */}
-        <div className="bg-[#FAF9F5] rounded-3xl p-6 border border-[#ebd078]/30 shadow-xs flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div className="space-y-1 text-left">
-            <div className="flex items-center gap-2">
-              <Settings className="w-5 h-5 text-emerald-800" />
+        <div className="bg-[#FAF9F5] rounded-3xl p-6 border border-[#ebd078]/40 shadow-[0_2px_20px_rgba(19,46,21,0.05)] flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-11 h-11 rounded-xl bg-white text-cscm-green border border-[#ebd078]/40 flex items-center justify-center shrink-0 shadow-sm">
+              <Settings className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-black uppercase text-cscm-green/70 tracking-widest block">Règle tarifaire active</span>
               <h3 className="text-base font-serif font-black text-cscm-dark">
                 Montant des cotisations par semestre : {rules.amountPerSemester.toLocaleString()} {rules.currency}
               </h3>
             </div>
           </div>
-          <form onSubmit={handleUpdateRules} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full xl:w-auto">
+          <form onSubmit={handleUpdateRules} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
             <div className="relative flex-1 sm:w-60">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-black tracking-wider">XOF (FCFA)</span>
               <input
@@ -1049,7 +1056,7 @@ export const Cotisations: React.FC = () => {
                 value={newRuleAmount}
                 onChange={(e) => setNewRuleAmount(e.target.value)}
                 placeholder="Saisissez le montant de la cotisation..."
-                className="w-full pl-24 pr-4 py-3 bg-white border-2 border-gray-200 focus:border-[#132e15] rounded-xl outline-none text-xs font-black text-[#132e15] transition-all text-center"
+                className="w-full pl-24 pr-4 py-3 bg-white border-2 border-gray-200 focus:border-cscm-green focus:ring-4 focus:ring-cscm-green/10 rounded-xl outline-none text-xs font-black text-[#132e15] transition-all text-center"
                 required
                 min="1"
               />
@@ -1057,7 +1064,7 @@ export const Cotisations: React.FC = () => {
 
             <button
               type="submit"
-              className="bg-[#132e15] hover:bg-[#204923] text-[#ebd078] border border-[#ebd078]/20 px-6 py-3 rounded-xl font-black text-xs tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap shadow-xs active:scale-95"
+              className="btn-gold px-6 py-3 font-black uppercase tracking-wider whitespace-nowrap"
             >
               Enregistrer
             </button>
@@ -1067,57 +1074,57 @@ export const Cotisations: React.FC = () => {
         {/* Dashboard 4 KPI Cards Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: En Retard Code Block */}
-          <div className="bg-rose-50/65 border-2 border-rose-100 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
+          <div className="stat-card text-left flex items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="text-[10px] font-black uppercase text-rose-600 tracking-wider">Membres Insolvables</span>
               <h3 className="text-4xl font-serif font-black text-rose-700">{delayedCount}</h3>
-              <p className="text-xs text-rose-950/70 font-semibold">Sociétés en attente de cotisation fixe</p>
+              <p className="text-xs text-gray-500 font-semibold">Sociétés en attente de cotisation fixe</p>
             </div>
-            <div className="p-4 bg-rose-100/50 rounded-2xl text-rose-600 border border-rose-200">
-              <AlertCircle className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-7 h-7" />
             </div>
           </div>
 
           {/* Card 2: À Jour Code Block */}
-          <div className="bg-emerald-50/65 border-2 border-emerald-100 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
+          <div className="stat-card text-left flex items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Membres Réguliers</span>
               <h3 className="text-4xl font-serif font-black text-emerald-700">{upToDateCount}</h3>
-              <p className="text-xs text-emerald-950/70 font-semibold">Sociétés en règle</p>
+              <p className="text-xs text-gray-500 font-semibold">Sociétés en règle</p>
             </div>
-            <div className="p-4 bg-emerald-100/50 rounded-2xl text-emerald-600 border border-emerald-200">
-              <ShieldCheck className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-7 h-7" />
             </div>
           </div>
 
           {/* Card 3: Période Code Block */}
-          <div className="bg-amber-50/50 border-2 border-amber-100/50 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
+          <div className="stat-card text-left flex items-center justify-between gap-4">
             <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider">Exercice &amp; Période</span>
+              <span className="text-[10px] font-black uppercase text-amber-700 tracking-wider">Exercice &amp; Période</span>
               <h3 className="text-2xl font-serif font-black text-[#132e15] truncate">{selectedMonth} {selectedYear}</h3>
-              <p className="text-xs text-amber-900/70 font-semibold">Période d'évaluation courante</p>
+              <p className="text-xs text-gray-500 font-semibold">Période d'évaluation courante</p>
             </div>
-            <div className="p-4 bg-amber-100/55 rounded-2xl text-amber-800 border border-amber-200">
-              <Calendar className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center shrink-0">
+              <Calendar className="w-7 h-7" />
             </div>
           </div>
 
           {/* Card 4: Total de la Caisse dynamically formatted in selected currency */}
-          <div className="bg-emerald-50 border-2 border-emerald-100 rounded-3xl p-6 text-left flex items-center justify-between gap-4 shadow-3xs">
+          <div className="stat-card text-left flex items-center justify-between gap-4">
             <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">Total de la Caisse</span>
+              <span className="text-[10px] font-black uppercase text-cscm-green tracking-wider">Total de la Caisse</span>
               <h3 className="text-2xl font-serif font-black text-emerald-950 truncate">{formatAmount(totalTreasury)}</h3>
-              <p className="text-xs text-emerald-900/70 font-semibold">Devise courante : {displayCurrency}</p>
+              <p className="text-xs text-gray-500 font-semibold">Devise courante : {displayCurrency}</p>
             </div>
-            <div className="p-4 bg-emerald-100/50 rounded-2xl text-emerald-800 border border-emerald-200">
-              <Coins className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cscm-green to-[#1b381c] text-cscm-gold border border-cscm-gold/20 flex items-center justify-center shrink-0 shadow-sm">
+              <Coins className="w-7 h-7" />
             </div>
           </div>
         </div>
 
         {/* Interactive workspace - full width */}
         <div className="w-full space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-gray-150 shadow-xs space-y-6 text-left">
+          <div className="surface-card p-6 space-y-6 text-left">
               
               {/* Header inside table workspace: containing Search Input, Currency display selector, and tabs */}
               <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 border-b border-gray-100 pb-4">
@@ -1185,27 +1192,27 @@ export const Cotisations: React.FC = () => {
                       placeholder="Saisissez un membre à rechercher..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 outline-none focus:border-emerald-700 text-xs font-semibold text-gray-700 placeholder:text-gray-400"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-[#FAF9F5] outline-none focus:border-cscm-green focus:bg-white focus:ring-4 focus:ring-cscm-green/10 transition-all text-xs font-semibold text-gray-700 placeholder:text-gray-400"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Members workspace table */}
-              <div className="overflow-x-auto rounded-2xl border border-gray-150">
-                <table className="w-full text-left border-collapse min-w-[850px] bg-white">
+              <div className="table-wrap shadow-sm">
+                <table className="data-table" style={{ minWidth: '850px' }}>
                   <thead>
-                    <tr className="bg-[#132e15] border-b border-emerald-950 text-white text-[10px] uppercase font-black tracking-wider">
-                      <th className="p-4">N° membre</th>
-                      <th className="p-4">Entreprise</th>
-                      <th className="p-4">Statut</th>
-                      <th className="p-4">Payé ({displayCurrency})</th>
-                      <th className="p-4">Reste à payer ({displayCurrency})</th>
-                      <th className="p-4">Paiements</th>
-                      <th className="p-4 text-right">Actions</th>
+                    <tr>
+                      <th>N° membre</th>
+                      <th>Entreprise</th>
+                      <th>Statut</th>
+                      <th>Payé ({displayCurrency})</th>
+                      <th>Reste à payer ({displayCurrency})</th>
+                      <th>Paiements</th>
+                      <th className="text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 text-xs font-semibold text-gray-700">
+                  <tbody className="text-xs font-semibold text-gray-700">
                     {filtered.map((ent, idx) => {
                       const restToPay = Math.max(0, (ent.requiredAmount || 0) - (ent.sumPaid || 0));
                       return (
@@ -1231,14 +1238,14 @@ export const Cotisations: React.FC = () => {
                           {/* Status - displays elegant cotisation status */}
                           <td className="p-4">
                             {ent.isExempt ? (
-                              <span className="inline-flex items-center gap-1.5 bg-gray-50 text-gray-500 text-[10px] px-2.5 py-1 rounded-full font-black border border-gray-200 uppercase tracking-wide" title={`Adhésion le ${ent.dateAdhesion || ent.dateCreation || 'N/A'}`}>
+                              <span className="badge-neutral" title={`Adhésion le ${ent.dateAdhesion || ent.dateCreation || 'N/A'}`}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
                                 Non membre
                               </span>
                             ) : ent.isUpToDate ? (
                               <div className="flex flex-col gap-1 items-start">
-                                <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-[10px] px-2.5 py-1 rounded-full font-black border border-emerald-100 uppercase tracking-wide">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="badge-green">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-cscm-green animate-pulse" />
                                   À jour
                                 </span>
                                 {ent.sumPaid >= rules.amountPerSemester * 3 ? (
@@ -1256,7 +1263,7 @@ export const Cotisations: React.FC = () => {
                                 ) : null}
                               </div>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 text-[10px] px-2.5 py-1 rounded-full font-black border border-rose-100 uppercase tracking-wide">
+                              <span className="badge-danger">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                 En retard
                               </span>
@@ -1291,21 +1298,19 @@ export const Cotisations: React.FC = () => {
 
                           {/* Custom Actions */}
                           <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {/* Receipts list trigger */}
+                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
                               <button
                                 onClick={() => setReceiptModalEnt(ent)}
-                                className="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                                className="btn-action-blue"
                                 title="Reçus et Bilan"
                               >
                                 <FileText className="w-3.5 h-3.5 text-blue-600" />
                                 Reçus ({getPaymentsList(ent).length})
                               </button>
 
-                              {/* Credit context modifier uploader template */}
                               <button
                                 onClick={() => handleOpenPayment(ent)}
-                                className="inline-flex items-center gap-1 bg-[#FAF9F5] hover:bg-cscm-green/10 border border-[#A69371]/40 hover:border-cscm-green text-[#132e15] hover:text-cscm-green px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                                className="btn-action-green"
                                 title="Enregistrer Versement"
                               >
                                 <Coins className="w-3.5 h-3.5 text-cscm-gold" />
@@ -1333,9 +1338,10 @@ export const Cotisations: React.FC = () => {
         </motion.div>
 
       {/* Add Direct Payment Modal Dialog */}
+      <ModalPortal>
       <AnimatePresence>
         {selectedEnt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="modal-overlay">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
@@ -1343,19 +1349,20 @@ export const Cotisations: React.FC = () => {
               onClick={() => {
                 if (!isProcessingPayment) setSelectedEnt(null);
               }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="modal-backdrop"
             />
             
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-lg p-6 md:p-8 relative z-10 shadow-2xl border border-[#a69371]/20 font-sans overflow-hidden"
+              className="modal-shell-lg font-sans"
             >
+              <div className="modal-body relative">
               {!isProcessingPayment && (
                 <button 
                   onClick={() => setSelectedEnt(null)}
-                  className="absolute top-5 right-5 p-2 hover:bg-gray-150 rounded-lg cursor-pointer transition-colors"
+                  className="absolute top-4 right-4 btn-icon z-20"
                 >
                   <X className="w-5 h-5 text-[#132e15]" />
                 </button>
@@ -1519,13 +1526,13 @@ export const Cotisations: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setSelectedEnt(null)}
-                          className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                          className="btn-secondary flex-1 text-xs"
                         >
                           Annuler
                         </button>
                         <button
                           type="submit"
-                          className="flex-1 bg-cscm-green hover:bg-[#1a3814] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                          className="btn-primary flex-1 text-xs"
                         >
                           <CheckCircle2 className="w-4 h-4 text-cscm-gold shrink-0" />
                           <span>Confirmer le versement</span>
@@ -1582,7 +1589,7 @@ export const Cotisations: React.FC = () => {
                                     setTimeout(() => setShowToast(false), 2000);
                                   }
                                 }}
-                                className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 cursor-pointer"
+                                className="btn-danger px-3 py-2 text-[10px] font-black uppercase tracking-wider shrink-0"
                               >
                                 Activer
                               </button>
@@ -1672,13 +1679,13 @@ export const Cotisations: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setSelectedEnt(null)}
-                              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                              className="btn-secondary flex-1 text-xs"
                             >
                               Annuler
                             </button>
                             <button
                               type="submit"
-                              className="flex-1 bg-[#132e15] hover:bg-emerald-950 text-[#ebd078] hover:text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center border border-[#ebd078]/25"
+                              className="btn-gold flex-1 py-3"
                             >
                               <Lock className="w-4 h-4 shrink-0" />
                               <span>Payer {paymentCurrency === 'EUR' ? `${Number(paymentAmount).toLocaleString('fr-FR')} EUR` : `${Number(paymentAmount).toLocaleString()} FCFA`}</span>
@@ -1696,32 +1703,36 @@ export const Cotisations: React.FC = () => {
                   )}
                 </form>
               </div>
+              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+      </ModalPortal>
 
       {/* Payment History & Receipt Picker Modal */}
+      <ModalPortal>
       <AnimatePresence>
         {receiptModalEnt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="modal-overlay">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
               exit={{ opacity: 0 }}
               onClick={() => setReceiptModalEnt(null)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="modal-backdrop"
             />
             
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-3xl p-6 md:p-8 relative z-10 shadow-2xl border border-[#a69371]/20 font-sans max-h-[90vh] flex flex-col overflow-hidden"
+              className="modal-shell max-w-3xl font-sans"
             >
+              <div className="modal-body relative flex flex-col">
               <button 
                 onClick={() => setReceiptModalEnt(null)}
-                className="absolute top-5 right-5 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+                className="absolute top-4 right-4 btn-icon z-20"
               >
                 <X className="w-5 h-5 text-[#132e15]" />
               </button>
@@ -1749,7 +1760,7 @@ export const Cotisations: React.FC = () => {
                       {getPaymentsList(receiptModalEnt).map((pay: any, idx: number) => (
                         <div 
                           key={`${pay.id || idx}-${idx}`} 
-                          className="bg-gray-50 hover:bg-gray-100/50 border border-gray-200 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors"
+                          className="bg-[#FAF9F5] hover:bg-white border border-gray-200 hover:border-cscm-green/25 hover:shadow-sm p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-200"
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -1771,8 +1782,9 @@ export const Cotisations: React.FC = () => {
 
                             {/* Beautiful visual chosen currency badge */}
                             <div className="flex flex-wrap gap-1.5 mt-2">
-                              <span className="bg-[#132e15]/5 text-[#132e15] border border-[#132e15]/10 text-xs px-2.5 py-1 rounded-full font-extrabold flex items-center gap-1.5 shadow-3xs bg-emerald-50 text-emerald-950">
-                                🪙 Montant : {formatAmount(pay.amount)}
+                              <span className="badge-green normal-case tracking-normal text-xs px-2.5 py-1">
+                                <Coins className="w-3.5 h-3.5" />
+                                Montant : {formatAmount(pay.amount)}
                               </span>
                             </div>
                           </div>
@@ -1781,26 +1793,26 @@ export const Cotisations: React.FC = () => {
                             <button
                               onClick={() => handleStartEdit(receiptModalEnt, pay)}
                               type="button"
-                              className="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 p-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center shadow-3xs"
+                              className="btn-icon-gold"
                               title="Modifier cette cotisation"
                             >
-                              <Pencil className="w-4 h-4 text-amber-700 shrink-0" />
+                              <Pencil className="w-4 h-4 shrink-0" />
                             </button>
                             <button
                               onClick={() => handleDeleteCotisation(receiptModalEnt, pay)}
                               type="button"
-                              className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 p-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center shadow-3xs"
+                              className="btn-icon-danger"
                               title="Supprimer cette cotisation"
                             >
-                              <Trash2 className="w-4 h-4 text-rose-700 shrink-0" />
+                              <Trash2 className="w-4 h-4 shrink-0" />
                             </button>
                             <button
                               onClick={() => setSelectedReceipt({ ent: receiptModalEnt, payment: pay })}
                               type="button"
-                              className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 p-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center shadow-3xs"
+                              className="inline-flex items-center justify-center p-2 rounded-xl border border-blue-100 bg-white hover:bg-blue-50 hover:border-blue-200 text-blue-700 transition-all duration-200 cursor-pointer outline-none focus-visible:ring-4 focus-visible:ring-blue-300/30 active:scale-95"
                               title="Visualiser le reçu"
                             >
-                              <Eye className="w-4 h-4 text-blue-700 shrink-0" />
+                              <Eye className="w-4 h-4 shrink-0" />
                             </button>
                           </div>
                         </div>
@@ -1813,38 +1825,42 @@ export const Cotisations: React.FC = () => {
                   <button
                     onClick={() => setReceiptModalEnt(null)}
                     type="button"
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    className="btn-secondary !text-xs"
                   >
                     Fermer la liste
                   </button>
                 </div>
               </div>
+              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+      </ModalPortal>
 
       {/* Single Printable Receipt Modal View */}
+      <ModalPortal>
       <AnimatePresence>
         {selectedReceipt && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="modal-overlay">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedReceipt(null)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="modal-backdrop"
             />
             
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-xl p-6 md:p-8 relative z-10 shadow-2xl border-2 border-[#132e15] font-sans"
+              className="modal-shell max-w-xl font-sans"
             >
+              <div className="modal-body relative">
               <button 
                 onClick={() => setSelectedReceipt(null)}
-                className="absolute top-5 right-5 p-2 hover:bg-gray-150 rounded-lg cursor-pointer transition-colors"
+                className="absolute top-4 right-4 btn-icon z-20"
                 title="Fermer le reçu"
               >
                 <X className="w-5 h-5 text-[#132e15]" />
@@ -1860,13 +1876,13 @@ export const Cotisations: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-250 text-left">
+                  <div className="bg-gray-50/70 p-3.5 rounded-2xl border border-white/50 text-left">
                     <p className="text-[10px] uppercase font-black tracking-wider text-gray-400 mb-1.5">Détails Reçu</p>
                     <p className="text-[#132e15] mb-1"><b>N° :</b> REC-2026-{selectedReceipt.payment.reference}</p>
                     <p className="text-[#132e15] mb-1"><b>Date :</b> {selectedReceipt.payment.date}</p>
                     <p className="text-[#132e15]"><b>Libellé :</b> {selectedReceipt.payment.label}</p>
                   </div>
-                  <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-250 text-left">
+                  <div className="bg-gray-50/70 p-3.5 rounded-2xl border border-white/50 text-left">
                     <p className="text-[10px] uppercase font-black tracking-wider text-gray-400 mb-1.5">Membre Émetteur</p>
                     <p className="text-[#132e15] mb-1"><b>Nom :</b> {selectedReceipt.ent.name}</p>
                     <p className="text-[#132e15] mb-1"><b>N° :</b> {selectedReceipt.ent.memberNo}</p>
@@ -1888,12 +1904,14 @@ export const Cotisations: React.FC = () => {
                     <p className="text-xs font-serif font-bold text-cscm-green italic">Signé électroniquement</p>
                   </div>
                 </div>
+              </div>
+              </div>
 
-                <div className="flex flex-wrap md:flex-nowrap gap-3 pt-4 border-t border-gray-100">
+              <div className="modal-footer flex-wrap md:flex-nowrap">
                   <button
                     onClick={() => setSelectedReceipt(null)}
                     type="button"
-                    className="flex-1 min-w-[80px] bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                    className="btn-secondary flex-1 min-w-[80px] text-xs"
                   >
                     Retour
                   </button>
@@ -1903,61 +1921,63 @@ export const Cotisations: React.FC = () => {
                       setSelectedReceipt(null);
                     }}
                     type="button"
-                    className="flex-1 min-w-[120px] bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    className="btn-danger flex-1 min-w-[120px] text-xs"
                     title="Supprimer définitivement ce reçu"
                   >
-                    <Trash2 className="w-4 h-4 text-rose-700 shrink-0" />
+                    <Trash2 className="w-4 h-4 shrink-0" />
                     <span>Supprimer</span>
                   </button>
                   <button
                     onClick={() => downloadReceiptFile(selectedReceipt.ent, selectedReceipt.payment)}
                     type="button"
-                    className="flex-1 min-w-[140px] bg-cscm-green hover:bg-[#1a3814] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    className="btn-primary flex-1 min-w-[140px] text-xs"
                   >
                     <Download className="w-4 h-4 text-cscm-gold shrink-0" />
                     <span>Télécharger Officiel</span>
                   </button>
-                </div>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+      </ModalPortal>
 
       {/* Edit Cotisation Modal View */}
+      <ModalPortal>
       <AnimatePresence>
         {editingPayment && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <div className="modal-overlay">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
               exit={{ opacity: 0 }}
               onClick={() => setEditingPayment(null)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="modal-backdrop"
             />
             
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white rounded-3xl w-full max-w-md p-6 relative z-10 shadow-2xl border border-gray-150 font-sans text-left"
+              className="modal-shell-md font-sans text-left"
             >
+              <div className="modal-body relative">
               <button 
                 onClick={() => setEditingPayment(null)}
-                className="absolute top-5 right-5 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+                className="absolute top-4 right-4 btn-icon z-20"
                 title="Fermer"
               >
                 <X className="w-5 h-5 text-cscm-dark" />
               </button>
 
               <div className="space-y-4">
-                <div className="border-b pb-3">
+                <div className="border-b border-white/40 pb-3">
                   <span className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Modification</span>
                   <h3 className="text-xl font-serif font-black text-cscm-dark">Modifier la Cotisation</h3>
                   <p className="text-xs text-gray-400 font-bold mt-0.5">Pour : <b className="text-cscm-green">{editingPayment.ent.name}</b></p>
                 </div>
 
-                <form onSubmit={handleSaveEdit} className="space-y-4">
+                <form id="edit-cotisation-form" onSubmit={handleSaveEdit} className="space-y-4">
                   <div>
                     <label className="block text-[10px] font-black text-cscm-dark uppercase tracking-wider mb-1.5">Libellé de la transaction</label>
                     <input
@@ -2082,27 +2102,31 @@ export const Cotisations: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="pt-3 flex gap-3">
+                </form>
+              </div>
+              </div>
+
+              <div className="modal-footer">
                     <button
                       type="button"
                       onClick={() => setEditingPayment(null)}
-                      className="flex-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                      className="btn-secondary flex-1 text-xs"
                     >
                       Annuler
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-cscm-green hover:bg-[#1a3814] text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer text-center"
+                      form="edit-cotisation-form"
+                      className="btn-primary flex-1 text-xs"
                     >
                       <span>Enregistrer les modifications</span>
                     </button>
-                  </div>
-                </form>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+      </ModalPortal>
 
       <ConfirmationModal
         isOpen={deleteTarget !== null}

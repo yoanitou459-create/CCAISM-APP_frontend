@@ -247,15 +247,28 @@ const Dashboard = () => {
     <SidebarLayout>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 font-sans bg-transparent text-[#12210E] min-h-screen">
         
-        {/* Title and Header Block (Exactly matches color preference + text layout) */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#12210E]/10 pb-5">
+        {/* Title and Header Block */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#12210E]/10 pb-6">
           <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-cscm-gold mb-1.5">
+              CCAISM • Tableau de bord
+            </p>
             <h1 className="text-3xl md:text-4xl font-serif font-black text-[#12210E] tracking-tight">
               Pilotage administrative
             </h1>
-            <p className="text-sm font-semibold text-emerald-800/80 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-sm font-semibold text-emerald-800/80 mt-1.5 max-w-2xl leading-relaxed">
               Vue complète pour piloter les entreprises, les utilisateurs, les cotisations et les imports de la Chambre de Commerce.
             </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Link to="/enterprises" className="btn-outline px-5 py-2.5">
+              <Building2 className="w-4 h-4" />
+              Voir les membres
+            </Link>
+            <Link to="/enterprises/add" className="btn-primary text-xs px-5 py-2.5">
+              <Plus className="w-4 h-4" />
+              Ajouter une entreprise
+            </Link>
           </div>
         </div>
 
@@ -319,7 +332,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           
           {/* KPI 1 : Membres */}
-          <div className="bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex justify-between items-center hover:scale-[1.01] transition-transform">
+          <div className="group bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] flex justify-between items-center transition-all duration-300 hover:shadow-[0_12px_40px_rgba(19,46,21,0.1)] hover:border-cscm-green/25 hover:-translate-y-0.5 relative overflow-hidden">
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#12210E]/45 block">
                 Entreprises membres
@@ -328,13 +341,13 @@ const Dashboard = () => {
                 {totalEnterprises}
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-center text-blue-500 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-center text-blue-500 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
               <Building2 className="w-5 h-5" />
             </div>
           </div>
 
           {/* KPI 2 : Actives */}
-          <div className="bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex justify-between items-center hover:scale-[1.01] transition-transform">
+          <div className="group bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] flex justify-between items-center transition-all duration-300 hover:shadow-[0_12px_40px_rgba(19,46,21,0.1)] hover:border-cscm-green/25 hover:-translate-y-0.5 relative overflow-hidden">
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#12210E]/45 block">
                 Entreprises actives
@@ -343,13 +356,13 @@ const Dashboard = () => {
                 {activeEnterprises}
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-center text-emerald-500 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-center text-emerald-500 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
               <Users className="w-5 h-5" />
             </div>
           </div>
 
           {/* KPI 3 : Cotisations */}
-          <div className="bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex justify-between items-center hover:scale-[1.01] transition-transform">
+          <div className="group bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] flex justify-between items-center transition-all duration-300 hover:shadow-[0_12px_40px_rgba(19,46,21,0.1)] hover:border-cscm-green/25 hover:-translate-y-0.5 relative overflow-hidden">
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#12210E]/45 block">
                 Cotisations totales
@@ -358,13 +371,13 @@ const Dashboard = () => {
                 {totalCotisations.toLocaleString()} FCFA
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-center justify-center text-amber-500 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-center justify-center text-amber-500 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
               <Coins className="w-5 h-5" />
             </div>
           </div>
 
           {/* KPI 4 : Nouvelles ce mois */}
-          <div className="bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex justify-between items-center hover:scale-[1.01] transition-transform">
+          <div className="group bg-white rounded-[1.75rem] p-5 border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] flex justify-between items-center transition-all duration-300 hover:shadow-[0_12px_40px_rgba(19,46,21,0.1)] hover:border-cscm-green/25 hover:-translate-y-0.5 relative overflow-hidden">
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#12210E]/45 block">
                 Nouvelles ce mois
@@ -373,7 +386,7 @@ const Dashboard = () => {
                 {currentMonthRegistrations}
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-purple-50/50 border border-purple-100 flex items-center justify-center text-purple-500 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-purple-50/50 border border-purple-100 flex items-center justify-center text-purple-500 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
@@ -601,42 +614,58 @@ const Dashboard = () => {
   );
 };
 
+const PROTECTED_PAGES: Array<{
+  key: string;
+  match: (pathname: string) => boolean;
+  element: React.ReactNode;
+  preserveScroll?: boolean;
+}> = [
+  { key: 'dashboard', match: p => p === '/dashboard', element: <Dashboard /> },
+  // La liste conserve sa position de scroll quand on revient d'une fiche
+  { key: 'enterprises', match: p => p === '/enterprises', element: <EnterpriseList />, preserveScroll: true },
+  { key: 'enterprises-add', match: p => p === '/enterprises/add', element: <AddEnterprise /> },
+  { key: 'enterprises-detail', match: p => p.startsWith('/enterprises/') && p !== '/enterprises/add' && p !== '/enterprises', element: <EnterpriseDetail /> },
+  { key: 'cotisations', match: p => p === '/cotisations', element: <Cotisations /> },
+  { key: 'users', match: p => p === '/users', element: <UserManagement /> },
+];
+
 const ProtectedLayout = () => {
   const location = useLocation();
+  const pageRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+
+  // À chaque navigation, la page qui devient active repart du haut
+  useEffect(() => {
+    const active = PROTECTED_PAGES.find(p => p.match(location.pathname));
+    if (active && !active.preserveScroll) {
+      requestAnimationFrame(() => {
+        const el = pageRefs.current[active.key];
+        if (el) el.scrollTop = 0;
+      });
+    }
+  }, [location.pathname]);
 
   return (
     <ProtectedRoute>
       <SidebarLayout>
         <div className="flex-1 relative overflow-hidden h-full w-full">
-          {/* Dashboard */}
-          <div key="layout-dashboard" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/dashboard' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
-            <Dashboard />
-          </div>
-
-          {/* Enterprises */}
-          <div key="layout-enterprises" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/enterprises' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
-            <EnterpriseList />
-          </div>
-
-          {/* Add Enterprise */}
-          <div key="layout-enterprises-add" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/enterprises/add' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
-            <AddEnterprise />
-          </div>
-
-          {/* Enterprise Detail */}
-          <div key="layout-enterprises-detail" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname.startsWith('/enterprises/') && location.pathname !== '/enterprises/add' && location.pathname !== '/enterprises' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
-            <EnterpriseDetail />
-          </div>
-
-          {/* Cotisations */}
-          <div key="layout-cotisations" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/cotisations' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
-            <Cotisations />
-          </div>
-
-          {/* Users */}
-          <div key="layout-users" className={`absolute inset-0 overflow-y-auto pb-24 lg:pb-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${location.pathname === '/users' ? 'opacity-100 z-10 pointer-events-auto scale-100 translate-y-0' : 'opacity-0 z-0 pointer-events-none scale-[0.98] translate-y-2'}`}>
-            <UserManagement />
-          </div>
+          {PROTECTED_PAGES.map(page => {
+            const isActive = page.match(location.pathname);
+            return (
+              <div
+                key={page.key}
+                ref={el => { pageRefs.current[page.key] = el; }}
+                className={`absolute inset-0 overflow-y-auto pb-28 lg:pb-8 transition-opacity duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  isActive
+                    ? 'opacity-100 z-10 pointer-events-auto'
+                    : 'opacity-0 z-0 pointer-events-none invisible'
+                }`}
+              >
+                <div className="page-shell">
+                  {page.element}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </SidebarLayout>
     </ProtectedRoute>

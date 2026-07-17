@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AlertTriangle, ArrowLeft, Check } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { ModalPortal } from './ModalPortal';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -18,46 +20,52 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   useBodyScrollLock(isOpen);
 
   return (
+    <ModalPortal>
     <AnimatePresence>
       {isOpen && (
-        <div key="confirmation-modal-container" className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div key="confirmation-modal-container" className="modal-overlay">
           <motion.div
             key="confirmation-modal-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            className="modal-backdrop"
           />
           
           <motion.div
             key="confirmation-modal-body"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-[#E5E5E5] w-full max-w-md rounded-lg shadow-2xl relative z-10 border-2 border-black p-8 text-center"
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="modal-shell-md !p-8 text-center"
           >
-          <h3 className="text-2xl font-serif font-bold text-[#4A3728] mb-8">
+          <div className="mx-auto mb-5 w-14 h-14 rounded-2xl bg-rose-50/90 border border-rose-100 flex items-center justify-center shadow-sm">
+            <AlertTriangle className="w-7 h-7 text-rose-600" />
+          </div>
+
+          <h3 className="text-xl font-serif font-black text-[#1A3D18] mb-2">
             {title}
           </h3>
+          <p className="text-xs font-semibold text-[#1A3D18]/45 mb-7">
+            Cette action est définitive et ne pourra pas être annulée.
+          </p>
           
-          <div className="flex justify-center gap-8">
-            <button
-              onClick={onConfirm}
-              className="bg-[#A81C1C] text-white px-8 py-2 rounded-md border-2 border-black font-bold text-xl hover:bg-[#8B1717] transition-colors shadow-md"
-            >
-              Valider
-            </button>
-            <button
-              onClick={onClose}
-              className="bg-[#E1F1F1] text-black px-8 py-2 rounded-md border-2 border-black font-bold text-xl hover:bg-[#D1E1E1] transition-colors shadow-md"
-            >
+          <div className="flex justify-center gap-3">
+            <button onClick={onClose} className="btn-secondary flex-1">
+              <ArrowLeft className="w-4 h-4" />
               Retour
+            </button>
+            <button onClick={onConfirm} className="btn-danger flex-1">
+              <Check className="w-4 h-4" />
+              Valider
             </button>
           </div>
         </motion.div>
       </div>
     )}
   </AnimatePresence>
+  </ModalPortal>
   );
 };

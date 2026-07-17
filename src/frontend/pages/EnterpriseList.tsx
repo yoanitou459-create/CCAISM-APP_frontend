@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Filter, Search, Trash2, Eye, Plus, ChevronRight, X, Building2, Landmark, CheckCircle2, AlertCircle, Coins, AlertTriangle, Loader2, Lock, CreditCard } from 'lucide-react';
+import { Filter, Search, Trash2, Eye, Plus, ChevronRight, X, Building2, Landmark, CheckCircle2, AlertCircle, Coins, AlertTriangle, Loader2, Lock, CreditCard, LayoutGrid, List, MapPin, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SidebarLayout } from '../components/SidebarLayout';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { EnterpriseSummaryModal } from '../components/EnterpriseSummaryModal';
+import { ModalPortal } from '../components/ModalPortal';
 import { getStoredEnterprises, saveStoredEnterprises, Enterprise } from '../../database/enterpriseStorage';
 import { getEffectiveApiKey } from '../../backend/paymentConfig';
 import { getLocalCotisationRules } from '../../database/cotisationRules';
@@ -129,6 +130,9 @@ export const EnterpriseList = () => {
   ];
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>(() => {
+    return (localStorage.getItem('cscm_enterprises_view') as 'cards' | 'table') || 'cards';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     pays: '',
@@ -137,6 +141,11 @@ export const EnterpriseList = () => {
     typeMembre: '',
     taille: ''
   });
+
+  const setViewModePersist = (mode: 'cards' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('cscm_enterprises_view', mode);
+  };
 
   const handleUpdateEnterprise = (updatedEnterprise: any) => {
     const updated = enterprises.map(e => e.id === updatedEnterprise.id ? updatedEnterprise : e);
@@ -306,7 +315,7 @@ export const EnterpriseList = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="max-w-[1440px] mx-auto p-4 md:p-8 font-sans space-y-8"
+        className="max-w-7xl mx-auto w-full p-4 md:p-8 font-sans space-y-8"
       >
         {/* Toast Feedbacks */}
         <AnimatePresence>
@@ -328,42 +337,77 @@ export const EnterpriseList = () => {
         </AnimatePresence>
 
         {/* Header Block */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
           <div>
-            <span className="text-xs font-black uppercase tracking-widest text-cscm-green">Registre National</span>
-            <h1 className="text-3xl md:text-4xl font-serif font-black text-cscm-dark mt-1">Annuaire des Membres</h1>
+            <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-cscm-green">
+              <span className="w-6 h-[2px] rounded-full bg-cscm-gold" />
+              Registre National
+            </span>
+            <h1 className="text-3xl md:text-4xl font-serif font-black text-[#1A3D18] mt-2 tracking-tight">Annuaire des Membres</h1>
+            <p className="page-subtitle mt-1">
+              {filteredEnterprises.length} résultat{filteredEnterprises.length !== 1 ? 's' : ''} sur {enterprises.length} adhérent{enterprises.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white border border-[#1A3D18]/10 rounded-2xl p-1.5 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setViewModePersist('cards')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                viewMode === 'cards'
+                  ? 'bg-cscm-green text-white shadow-md shadow-cscm-green/25'
+                  : 'text-[#1A3D18]/60 hover:text-cscm-green hover:bg-cscm-green/5'
+              }`}
+              title="Vue cartes"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Cartes
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewModePersist('table')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                viewMode === 'table'
+                  ? 'bg-cscm-green text-white shadow-md shadow-cscm-green/25'
+                  : 'text-[#1A3D18]/60 hover:text-cscm-green hover:bg-cscm-green/5'
+              }`}
+              title="Vue tableau"
+            >
+              <List className="w-4 h-4" />
+              Tableau
+            </button>
           </div>
         </div>
 
         {/* Mini Stats Lineup */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#132e15]/10 flex items-center gap-4">
-            <div className="p-3.5 bg-cscm-green/10 rounded-2xl text-cscm-green shrink-0">
+          <div className="stat-card flex items-center gap-4">
+            <div className="p-3.5 bg-cscm-green/10 rounded-2xl text-cscm-green shrink-0 ring-1 ring-cscm-green/10">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[#132e15]/75 text-[10px] font-black uppercase tracking-wider">Membres totaux</p>
-              <h3 className="text-2xl font-serif font-black text-cscm-dark mt-0.5">{enterprises.length}</h3>
+              <h3 className="text-2xl font-serif font-black text-[#12210E] mt-0.5">{enterprises.length}</h3>
             </div>
           </div>
           
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#132e15]/10 flex items-center gap-4">
-            <div className="p-3.5 bg-cscm-gold/15 rounded-2xl text-[#a8820c] shrink-0">
+          <div className="stat-card flex items-center gap-4">
+            <div className="p-3.5 bg-cscm-gold/15 rounded-2xl text-[#a8820c] shrink-0 ring-1 ring-cscm-gold/20">
               <Landmark className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[#132e15]/75 text-[10px] font-black uppercase tracking-wider">Cotisations accumulées</p>
-              <h3 className="text-2xl font-serif font-black text-cscm-dark mt-0.5">{totalCotisations.toLocaleString()} FCFA</h3>
+              <h3 className="text-2xl font-serif font-black text-[#12210E] mt-0.5">{totalCotisations.toLocaleString()} FCFA</h3>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#132e15]/10 flex items-center gap-4">
-            <div className="p-3.5 bg-indigo-500/10 rounded-2xl text-indigo-600 shrink-0">
+          <div className="stat-card flex items-center gap-4">
+            <div className="p-3.5 bg-indigo-500/10 rounded-2xl text-indigo-600 shrink-0 ring-1 ring-indigo-500/10">
               <Plus className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[#132e15]/75 text-[10px] font-black uppercase tracking-wider">Secteurs actifs</p>
-              <h3 className="text-2xl font-serif font-black text-cscm-dark mt-0.5">
+              <h3 className="text-2xl font-serif font-black text-[#12210E] mt-0.5">
                 {Array.from(new Set(enterprises.map(e => e.secteur).filter(Boolean))).length}
               </h3>
             </div>
@@ -371,10 +415,10 @@ export const EnterpriseList = () => {
         </div>
 
         {/* Sectors count horizontal breakdown - interactive filters */}
-        <div className="bg-white p-6 rounded-3xl border border-gray-150 shadow-sm space-y-3.5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b pb-2.5 border-gray-50">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#132e15]">Effectifs d'entreprises par secteur d'activité</span>
-            <span className="text-[10px] bg-emerald-50 text-emerald-800 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+        <div className="surface-card p-6 space-y-3.5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b pb-3 border-[#12210E]/10">
+            <span className="text-[11px] font-black uppercase tracking-widest text-[#12210E]">Effectifs d'entreprises par secteur d'activité</span>
+            <span className="badge-green">
               {enterprises.length} Adhérents Enregistrés
             </span>
           </div>
@@ -386,10 +430,10 @@ export const EnterpriseList = () => {
                 <button 
                   key={sect}
                   onClick={() => setFilters(prev => ({ ...prev, secteur: isSelected ? '' : sect }))}
-                  className={`px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all border outline-none cursor-pointer flex items-center gap-2 select-none ${
+                  className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all border outline-none cursor-pointer select-none ${
                     isSelected 
-                      ? 'bg-cscm-green text-white border-cscm-green shadow-md shadow-cscm-green/10' 
-                      : 'bg-[#FAF9F5] text-gray-700 border-gray-150 hover:bg-gray-100'
+                      ? 'bg-cscm-green text-white border-cscm-green shadow-md shadow-cscm-green/20 -translate-y-0.5' 
+                      : 'bg-[#FAF9F5] text-gray-700 border-[#12210E]/10 hover:bg-cscm-green/5 hover:border-cscm-green/30 hover:-translate-y-0.5'
                   }`}
                 >
                   <span className={isSelected ? 'text-cscm-gold font-bold' : 'text-[#8c7015] font-bold'}>{sect}</span>
@@ -403,31 +447,27 @@ export const EnterpriseList = () => {
         </div>
 
         {/* Search, Filter Action Bar */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#132e15]/10 space-y-4">
+        <div className="surface-card p-6 space-y-4">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="relative flex-1 w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#132e15] w-5 h-5 pointer-events-none font-bold" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-cscm-green w-5 h-5 pointer-events-none" />
               <input 
                 type="text" 
                 placeholder="Saisissez le nom d'une entreprise ou son numéro de membre à rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-150 outline-none focus:border-cscm-green focus:ring-2 focus:ring-cscm-green/10 transition-all text-sm placeholder:text-[#132e15]/60 font-semibold text-[#132e15]"
+                className="field-input !pl-12 font-semibold !rounded-2xl"
               />
             </div>
 
             <button 
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`w-full md:w-auto px-6 py-3.5 rounded-2xl font-bold text-sm tracking-wide border cursor-pointer flex items-center justify-center gap-2.5 transition-all ${
-                isFilterOpen 
-                ? 'bg-cscm-green text-white border-cscm-green' 
-                : 'bg-gray-55 bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-              }`}
+              className={`${isFilterOpen ? 'btn-primary' : 'btn-outline'} w-full md:w-auto !px-6 !py-3.5 !text-sm tracking-wide`}
             >
               <Filter className="w-4 h-4" />
               <span>Filtrer les résultats</span>
               {Object.values(filters).some(Boolean) && (
-                <span className="w-2.1 h-2.1 rounded-full bg-cscm-gold animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-cscm-gold animate-pulse" />
               )}
             </button>
           </div>
@@ -440,7 +480,7 @@ export const EnterpriseList = () => {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="bg-gray-50/70 p-6 rounded-2xl border border-gray-150 flex flex-wrap gap-4 items-end mt-2">
+                <div className="bg-[#FAF9F5] p-6 rounded-2xl border border-[#12210E]/10 flex flex-wrap gap-4 items-end mt-2">
                   {[
                     { 
                       label: 'Pays d\'origine', 
@@ -461,7 +501,7 @@ export const EnterpriseList = () => {
                     { label: 'Taille', key: 'taille', options: ['Petite', 'Moyenne', 'Grande'] },
                   ].map((filter) => (
                     <div key={filter.key} className="flex flex-col gap-1.5 w-full sm:w-[185px]">
-                      <label className="text-[10px] font-black text-[#132e15] uppercase tracking-widest leading-none">{filter.label}</label>
+                      <label className="text-[10px] font-black text-[#12210E] uppercase tracking-widest leading-none">{filter.label}</label>
                       <select 
                         value={(filters as any)[filter.key]}
                         onChange={(e) => {
@@ -474,7 +514,7 @@ export const EnterpriseList = () => {
                             return updated;
                           });
                         }}
-                        className="bg-white border border-gray-250 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none w-full shadow-sm text-gray-700 focus:border-cscm-green transition-colors"
+                        className="field-select !bg-white !py-2.5 text-xs font-semibold"
                       >
                         <option value="">Tous</option>
                         {filter.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -494,65 +534,199 @@ export const EnterpriseList = () => {
           </AnimatePresence>
         </div>
 
-        {/* Grid-style list layout / Table */}
-        <div className="bg-white rounded-[2rem] shadow-sm border border-[#132e15]/20 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-full lg:min-w-[1000px]">
+        {/* Liste des entreprises — Cartes ou Tableau */}
+        {filteredEnterprises.length === 0 ? (
+          <div className="surface-card p-16 flex flex-col items-center justify-center gap-4 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-cscm-green/10 text-cscm-green flex items-center justify-center ring-1 ring-cscm-green/15">
+              <Building2 className="w-8 h-8" />
+            </div>
+            <div>
+              <p className="font-serif font-black text-[#1A3D18] text-base">Aucun membre trouvé</p>
+              <p className="text-[#1A3D18]/55 font-semibold text-sm mt-1">Aucune entreprise ne correspond à vos critères de recherche.</p>
+            </div>
+          </div>
+        ) : viewMode === 'cards' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            {filteredEnterprises.map((ent, idx) => (
+              <motion.div
+                key={`${ent.id || idx}-card`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: Math.min(idx * 0.03, 0.3) }}
+                className="group surface-card surface-card-hover p-5 flex flex-col gap-4 relative overflow-hidden"
+              >
+                {/* Accent strip */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cscm-green via-[#6BB85C] to-cscm-gold opacity-80" />
+
+                <div className="flex items-start gap-3.5 pt-1">
+                  <div className="w-14 h-14 rounded-2xl border-2 border-cscm-gold/40 bg-white p-0.5 flex items-center justify-center shadow-sm shrink-0 ring-2 ring-cscm-green/10 overflow-hidden transition-all group-hover:ring-cscm-green/25 group-hover:border-cscm-gold/70">
+                    {ent.logo ? (
+                      <img src={ent.logo} alt={ent.raisonSociale || ent.name} className="w-full h-full rounded-xl object-cover" />
+                    ) : (
+                      <div className="w-full h-full rounded-xl bg-gradient-to-br from-cscm-green/15 to-cscm-green/5 text-cscm-green flex items-center justify-center font-serif font-black text-lg">
+                        {(ent.raisonSociale || ent.name || '').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-extrabold text-[#1A3D18] group-hover:text-cscm-green transition-colors leading-snug text-[15px] truncate">
+                      {ent.raisonSociale || ent.name}
+                    </h3>
+                    <p className="text-[10px] text-[#1A3D18]/55 font-bold uppercase tracking-wider mt-0.5">
+                      {ent.formeJuridique || '—'}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="font-mono text-[10px] font-black text-cscm-green bg-cscm-green/10 px-2 py-0.5 rounded-md border border-cscm-green/15">
+                        {ent.memberNo || '—'}
+                      </span>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black ${
+                        ent.statutMembre === 'Actif'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          : 'bg-rose-50 text-rose-700 border border-rose-100'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${ent.statutMembre === 'Actif' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                        {ent.statutMembre || '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${getSectorStyle(ent.secteur)}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                    {ent.secteur || 'Autres'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-2 rounded-xl bg-[#f4f8f2] px-3 py-2.5 border border-cscm-green/10">
+                    <MapPin className="w-3.5 h-3.5 text-cscm-green shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-bold text-[#1A3D18] truncate">{ent.ville || '—'}</p>
+                      <p className="text-[9px] font-bold uppercase text-[#1A3D18]/45 truncate">{ent.pays || '—'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl bg-[#f4f8f2] px-3 py-2.5 border border-cscm-green/10">
+                    <Users className="w-3.5 h-3.5 text-cscm-green shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-bold text-[#1A3D18]">{ent.effectif || '—'} pers.</p>
+                      <p className="text-[9px] font-bold uppercase text-[#1A3D18]/45">Effectif</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#1A3D18]/8">
+                  <div className="flex items-center gap-1.5">
+                    {userRole === 'ADMIN' && (
+                      <button
+                        onClick={() => {
+                          setQuickPaymentEnt(ent);
+                          setPaymentMode('manual');
+                          setPaymentAmount(String(rules.amountPerSemester));
+                          setCardName('');
+                          setCardNumber('');
+                          setCardExpiry('');
+                          setCardCvv('');
+                          setIsProcessingPayment(false);
+                          setPaymentProgressText('');
+                          setPaymentRef(`VIR-${Math.floor(100000 + Math.random() * 900000)}`);
+                        }}
+                        className="btn-icon-gold"
+                        title={`Ajouter Cotisation (${rules.amountPerSemester.toLocaleString()} FCFA)`}
+                      >
+                        <Coins className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setEnterpriseToSummary(ent)}
+                      className="btn-icon"
+                      title="Fiche technique PDF"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    {userRole === 'ADMIN' && (
+                      <button
+                        onClick={() => setEnterpriseToDelete(ent)}
+                        className="btn-icon-danger"
+                        title="Retirer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {userRole !== 'MEMBRE' && (
+                    <button
+                      onClick={() => navigate(`/enterprises/${ent.id}`)}
+                      className="btn-primary !px-3.5 !py-2 !text-xs"
+                    >
+                      Détails
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="table-wrap shadow-[0_2px_20px_rgba(74,155,60,0.08)]">
+            <table className="data-table" style={{ minWidth: '900px' }}>
               <thead>
-                <tr className="bg-[#132e15] border-b border-[#132e15]/20 text-white text-[11px] uppercase font-black tracking-widest">
-                  <th className="p-6">Nom de l'entreprise</th>
-                  <th className="p-6">N° Membre</th>
-                  <th className="p-6 hidden sm:table-cell">Localisation</th>
-                  <th className="p-6 hidden md:table-cell">Secteur</th>
-                  <th className="p-6 hidden md:table-cell">Effectif</th>
-                  <th className="p-6 hidden sm:table-cell">Statut Adhésion</th>
-                  <th className="p-6 text-right">Actions</th>
+                <tr>
+                  <th>Nom de l'entreprise</th>
+                  <th>N° Membre</th>
+                  <th className="hidden sm:table-cell">Localisation</th>
+                  <th className="hidden md:table-cell">Secteur</th>
+                  <th className="hidden md:table-cell">Effectif</th>
+                  <th className="hidden sm:table-cell">Statut Adhésion</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#132e15]/10 text-sm font-semibold text-[#132e15]">
+              <tbody>
                 {filteredEnterprises.map((ent, idx) => (
-                  <tr key={`${ent.id || idx}-${idx}`} className="hover:bg-gray-50/50 transition-all group">
-                    <td className="p-6 text-cscm-dark flex items-center gap-3.5">
-                      <div className="w-12 h-12 rounded-2xl border-2 border-cscm-gold/40 bg-white p-0.5 flex items-center justify-center shadow-xs relative shrink-0 ring-2 ring-cscm-green/5 transition-all group-hover:ring-cscm-green/15 group-hover:border-cscm-gold/80 overflow-hidden">
-                        {ent.logo ? (
-                          <img src={ent.logo} alt={ent.raisonSociale || ent.name} className="w-full h-full rounded-xl object-cover" />
-                        ) : (
-                          <div className="w-full h-full rounded-xl bg-gradient-to-br from-cscm-green/10 to-cscm-green/5 text-cscm-green flex items-center justify-center font-serif font-black text-center text-sm">
-                            {(ent.raisonSociale || ent.name || '').charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.raisonSociale || ent.name}</div>
-                        <div className="text-[10px] text-[#132e15]/75 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
+                  <tr key={`${ent.id || idx}-${idx}`} className="group hover:bg-cscm-green/[0.05] transition-colors">
+                    <td className="text-cscm-dark">
+                      <div className="flex items-center gap-3.5 min-w-[200px]">
+                        <div className="w-12 h-12 rounded-2xl border-2 border-cscm-gold/40 bg-white p-0.5 flex items-center justify-center shadow-xs relative shrink-0 ring-2 ring-cscm-green/5 transition-all group-hover:ring-cscm-green/15 group-hover:border-cscm-gold/80 overflow-hidden">
+                          {ent.logo ? (
+                            <img src={ent.logo} alt={ent.raisonSociale || ent.name} className="w-full h-full rounded-xl object-cover" />
+                          ) : (
+                            <div className="w-full h-full rounded-xl bg-gradient-to-br from-cscm-green/10 to-cscm-green/5 text-cscm-green flex items-center justify-center font-serif font-black text-center text-sm">
+                              {(ent.raisonSociale || ent.name || '').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.raisonSociale || ent.name}</div>
+                          <div className="text-[10px] text-[#1A3D18]/60 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
+                        </div>
                       </div>
                     </td>
-                    <td className="p-6 text-[#132e15]/80 font-mono text-xs font-bold">{ent.memberNo}</td>
-                    <td className="p-6 text-[#132e15] hidden sm:table-cell">
-                      <div className="font-bold text-[#132e15]">{ent.ville}</div>
-                      <div className="text-[10px] text-[#132e15]/70 font-bold uppercase mt-0.5">{ent.pays}</div>
+                    <td className="text-[#1A3D18]/80 font-mono text-xs font-bold whitespace-nowrap">{ent.memberNo}</td>
+                    <td className="text-[#1A3D18] hidden sm:table-cell">
+                      <div className="font-bold">{ent.ville}</div>
+                      <div className="text-[10px] text-[#1A3D18]/55 font-bold uppercase mt-0.5">{ent.pays}</div>
                     </td>
-                    <td className="p-6 hidden md:table-cell">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${getSectorStyle(ent.secteur)}`}>
+                    <td className="hidden md:table-cell">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border whitespace-nowrap ${getSectorStyle(ent.secteur)}`}>
                         <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                         {ent.secteur}
                       </span>
                     </td>
-                    <td className="p-6 text-[#132e15] font-black hidden md:table-cell">{ent.effectif} pers.</td>
-                    <td className="p-6 hidden sm:table-cell">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${
-                        ent.statutMembre === 'Actif' 
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
-                        : 'bg-rose-50 text-rose-700 border border-rose-100'
+                    <td className="text-[#1A3D18] font-black hidden md:table-cell whitespace-nowrap">{ent.effectif} pers.</td>
+                    <td className="hidden sm:table-cell">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black whitespace-nowrap ${
+                        ent.statutMembre === 'Actif'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          : 'bg-rose-50 text-rose-700 border border-rose-100'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${ent.statutMembre === 'Actif' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                         {ent.statutMembre}
                       </span>
                     </td>
-                    <td className="p-6">
-                      <div className="flex items-center justify-end gap-2 text-right">
+                    <td>
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
                         {userRole === 'ADMIN' && (
-                          <button 
+                          <button
                             onClick={() => {
                               setQuickPaymentEnt(ent);
                               setPaymentMode('manual');
@@ -565,32 +739,32 @@ export const EnterpriseList = () => {
                               setPaymentProgressText('');
                               setPaymentRef(`VIR-${Math.floor(100000 + Math.random() * 900000)}`);
                             }}
-                            className="p-2 text-[#a8820c] hover:text-amber-600 hover:bg-amber-50 border border-amber-100 rounded-xl transition-all"
+                            className="btn-icon-gold"
                             title={`Ajouter Cotisation (${rules.amountPerSemester.toLocaleString()} FCFA)`}
                           >
-                            <Coins className="w-4.5 h-4.5 text-amber-500 animate-pulse" />
+                            <Coins className="w-4 h-4" />
                           </button>
                         )}
-                        <button 
+                        <button
                           onClick={() => setEnterpriseToSummary(ent)}
-                          className="p-2 text-[#132e15] hover:text-cscm-green hover:bg-[#FAF9F5] border border-gray-150 rounded-xl transition-all"
+                          className="btn-icon"
                           title="Fiche technique PDF"
                         >
-                          <Eye className="w-4.5 h-4.5" />
+                          <Eye className="w-4 h-4" />
                         </button>
                         {userRole === 'ADMIN' && (
-                          <button 
+                          <button
                             onClick={() => setEnterpriseToDelete(ent)}
-                            className="p-2 text-rose-700 hover:text-rose-900 hover:bg-rose-50 border border-rose-100 rounded-xl transition-all"
+                            className="btn-icon-danger"
                             title="Retirer"
                           >
-                            <Trash2 className="w-4.5 h-4.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                         {userRole !== 'MEMBRE' && (
-                          <button 
+                          <button
                             onClick={() => navigate(`/enterprises/${ent.id}`)}
-                            className="bg-cscm-green/10 text-cscm-green hover:bg-cscm-green hover:text-white px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer select-none"
+                            className="btn-primary !px-3 !py-1.5 !text-xs"
                           >
                             Détails
                             <ChevronRight className="w-3.5 h-3.5" />
@@ -600,17 +774,10 @@ export const EnterpriseList = () => {
                     </td>
                   </tr>
                 ))}
-                {filteredEnterprises.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="p-16 text-center text-[#132e15]/60 italic font-bold">
-                      Aucune entreprise ne correspond à vos critères de recherche.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
-        </div>
+        )}
       </motion.div>
 
       {/* Modals */}
@@ -626,17 +793,25 @@ export const EnterpriseList = () => {
       />
 
       {/* Quick Bank & Online Payment Cotisation Modal */}
+      <ModalPortal>
       <AnimatePresence>
         {quickPaymentEnt && (
-          <div className="fixed inset-0 bg-black/60 z-[120] backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="modal-overlay">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isProcessingPayment && setQuickPaymentEnt(null)}
+              className="modal-backdrop"
+            />
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden border border-gray-150"
+              className="modal-shell-md overflow-hidden"
             >
               {/* Header */}
-              <div className="p-6 bg-[#0a1208] text-white flex justify-between items-center border-b border-[#112310]">
+              <div className="modal-header-dark items-center">
                 <div>
                   <h3 className="text-sm font-serif font-black text-cscm-gold tracking-wide">
                     {paymentMode === 'online' ? 'Paiement Sécurisé En Ligne' : 'Saisir Paiement Banque'}
@@ -666,16 +841,16 @@ export const EnterpriseList = () => {
                 </div>
               ) : (
                 /* MAIN FORM VIEW */
-                <form onSubmit={handleRegisterQuickPayment} className="p-6 space-y-4">
+                <form onSubmit={handleRegisterQuickPayment} className="modal-body !p-6 space-y-4">
                   {/* Mode Tabs */}
-                  <div className="grid grid-cols-2 bg-gray-100 p-1 rounded-2xl">
+                  <div className="grid grid-cols-2 bg-white/50 backdrop-blur-sm border border-white/60 p-1 rounded-2xl">
                     <button
                       type="button"
                       onClick={() => setPaymentMode('manual')}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         paymentMode === 'manual' 
-                          ? 'bg-white text-cscm-dark shadow-xs' 
-                          : 'text-gray-500 hover:text-cscm-dark'
+                          ? 'bg-white text-[#2E4D31] shadow-md' 
+                          : 'text-[#2E4D31]/50 hover:text-[#2E4D31]'
                       }`}
                     >
                       Virement Banque
@@ -683,10 +858,10 @@ export const EnterpriseList = () => {
                     <button
                       type="button"
                       onClick={() => setPaymentMode('online')}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         paymentMode === 'online' 
-                          ? 'bg-[#132e15] text-white shadow-xs' 
-                          : 'text-gray-500 hover:text-cscm-dark'
+                          ? 'bg-[#2E4D31] text-white shadow-md' 
+                          : 'text-[#2E4D31]/50 hover:text-[#2E4D31]'
                       }`}
                     >
                       Paiement En Ligne
@@ -694,7 +869,7 @@ export const EnterpriseList = () => {
                   </div>
 
                   {/* Common editable amount input */}
-                  <div className="space-y-3 bg-[#FAF9F5] p-4 rounded-2xl border border-gray-150">
+                  <div className="space-y-3 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white/70">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider block">Devise du versement</label>
                       <select
@@ -779,13 +954,13 @@ export const EnterpriseList = () => {
                         <button 
                           type="button"
                           onClick={() => setQuickPaymentEnt(null)}
-                          className="flex-1 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer text-center"
+                          className="btn-secondary flex-1 !text-xs"
                         >
                           Annuler
                         </button>
                         <button 
                           type="submit"
-                          className="flex-1 py-3 text-xs font-black text-white bg-cscm-green hover:bg-[#152e16] rounded-xl transition-colors cursor-pointer text-center shadow-md shadow-cscm-green/10"
+                          className="btn-primary flex-1 !text-xs"
                         >
                           Valider le versement
                         </button>
@@ -897,16 +1072,16 @@ export const EnterpriseList = () => {
                             <button 
                               type="button"
                               onClick={() => setQuickPaymentEnt(null)}
-                              className="flex-1 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer text-center"
+                              className="btn-secondary flex-1 !text-xs"
                             >
                               Annuler
                             </button>
                             <button 
                               type="submit"
-                              className="flex-1 py-3 text-xs font-black text-[#ebd078] bg-[#132e15] hover:bg-emerald-950 rounded-xl transition-colors cursor-pointer text-center shadow-md border border-[#ebd078]/25"
+                              className="btn-gold flex-1 !text-xs"
                             >
-                              <Lock className="w-3.5 h-3.5 inline shrink-0 mr-1" />
-                              <span>Payer {Number(paymentAmount).toLocaleString()} FCFA</span>
+                              <Lock className="w-3.5 h-3.5 shrink-0" />
+                              Payer {Number(paymentAmount).toLocaleString()} FCFA
                             </button>
                           </div>
                         </div>
@@ -919,6 +1094,7 @@ export const EnterpriseList = () => {
           </div>
         )}
       </AnimatePresence>
+      </ModalPortal>
     </SidebarLayout>
   );
 };

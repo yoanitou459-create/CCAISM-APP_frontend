@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Camera, Pencil } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { ModalPortal } from './ModalPortal';
 
 const PencilIcon = ({ size }: { size: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -123,12 +124,12 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
               { label: "Secteur d'activité", key: 'secteur', type: 'select', options: ['IT', 'BTP', 'Finance', 'Agriculture', 'Commerce', 'Services', 'Industrie', 'Santé', 'Éducation', 'Tourisme', 'Autre'] },
             ].map((field: any, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-2 border-b border-gray-100 last:border-0">
-                <label className="sm:w-48 text-xs font-black uppercase tracking-wider text-gray-500 shrink-0">{field.label}</label>
+                <label className="field-label sm:w-48 shrink-0 mb-0">{field.label}</label>
                 {field.type === 'select' ? (
                   <select 
                     value={formData[field.key!] || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
-                    className="flex-1 bg-[#FAF9F5] border-2 border-gray-200 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-bold text-gray-900 focus:bg-white focus:border-cscm-green outline-none transition-all focus:ring-4 focus:ring-cscm-green/5"
+                    className="field-select flex-1"
                   >
                     <option value="" className="text-gray-400 font-medium">Sélectionner...</option>
                     {field.options?.map((opt: string) => <option key={opt} value={opt} className="text-gray-900 font-semibold">{opt}</option>)}
@@ -139,7 +140,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                     value={formData[field.key!] || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
                     placeholder={field.placeholder}
-                    className="flex-1 bg-[#FAF9F5] border-2 border-gray-200 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-bold text-gray-900 focus:bg-white focus:border-cscm-green outline-none transition-all focus:ring-4 focus:ring-cscm-green/5 placeholder:text-gray-400 placeholder:font-medium"
+                    className="field-input flex-1"
                   />
                 )}
               </div>
@@ -155,77 +156,77 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
 
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5 pb-2 border-b border-gray-100">
-                <label className="text-xs font-bold text-gray-700">Secteurs d'activité :</label>
+                <label className="field-label mb-0">Secteurs d'activité :</label>
                 <textarea 
                   rows={3}
                   value={formData.secteur || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, secteur: e.target.value }))}
                   placeholder="Tourisme&#10;Agriculture&#10;IT"
-                  className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-450"
+                  className="field-input"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5 pb-2 border-b border-gray-100">
-                <label className="text-xs font-bold text-gray-700">Expertises :</label>
+                <label className="field-label mb-0">Expertises :</label>
                 <textarea 
                   rows={3}
                   value={formData.expertisePrincipale || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, expertisePrincipale: e.target.value }))}
                   placeholder="Tourisme&#10;Conseil hôtelier"
-                  className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-450"
+                  className="field-input"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5 pb-2 border-b border-gray-100">
-                <label className="text-xs font-bold text-gray-700">Produits / Services :</label>
+                <label className="field-label mb-0">Produits / Services :</label>
                 <textarea 
                   rows={2}
                   value={formData.produitsServices || formData.produits_services || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, produitsServices: e.target.value }))}
                   placeholder="Lister les produits et services"
-                  className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-450"
+                  className="field-input"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5 pb-2 border-b border-gray-100">
-                <label className="text-xs font-bold text-gray-700">Technologies utilisées :</label>
+                <label className="field-label mb-0">Technologies utilisées :</label>
                 <textarea 
                   rows={2}
                   value={formData.technologies || formData.technologies_utilisees || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, technologies: e.target.value }))}
                   placeholder="Lister les technologies"
-                  className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-450"
+                  className="field-input"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5 pb-2 border-b border-gray-100">
-                <label className="text-xs font-bold text-gray-700">Marchés cibles :</label>
+                <label className="field-label mb-0">Marchés cibles :</label>
                 <input 
                   type="text" 
                   value={formData.marchesCibles || formData.marches_cibles || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, marchesCibles: e.target.value }))}
                   placeholder="Ex: Région UEMOA"
-                  className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-450"
+                  className="field-input"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5 pb-2 border-b border-gray-100">
-                <label className="text-xs font-bold text-gray-700">Clients références :</label>
+                <label className="field-label mb-0">Clients références :</label>
                 <textarea 
                   rows={2}
                   value={formData.clientsReferences || formData.clients_references || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, clientsReferences: e.target.value }))}
                   placeholder="Lister les clients importants"
-                  className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-450"
+                  className="field-input"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5 pb-2">
-                <label className="text-xs font-bold text-gray-700">Niveau expertise :</label>
+                <label className="field-label mb-0">Niveau expertise :</label>
                 <select 
                   value={formData.niveauExpertise || formData.niveau_expertise || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, niveauExpertise: e.target.value }))}
-                  className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all focus:ring-4 focus:ring-[#132e15]/5"
+                  className="field-select"
                 >
                   <option value="">Sélectionner...</option>
                   <option value="Expert">Expert</option>
@@ -245,51 +246,51 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
 
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-2 border-b border-gray-100">
-                <label className="sm:w-48 text-xs font-bold text-gray-700">Nom de la certification :</label>
+                <label className="field-label sm:w-48 shrink-0 mb-0">Nom de la certification :</label>
                 <input 
                   type="text" 
                   value={formData.name || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, name: e.target.value }))}
                   placeholder="Ex: ISO 9001 - Management de la Qualité"
-                  className="flex-1 bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-405"
+                  className="field-input flex-1"
                 />
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-2 border-b border-gray-100">
-                <label className="sm:w-48 text-xs font-bold text-gray-700">Code de la certification :</label>
+                <label className="field-label sm:w-48 shrink-0 mb-0">Code de la certification :</label>
                 <input 
                   type="text" 
                   value={formData.code || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, code: e.target.value }))}
                   placeholder="Ex: ISO-9001-2015"
-                  className="flex-1 bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-405"
+                  className="field-input flex-1"
                 />
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-2 border-b border-gray-100">
-                <label className="sm:w-48 text-xs font-bold text-gray-700">Date d'obtention :</label>
+                <label className="field-label sm:w-48 shrink-0 mb-0">Date d'obtention :</label>
                 <input 
                   type="date"
                   value={formData.date || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, date: e.target.value }))}
-                  className="flex-1 bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                  className="field-input flex-1"
                 />
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-4 border-b border-gray-100">
-                <label className="sm:w-48 text-xs font-bold text-gray-700">Organisme émetteur :</label>
+                <label className="field-label sm:w-48 shrink-0 mb-0">Organisme émetteur :</label>
                 <input 
                   type="text" 
                   value={formData.issuer || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, issuer: e.target.value }))}
                   placeholder="Ex: AFNOR Certification"
-                  className="flex-1 bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-semibold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-405"
+                  className="field-input flex-1"
                 />
               </div>
 
               {/* PDF or PNG Uploader supporting Drag & Drop */}
               <div className="space-y-2 mt-4 text-left">
-                <label className="text-xs font-bold text-gray-700 block">Téléverser le certificat (Format PDF ou PNG) :</label>
+                <label className="field-label">Téléverser le certificat (Format PDF ou PNG) :</label>
                 <div 
                   onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                   onDragLeave={() => setIsDragging(false)}
@@ -411,21 +412,21 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
             <div className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1 text-left">
-                  <label className="text-xs font-bold text-gray-700">Exercice fiscal :</label>
+                  <label className="field-label mb-0">Exercice fiscal :</label>
                   <input 
                     type="number"
                     value={formData.year || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, year: e.target.value }))}
                     placeholder="2026"
-                    className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                    className="field-input"
                   />
                 </div>
                 <div className="space-y-1 text-left">
-                  <label className="text-xs font-bold text-gray-700">Devise :</label>
+                  <label className="field-label mb-0">Devise :</label>
                   <select 
                     value={formData.devise || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, devise: e.target.value }))}
-                    className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                    className="field-select"
                   >
                     <option value="XOF - Franc CFA Ouest Africain">XOF - Franc CFA Ouest Africain</option>
                     <option value="EUR - Euro">EUR - Euro</option>
@@ -442,43 +443,43 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                 </span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">CA total :</label>
+                    <label className="field-label mb-0">CA total :</label>
                     <input 
                       type="number"
                       value={formData.ca || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, ca: e.target.value }))}
                       placeholder="CA total"
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                      className="field-input"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">CA Export :</label>
+                    <label className="field-label mb-0">CA Export :</label>
                     <input 
                       type="number"
                       value={formData.export || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, export: e.target.value }))}
                       placeholder="CA Export"
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                      className="field-input"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">CA Maroc :</label>
+                    <label className="field-label mb-0">CA Maroc :</label>
                     <input 
                       type="number"
                       value={formData.ca_maroc || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, ca_maroc: e.target.value }))}
                       placeholder="CA Maroc"
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                      className="field-input"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">CA Sénégal :</label>
+                    <label className="field-label mb-0">CA Sénégal :</label>
                     <input 
                       type="number"
                       value={formData.ca_senegal || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, ca_senegal: e.target.value }))}
                       placeholder="CA Sénégal"
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                      className="field-input"
                     />
                   </div>
                 </div>
@@ -490,13 +491,13 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                   RENTABILITÉ ET RÉSULTATS
                 </span>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">Résultat net :</label>
+                  <label className="field-label mb-0">Résultat net :</label>
                   <input 
                     type="number"
                     value={formData.resultatNet || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, resultatNet: e.target.value }))}
                     placeholder="Résultat net"
-                    className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                    className="field-input"
                   />
                 </div>
               </div>
@@ -508,33 +509,33 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                 </span>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">Total actif :</label>
+                    <label className="field-label mb-0">Total actif :</label>
                     <input 
                       type="number"
                       value={formData.totalActif || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, totalActif: e.target.value }))}
                       placeholder="Total actif"
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                      className="field-input"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">Capitaux propres :</label>
+                    <label className="field-label mb-0">Capitaux propres :</label>
                     <input 
                       type="number"
                       value={formData.capitauxPropres || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, capitauxPropres: e.target.value }))}
                       placeholder="Capitaux propres"
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                      className="field-input"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">Endettement :</label>
+                    <label className="field-label mb-0">Endettement :</label>
                     <input 
                       type="number"
                       value={formData.endettement || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, endettement: e.target.value }))}
                       placeholder="Endettement"
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all"
+                      className="field-input"
                     />
                   </div>
                 </div>
@@ -547,21 +548,21 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                 </span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">Source des données :</label>
+                    <label className="field-label mb-0">Source des données :</label>
                     <input 
                       type="text"
                       value={formData.source || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, source: e.target.value }))}
                       placeholder="Ex: Bilan comptable"
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all placeholder:text-gray-405"
+                      className="field-input"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">Visibilité :</label>
+                    <label className="field-label mb-0">Visibilité :</label>
                     <select 
                       value={formData.visibilite || ''}
                       onChange={(e) => setFormData((prev: any) => ({ ...prev, visibilite: e.target.value }))}
-                      className="w-full bg-[#f4f3f0] border-2 border-gray-250 hover:border-gray-300 rounded-xl p-3 text-xs font-bold text-gray-950 focus:bg-white focus:border-[#132e15] outline-none transition-all animate-none"
+                      className="field-select"
                     >
                       <option value="Publique">Publique</option>
                       <option value="Privée">Privée</option>
@@ -583,12 +584,12 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
               { label: "Priorité administrative", key: 'priority', type: 'select', options: ['Basse', 'Moyenne', 'Haute', 'Critique'] },
             ].map((field: any, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-2 border-b border-gray-100 last:border-0">
-                <label className="sm:w-48 text-xs font-black uppercase tracking-wider text-gray-500 shrink-0">{field.label}</label>
+                <label className="field-label sm:w-48 shrink-0 mb-0">{field.label}</label>
                 {field.type === 'select' ? (
                   <select 
                     value={formData[field.key!] || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
-                    className="flex-1 bg-[#FAF9F5] border-2 border-gray-200 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-bold text-gray-900 focus:bg-white focus:border-cscm-green outline-none transition-all focus:ring-4 focus:ring-cscm-green/5"
+                    className="field-select flex-1"
                   >
                     <option value="" className="text-gray-400 font-medium">Sélectionner...</option>
                     {field.options?.map((opt: string) => <option key={opt} value={opt} className="text-gray-900 font-semibold">{opt}</option>)}
@@ -599,7 +600,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                     value={formData[field.key!] || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
                     placeholder={field.placeholder}
-                    className="flex-1 bg-[#FAF9F5] border-2 border-gray-200 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-bold text-gray-900 focus:bg-white focus:border-cscm-green outline-none transition-all focus:ring-4 focus:ring-cscm-green/5 placeholder:text-gray-400 placeholder:font-medium"
+                    className="field-input flex-1"
                   />
                 )}
               </div>
@@ -617,12 +618,12 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
               { label: "Contact principal ?", key: 'isPrimary', type: 'select', options: ['Oui', 'Non'] },
             ].map((field: any, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-2 border-b border-gray-100 last:border-0">
-                <label className="sm:w-48 text-xs font-black uppercase tracking-wider text-gray-500 shrink-0">{field.label}</label>
+                <label className="field-label sm:w-48 shrink-0 mb-0">{field.label}</label>
                 {field.type === 'select' ? (
                   <select 
                     value={formData[field.key!] || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
-                    className="flex-1 bg-[#FAF9F5] border-2 border-gray-200 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-bold text-gray-900 focus:bg-white focus:border-cscm-green outline-none transition-all focus:ring-4 focus:ring-cscm-green/5"
+                    className="field-select flex-1"
                   >
                     <option value="" className="text-gray-400 font-medium">Sélectionner...</option>
                     {field.options?.map((opt: string) => <option key={opt} value={opt} className="text-gray-900 font-semibold">{opt}</option>)}
@@ -633,7 +634,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                     value={formData[field.key!] || ''}
                     onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
                     placeholder={field.placeholder}
-                    className="flex-1 bg-[#FAF9F5] border-2 border-gray-200 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-bold text-gray-900 focus:bg-white focus:border-cscm-green outline-none transition-all focus:ring-4 focus:ring-cscm-green/5 placeholder:text-gray-400 placeholder:font-medium"
+                    className="field-input flex-1"
                   />
                 )}
               </div>
@@ -649,13 +650,13 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
               { label: "Montant (FCFA)", key: 'amount', placeholder: "Saisissez le montant de la cotisation", type: 'number' },
             ].map((field: any, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-2 border-b border-gray-100 last:border-0">
-                <label className="sm:w-48 text-xs font-black uppercase tracking-wider text-gray-500 shrink-0">{field.label}</label>
+                <label className="field-label sm:w-48 shrink-0 mb-0">{field.label}</label>
                 <input 
                   type={field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : 'text'} 
                   value={formData[field.key!] || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
                   placeholder={field.placeholder || ''}
-                  className="flex-1 bg-[#FAF9F5] border-2 border-gray-200 hover:border-gray-300 w-full rounded-xl p-3 text-xs font-bold text-gray-900 focus:bg-white focus:border-cscm-green outline-none transition-all focus:ring-4 focus:ring-cscm-green/5 placeholder:text-gray-400 placeholder:font-medium"
+                  className="field-input flex-1"
                 />
               </div>
             ))}
@@ -667,9 +668,10 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
   };
 
   return (
+    <ModalPortal>
     <AnimatePresence>
       {isOpen && type && (
-        <div key="edit-form-modal-container" className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div key="edit-form-modal-container" className="modal-overlay">
           {/* Modal Backdrop */}
           <motion.div
             key="edit-form-modal-backdrop"
@@ -677,7 +679,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="modal-backdrop"
           />
           
           {/* Modal Body Container */}
@@ -686,35 +688,38 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
             initial={{ scale: 0.95, opacity: 0, y: 25 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 25 }}
-            className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh] border border-gray-200/80"
+            className="modal-shell max-w-3xl bg-white/95"
           >
-          {/* Header */}
-          <div className="p-6 text-center bg-gradient-to-r from-[#122410] to-[#1c3a19] text-white border-b border-[#234c20] relative flex flex-col items-center justify-center">
-            <h2 className="text-xl md:text-2xl font-serif font-black text-cscm-gold tracking-tight leading-snug">
+          {/* Header verre */}
+          <div className="modal-header-dark !flex-col !items-center !justify-center text-center !pt-7 !pb-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cscm-gold/90 relative z-10">
+              {mode === 'add' ? 'Ajout' : 'Modification'}
+            </p>
+            <h2 className="text-xl md:text-2xl font-serif font-black text-white tracking-tight leading-snug relative z-10 mt-1">
               {type}
             </h2>
-            <p className="text-[10px] text-white/70 font-black uppercase tracking-widest mt-1">
-              Configuration & Réglage des Propriétés
+            <p className="text-[10px] text-white/65 font-bold uppercase tracking-widest mt-1 relative z-10">
+              Configuration & réglage des propriétés
             </p>
             <button 
               onClick={onClose}
-              className="absolute right-4 top-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/5 cursor-pointer"
+              className="absolute right-4 top-4 p-2 bg-white/15 hover:bg-white/25 text-white rounded-xl transition-all border border-white/20 cursor-pointer z-20"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Form scrollable viewport */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-white">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-gradient-to-b from-white/50 to-transparent">
             {renderForm()}
           </div>
 
           {/* Footer controls */}
-          <div className="p-5 bg-slate-50/80 border-t border-gray-100 flex justify-end gap-3.5">
+          <div className="modal-footer justify-end">
             <button 
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+              className="btn-secondary text-xs uppercase tracking-wider"
             >
               Annuler
             </button>
@@ -723,7 +728,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                 onSave(formData);
                 onClose();
               }}
-              className="bg-cscm-green hover:bg-[#1c3d1e] text-white px-8 py-2.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md select-none cursor-pointer"
+              className="btn-primary px-8 text-xs uppercase tracking-wider"
             >
               {mode === 'add' ? 'Ajouter' : 'Enregistrer'}
             </button>
@@ -732,5 +737,6 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
       </div>
     )}
   </AnimatePresence>
+  </ModalPortal>
   );
 };

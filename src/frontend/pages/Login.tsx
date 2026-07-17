@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { ModalPortal } from '../components/ModalPortal';
 import { Logo } from '../components/Logo';
 import { getStoredUsers, saveStoredUsers, fetchLatestUsers } from '../../database/userStorage';
-import { ShieldCheck, User, Eye, EyeOff, Sparkles, Building2, Lock, X } from 'lucide-react';
+import { User, Eye, EyeOff, Lock, X, ShieldCheck } from 'lucide-react';
 import { auth } from '../../database/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+
+const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
+    <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
+  </svg>
+);
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -17,10 +27,9 @@ export const Login: React.FC = () => {
   const [fallbackEmail, setFallbackEmail] = useState('');
   const navigate = useNavigate();
 
-  // Make sure users exist in storage and redirect if already logged in
   useEffect(() => {
     getStoredUsers();
-    fetchLatestUsers(); // Pre-fetch from Firestore in the background on mount
+    fetchLatestUsers();
     const token = localStorage.getItem('token');
     if (token) {
       navigate('/dashboard', { replace: true });
@@ -35,25 +44,21 @@ export const Login: React.FC = () => {
     try {
       const trimmedEmail = email.trim().toLowerCase();
       const users = await fetchLatestUsers();
-      
-      // Find matching user
       const matchedUser = users.find(u => u.email.toLowerCase() === trimmedEmail);
-      
+
       if (matchedUser) {
-        // Validate active status
         if (matchedUser.status === 'Inactif') {
           setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
           setIsVerifying(false);
           return;
         }
 
-        // Validate password
         if (matchedUser.password && matchedUser.password !== password) {
           setError('Mot de passe incorrect pour cet utilisateur.');
           setIsVerifying(false);
           return;
         }
-        
+
         localStorage.setItem('token', `mock-token-${matchedUser.id}`);
         localStorage.setItem('user', JSON.stringify({
           id: matchedUser.id,
@@ -62,8 +67,7 @@ export const Login: React.FC = () => {
           email: matchedUser.email,
           role: matchedUser.role
         }));
-        
-        // Let layout know role changed
+
         window.dispatchEvent(new Event('user_profile_updated'));
         navigate('/dashboard');
       } else {
@@ -79,7 +83,7 @@ export const Login: React.FC = () => {
   const handleSuccessfulGoogleLogin = async (userEmail: string, displayName: string, companyName?: string) => {
     const users = await fetchLatestUsers();
     let matchedUser = users.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
-    
+
     if (!matchedUser) {
       const names = displayName ? displayName.split(' ') : [];
       const prenom = names[0] || 'Utilisateur';
@@ -113,7 +117,7 @@ export const Login: React.FC = () => {
       role: matchedUser.role,
       entreprise: matchedUser.entreprise || ''
     }));
-    
+
     window.dispatchEvent(new Event('user_profile_updated'));
     navigate('/dashboard');
   };
@@ -130,141 +134,214 @@ export const Login: React.FC = () => {
       }
     } catch (err: any) {
       console.error("Google login error:", err);
-      // Popup blocked or similar issue inside the sandboxed iframe, show the beautiful fallback modal
       setShowGoogleFallback(true);
     } finally {
       setIsVerifying(false);
     }
   };
 
+  const handleFallbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fallbackEmail.trim()) return;
+    setShowGoogleFallback(false);
+    await handleSuccessfulGoogleLogin(fallbackEmail.trim(), '');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f5faef] via-[#FAF9F5] to-[#fefbe3] flex flex-col justify-center items-center p-4 md:p-8 relative selection:bg-cscm-green selection:text-white">
-      {/* Background ambient accents */}
+    <div className="auth-page">
+      {/* Accents d'ambiance */}
       <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#1b381c]/5 to-transparent pointer-events-none" />
-      <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-[#ebd078]/5 blur-3xl pointer-events-none" />
+      <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-[#ebd078]/10 blur-3xl pointer-events-none animate-float" />
       <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-[#1b381c]/5 blur-3xl pointer-events-none" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl border border-gray-200/65 flex flex-col lg:flex-row overflow-hidden relative z-10"
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="auth-shell"
       >
-        {/* Left Side: Elegant Portal Introduction with Logo */}
-        <div className="w-full lg:w-5/12 bg-gradient-to-br from-[#122410] via-[#0c180b] to-[#040804] p-8 md:p-12 flex flex-col items-center justify-center text-white relative min-h-[350px] lg:min-h-full">
-          {/* Subtle background blurs */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[2.5rem_0_0_2.5rem]">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cscm-gold/10 rounded-full blur-3xl" />
-            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl" />
-          </div>
-          
-          <div className="relative z-10 flex flex-col items-center justify-center space-y-6 text-center w-full">
-            {/* Elegant outer design ring around the logo */}
-            <div className="relative p-10 rounded-[2.5rem] bg-white/5 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md transition-all duration-300 hover:border-cscm-gold/30">
-              <div className="absolute -inset-1 rounded-[2.7rem] bg-gradient-to-tr from-cscm-gold/20 via-transparent to-emerald-500/20 blur opacity-40 transition duration-500" />
-              <Logo className="scale-110 text-white" />
+        {/* Panneau formulaire */}
+        <div className="auth-form-panel">
+          <div className="max-w-sm mx-auto w-full">
+            <p className="auth-eyebrow">CCAISM</p>
+            <h1 className="auth-title">Connexion</h1>
+            <p className="auth-subtitle">Accédez à la plateforme CCAISM</p>
+
+            <div className="mt-7 space-y-5">
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isVerifying}
+                className="google-btn"
+              >
+                <GoogleIcon />
+                Continuer avec Google
+              </button>
+
+              <div className="auth-divider">ou</div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="field-label">
+                    <User />
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="username"
+                    required
+                    placeholder="Saisissez votre adresse email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="field-input"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center">
+                    <label className="field-label">
+                      <Lock />
+                      Mot de passe
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      autoComplete="current-password"
+                      required
+                      placeholder="Saisissez votre mot de passe"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="field-input pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cscm-green transition-all cursor-pointer outline-none"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-100/70 rounded-xl text-red-600 text-xs text-center font-bold">
+                    {error}
+                  </div>
+                )}
+
+                <button type="submit" id="login-submit-btn" disabled={isVerifying} className="btn-cta">
+                  {isVerifying ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Vérification en cours...
+                    </>
+                  ) : (
+                    'Se connecter'
+                  )}
+                </button>
+              </form>
+
+              <p className="text-center text-[11px] font-semibold text-gray-400 leading-relaxed">
+                Une connexion rapide et sécurisée pour accéder à votre espace CCAISM.
+              </p>
+            </div>
+
+            <div className="mt-7 pt-5 border-t border-gray-100 flex justify-between items-center text-xs font-bold">
+              <Link to="/signup" className="text-[#12210E]/70 hover:text-cscm-green transition-colors">
+                Créer un compte
+              </Link>
+              <Link to="/forgot-password" className="text-[#12210E]/70 hover:text-cscm-green transition-colors">
+                Mot de passe oublié ?
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Form & Quick Credentials Switcher */}
-        <div className="w-full lg:w-7/12 p-8 md:p-12 flex flex-col justify-between bg-white">
-          <div className="max-w-md mx-auto w-full space-y-6">
-            <div className="text-center lg:text-left">
-              <h1 className="text-2xl md:text-3xl font-serif font-black text-[#1b381c]">
-                Espace de Connexion
-              </h1>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-cscm-gold" />
-                  Adresse Email
-                </label>
-                <input 
-                  type="email" 
-                  name="email"
-                  autoComplete="username"
-                  required
-                  placeholder="Saisissez votre adresse email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-cscm-gold" />
-                    Mot de passe
-                  </label>
-                  <Link to="/forgot-password" className="text-[10px] font-bold text-gray-400 hover:text-cscm-green transition-all">
-                    Oublié ?
-                  </Link>
-                </div>
-                
-                <div className="relative">
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
-                    name="password"
-                    autoComplete="current-password"
-                    required
-                    placeholder="Saisissez votre mot de passe"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-4 pr-10 py-3 border border-gray-200 focus:border-cscm-green rounded-xl outline-none font-sans text-xs text-gray-800 transition-all bg-[#FAF9F5]/30 focus:bg-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cscm-green transition-all cursor-pointer outline-none"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-100/65 rounded-xl text-red-600 text-xs text-center font-bold">
-                  {error}
-                </div>
-              )}
-
-              <button 
-                type="submit" 
-                id="login-submit-btn"
-                disabled={isVerifying}
-                className="w-full py-3.5 bg-cscm-green hover:bg-[#152e16] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg hover:shadow-black/10 flex items-center justify-center cursor-pointer select-none font-sans disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isVerifying ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Vérification en cours...
-                  </span>
-                ) : (
-                  "Se connecter au portail"
-                )}
-              </button>
-            </form>
+        {/* Panneau de marque */}
+        <div className="auth-brand-panel">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cscm-gold/10 rounded-full blur-3xl" />
+            <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl" />
+            <div className="absolute bottom-10 right-10 w-32 h-32 border border-white/5 rounded-full" />
           </div>
 
-          <div className="mt-8 pt-5 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-semibold text-gray-400">
-            <div className="flex gap-1">
-              <span>Nouveau sur le portail ?</span>
-              <Link to="/signup" className="text-cscm-green hover:underline">
-                S'enregistrer
-              </Link>
+          <div className="relative z-10 flex flex-col items-center justify-center gap-8 w-full">
+            <Logo className="scale-110 text-white" />
+
+            <div className="brand-glass">
+              <div className="mx-auto mb-3 w-9 h-9 rounded-xl bg-cscm-gold/15 border border-cscm-gold/30 flex items-center justify-center">
+                <ShieldCheck className="w-4.5 h-4.5 text-cscm-gold" />
+              </div>
+              <h3 className="font-serif font-bold text-lg text-cscm-gold">Gestion simple et sécurisée</h3>
+              <p className="text-white/60 text-xs font-medium leading-relaxed mt-2">
+                Connectez-vous pour accéder aux entreprises, aux imports et aux outils de suivi selon votre rôle.
+              </p>
             </div>
-            <span>© 2026 CSCM • Chambre Sénégalaise</span>
           </div>
         </div>
       </motion.div>
+
+      {/* Fallback Google (popup bloquée) */}
+      <ModalPortal>
+      <AnimatePresence>
+        {showGoogleFallback && (
+          <div className="modal-overlay">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowGoogleFallback(false)}
+              className="modal-backdrop"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="modal-shell-md"
+            >
+              <div className="modal-header-dark">
+                <div className="flex items-center gap-3">
+                  <GoogleIcon className="shrink-0" />
+                  <div>
+                    <h3 className="font-serif font-bold text-lg text-[#ebd078]">Connexion Google</h3>
+                    <p className="text-white/60 text-xs font-medium">Saisissez votre email Google pour continuer</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowGoogleFallback(false)} className="text-white/60 hover:text-white transition-colors cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <form onSubmit={handleFallbackSubmit} className="modal-body space-y-4">
+                <div>
+                  <label className="field-label">
+                    <User />
+                    Adresse Email Google
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    autoFocus
+                    placeholder="prenom.nom@gmail.com"
+                    value={fallbackEmail}
+                    onChange={(e) => setFallbackEmail(e.target.value)}
+                    className="field-input"
+                  />
+                </div>
+                <button type="submit" className="btn-cta">Continuer</button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      </ModalPortal>
     </div>
   );
 };

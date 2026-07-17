@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Camera, X, CheckSquare } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { getStoredUsers, saveStoredUsers } from '../../database/userStorage';
+import { ModalPortal } from './ModalPortal';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -92,27 +93,24 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
   };
 
   return (
+    <ModalPortal>
     <AnimatePresence>
       {isOpen && (
-        <div key="profile-modal-root">
-          {/* Backdrop */}
+        <div key="profile-modal-container" className="modal-overlay">
           <motion.div
             key="profile-modal-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[80]"
+            className="modal-backdrop"
           />
-          
-          {/* Modal Container */}
-          <div key="profile-modal-container" className="fixed inset-0 flex items-center justify-center p-4 z-[90] pointer-events-none">
             <motion.div
               key="profile-modal-body"
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="bg-white text-cscm-dark w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden pointer-events-auto relative flex flex-col max-h-[92vh] border border-[#a69371]/20 font-sans"
+              className="modal-shell max-w-xl bg-white/95 text-cscm-dark font-sans"
             >
               {/* Back Button (Left Arrow) */}
               <button 
@@ -173,52 +171,52 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                 <div className="w-full space-y-5 text-left">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">PRÉNOM</label>
+                      <label className="field-label">PRÉNOM</label>
                       <input 
                         type="text" 
                         value={formData.prenom}
                         onChange={(e) => setFormData({...formData, prenom: e.target.value})}
-                        className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
+                        className="field-input"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">NOM</label>
+                      <label className="field-label">NOM</label>
                       <input 
                         type="text" 
                         value={formData.nom}
                         onChange={(e) => setFormData({...formData, nom: e.target.value})}
-                        className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
+                        className="field-input"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">EMAIL</label>
+                    <label className="field-label">EMAIL</label>
                     <input 
                       type="email" 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
+                      className="field-input"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">NOM DE L'ENTREPRISE (RAISON SOCIALE)</label>
+                    <label className="field-label">NOM DE L'ENTREPRISE (RAISON SOCIALE)</label>
                     <input 
                       type="text" 
                       value={formData.entreprise}
                       onChange={(e) => setFormData({...formData, entreprise: e.target.value})}
                       placeholder="Non spécifié"
-                      className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all"
+                      className="field-input"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">LANGUE</label>
+                    <label className="field-label">LANGUE</label>
                     <select
                       value={formData.langue}
                       onChange={(e) => setFormData({...formData, langue: e.target.value})}
-                      className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all cursor-pointer"
+                      className="field-select"
                     >
                       <option value="Français" className="text-gray-950 bg-white">Français</option>
                       <option value="Anglais" className="text-gray-950 bg-white">English</option>
@@ -227,11 +225,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-[#12210E]/60 uppercase tracking-widest mb-1.5">APPARENCE</label>
+                    <label className="field-label">APPARENCE</label>
                     <select
                       value={formData.apparence}
                       onChange={(e) => setFormData({...formData, apparence: e.target.value})}
-                      className="w-full bg-[#FAF9F5] border border-gray-200 rounded-2xl px-4 py-3 text-sm font-semibold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all cursor-pointer"
+                      className="field-select"
                     >
                       <option value="Clair" className="text-gray-950 bg-white">Clair</option>
                       <option value="Sombre" className="text-gray-950 bg-white">Sombre (Bêta)</option>
@@ -242,7 +240,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                   <div className="pt-4">
                     <button 
                       onClick={handleSave}
-                      className="w-full bg-[#1b381c] hover:bg-[#122613] text-white py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-950/20 transition-all font-bold text-sm cursor-pointer"
+                      className="btn-cta"
                     >
                       {/* Floppy disk style verification icon */}
                       <CheckSquare className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -251,7 +249,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                     
                     <button
                       onClick={onLogout}
-                      className="w-full mt-3 bg-rose-50 hover:bg-rose-100/50 text-rose-600 py-3 px-6 rounded-2xl transition-all font-bold text-xs cursor-pointer flex items-center justify-center"
+                      className="w-full mt-3 bg-rose-50 hover:bg-rose-100 text-rose-600 py-3 px-6 rounded-xl border border-rose-100 transition-all font-bold text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center active:scale-[0.99]"
                     >
                       Déconnexion administrative
                     </button>
@@ -259,9 +257,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
                 </div>
               </div>
             </motion.div>
-          </div>
         </div>
       )}
     </AnimatePresence>
+    </ModalPortal>
   );
 };

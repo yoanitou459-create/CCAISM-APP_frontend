@@ -3,17 +3,62 @@
 
 @theme {
   --color-cscm-gold: #E5C35E;
-  --color-cscm-green: #37662B;
-  --color-cscm-dark: #12210E;
+  --color-cscm-green: #4A9B3C;
+  --color-cscm-dark: #1A3D18;
   --color-cscm-light: #FAF9F5;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Outfit", ui-serif, sans-serif;
+
+  /* Couleurs manquantes utilisées dans le projet */
+  --color-gray-55: #f9fafb;
+  --color-gray-150: #e8eaed;
+  --color-gray-250: #dfe1e4;
+  --color-gray-405: #6b7280;
+  --color-gray-450: #9ca3af;
+  --color-gray-505: #737373;
+  --color-gray-850: #1f2937;
+  --color-emerald-850: #064e3b;
+  --color-rose-150: #fecdd3;
+  --color-white-900: #f9fafb;
+
+  --spacing-2\.1: 0.525rem;
+  --spacing-4\.5: 1.125rem;
+
+  --text-2xs: 0.625rem;
+
+  --shadow-3xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
 }
 
 body {
   @apply bg-cscm-dark text-white font-sans;
-  background: radial-gradient(circle at top left, #294A1E 0%, #12210E 100%);
+  background: radial-gradient(circle at top left, #3D7A32 0%, #1A3D18 100%);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Scrollbar élégante à l'échelle de l'app ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(19, 46, 21, 0.25) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(19, 46, 21, 0.22);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(19, 46, 21, 0.4);
+  background-clip: content-box;
 }
 
 .glass-card {
@@ -24,15 +69,414 @@ body {
   @apply w-full bg-white/5 border border-white/20 rounded-2xl px-4 py-3 outline-none focus:border-cscm-gold focus:ring-2 focus:ring-cscm-gold/30 transition-all text-white placeholder:text-white/40;
 }
 
+/* ── Boutons (thème verre) ── */
 .btn-primary {
-  @apply bg-cscm-green hover:bg-[#437A35] text-white px-8 py-3.5 rounded-2xl font-semibold transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-black/15;
+  @apply inline-flex items-center justify-center gap-2
+         bg-gradient-to-b from-[#4A9B3C] to-[#3d8532] hover:from-[#52a844] hover:to-[#459B36]
+         text-white px-6 py-2.5 rounded-2xl font-bold text-sm
+         transition-all duration-200
+         shadow-[0_6px_20px_rgba(74,155,60,0.35)] hover:shadow-[0_10px_28px_rgba(74,155,60,0.45)]
+         border border-white/20
+         hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0
+         cursor-pointer select-none outline-none
+         focus-visible:ring-4 focus-visible:ring-cscm-green/30
+         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[0_6px_20px_rgba(74,155,60,0.35)] disabled:hover:translate-y-0;
 }
 
-/* Scrollbar-none class to hide horizontal scrollbar */
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2
+         bg-white/70 hover:bg-white backdrop-blur-md text-[#1A3D18]
+         px-6 py-2.5 rounded-2xl font-bold text-sm
+         border border-white/80 hover:border-cscm-green/25
+         transition-all duration-200 shadow-sm hover:shadow-md
+         cursor-pointer select-none outline-none
+         focus-visible:ring-4 focus-visible:ring-cscm-green/15
+         active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center gap-2
+         bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700
+         text-white px-6 py-2.5 rounded-2xl font-bold text-sm
+         transition-all duration-200
+         shadow-[0_6px_20px_rgba(225,29,72,0.3)] hover:shadow-[0_10px_28px_rgba(225,29,72,0.4)]
+         border border-white/20
+         cursor-pointer select-none outline-none
+         focus-visible:ring-4 focus-visible:ring-rose-500/25
+         active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-gold {
+  @apply inline-flex items-center justify-center gap-2
+         bg-gradient-to-b from-[#2E4D31] to-[#1A3D18] hover:from-[#355a38] hover:to-[#2E4D31]
+         text-[#ebd078] px-4 py-2.5 rounded-2xl font-bold text-xs
+         border border-[#ebd078]/35 hover:border-[#ebd078]/55
+         transition-all duration-200
+         shadow-[0_6px_18px_rgba(46,77,49,0.3)] hover:shadow-[0_10px_24px_rgba(46,77,49,0.4)]
+         cursor-pointer select-none outline-none
+         focus-visible:ring-4 focus-visible:ring-[#ebd078]/25
+         active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-outline {
+  @apply inline-flex items-center justify-center gap-2
+         bg-white/60 hover:bg-white/90 backdrop-blur-md text-[#1A3D18]
+         px-4 py-2.5 rounded-2xl font-bold text-xs
+         border border-white/70 hover:border-cscm-green/40
+         transition-all duration-200 shadow-sm hover:shadow-md
+         cursor-pointer select-none outline-none
+         focus-visible:ring-4 focus-visible:ring-cscm-green/15
+         active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-icon {
+  @apply inline-flex items-center justify-center p-2.5 rounded-xl
+         border border-white/70 bg-white/70 backdrop-blur-md
+         hover:bg-white hover:border-cscm-green/35 text-[#1A3D18]
+         transition-all duration-200 shadow-sm hover:shadow-md
+         cursor-pointer outline-none
+         focus-visible:ring-4 focus-visible:ring-cscm-green/15
+         active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-icon-gold {
+  @apply inline-flex items-center justify-center p-2.5 rounded-xl
+         border border-amber-200/60 bg-white/70 backdrop-blur-md
+         hover:bg-amber-50 hover:border-amber-300 text-amber-600
+         transition-all duration-200 shadow-sm hover:shadow-md
+         cursor-pointer outline-none
+         focus-visible:ring-4 focus-visible:ring-amber-300/30
+         active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-icon-danger {
+  @apply inline-flex items-center justify-center p-2.5 rounded-xl
+         border border-rose-200/60 bg-white/70 backdrop-blur-md
+         hover:bg-rose-50 hover:border-rose-300 text-rose-700
+         transition-all duration-200 shadow-sm hover:shadow-md
+         cursor-pointer outline-none
+         focus-visible:ring-4 focus-visible:ring-rose-300/30
+         active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-action {
+  @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-[0.98];
+}
+
+.btn-action-blue {
+  @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-[0.98] bg-blue-50/90 hover:bg-blue-100 border border-blue-200/80 text-blue-800 backdrop-blur-sm;
+}
+
+.btn-action-green {
+  @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-[0.98] bg-white/70 hover:bg-cscm-green/10 border border-cscm-green/20 hover:border-cscm-green text-[#1A3D18] hover:text-cscm-green backdrop-blur-sm;
+}
+
+/* ── Tableaux ── */
+.table-wrap {
+  @apply overflow-x-auto rounded-2xl border border-[#132e15]/15 bg-white;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  @apply w-full text-left border-collapse;
+  min-width: 720px;
+}
+
+.data-table thead tr {
+  @apply bg-[#2F6B28] text-white text-[10px] uppercase font-black tracking-wider;
+}
+
+.data-table th {
+  @apply p-4 whitespace-nowrap;
+}
+
+.data-table td {
+  @apply p-4 align-middle;
+}
+
+.data-table tbody {
+  @apply divide-y divide-gray-100 text-sm font-semibold text-[#132e15];
+}
+
+.data-table tbody tr {
+  @apply hover:bg-gray-50/60 transition-colors;
+}
+
+.data-table-bordered {
+  @apply w-full border-collapse text-xs;
+}
+
+.data-table-bordered th,
+.data-table-bordered td {
+  @apply border border-[#132e15]/15 p-3 align-middle;
+}
+
+.data-table-bordered thead tr {
+  @apply bg-[#2F6B28] text-white text-xs font-black uppercase tracking-wider;
+}
+
+/* ── Modales (thème verre) ── */
+/* Portées dans body via ModalPortal — au-dessus de la navbar (z-40) */
+.modal-overlay {
+  @apply fixed inset-0 z-[500] flex items-start justify-center
+         px-3 sm:px-4 pt-[5.25rem] sm:pt-[5.75rem] lg:pt-[6rem] pb-4 sm:pb-6;
+}
+
+.modal-backdrop {
+  @apply absolute inset-0 z-0 bg-[#1A3D18]/55 backdrop-blur-md;
+}
+
+.modal-shell {
+  @apply bg-white/90 backdrop-blur-2xl rounded-[1.75rem] w-full relative z-10
+         shadow-[0_20px_60px_rgba(20,50,30,0.28)] border border-white/60
+         flex flex-col max-h-[calc(100dvh-6.5rem)] sm:max-h-[calc(100dvh-7rem)] overflow-hidden;
+}
+
+.modal-shell-lg {
+  @apply bg-white/90 backdrop-blur-2xl rounded-[1.75rem] w-full max-w-lg relative z-10
+         shadow-[0_20px_60px_rgba(20,50,30,0.28)] border border-white/60
+         flex flex-col max-h-[calc(100dvh-6.5rem)] sm:max-h-[calc(100dvh-7rem)] overflow-hidden;
+}
+
+.modal-shell-md {
+  @apply bg-white/90 backdrop-blur-2xl rounded-[1.75rem] w-full max-w-md relative z-10
+         shadow-[0_20px_60px_rgba(20,50,30,0.28)] border border-white/60
+         flex flex-col max-h-[calc(100dvh-6.5rem)] sm:max-h-[calc(100dvh-7rem)] overflow-hidden;
+}
+
+.modal-body {
+  @apply overflow-y-auto flex-1 p-6 md:p-8;
+}
+
+.modal-header-dark {
+  @apply p-5 md:p-6 bg-gradient-to-r from-[#2E4D31] via-[#355a38] to-[#2E4D31]
+         text-white flex justify-between items-start gap-4 shrink-0
+         border-b border-white/10 relative overflow-hidden;
+}
+
+.modal-header-dark::before {
+  content: "";
+  @apply absolute -top-16 -right-16 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none;
+}
+
+.modal-footer {
+  @apply p-4 md:p-6 border-t border-white/40 bg-white/40 backdrop-blur-md flex flex-wrap gap-3 shrink-0;
+}
+
+/* ── Onglets ── */
+.tab-nav {
+  @apply flex overflow-x-auto gap-2 pb-1;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  @apply inline-flex items-center justify-center gap-1.5 px-3 py-2 md:px-4 md:py-2.5 rounded-xl transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 text-xs font-bold;
+}
+
+.tab-btn-active {
+  @apply bg-[#2F6B28] text-[#ebd078] shadow-sm ring-1 ring-[#ebd078]/25 font-black;
+}
+
+.tab-btn-inactive {
+  @apply text-[#132e15]/70 hover:bg-[#132e15]/5 hover:text-[#132e15] border border-gray-150 bg-[#FAF9F5];
+}
+
+/* ── Utilitaires ── */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
 .scrollbar-none::-webkit-scrollbar {
   display: none !important;
 }
 .scrollbar-none {
-  -ms-overflow-style: none !important;  /* IE and Edge */
-  scrollbar-width: none !important;  /* Firefox */
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* ── Conteneur de page centré (alignement uniforme) ── */
+.page-shell {
+  @apply w-full min-h-full mx-auto;
+}
+
+/* ── Thème verre (glassmorphism) ── */
+.glass-panel {
+  @apply bg-white/55 backdrop-blur-2xl border border-white/50 rounded-[1.75rem] shadow-[0_8px_40px_rgba(30,70,40,0.08)];
+}
+
+.glass-sidebar {
+  background: linear-gradient(180deg, rgba(20, 45, 28, 0.88) 0%, rgba(12, 28, 18, 0.92) 100%);
+  @apply backdrop-blur-2xl border border-white/10 shadow-[0_12px_40px_rgba(10,30,15,0.35)];
+}
+
+.glass-nav-active {
+  @apply bg-white text-[#1A3D18] shadow-lg shadow-black/20;
+}
+
+.app-ambient-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 20%, rgba(140, 200, 120, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(230, 210, 140, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 70% 90%, rgba(160, 190, 140, 0.25) 0%, transparent 50%),
+    linear-gradient(135deg, #eef6ea 0%, #f7f5ef 45%, #f3f0e4 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Design system étendu — surfaces claires, formulaires, auth
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Champs de formulaire (contexte clair) ── */
+.field-label {
+  @apply text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 mb-1.5;
+}
+
+.field-label svg {
+  @apply w-3.5 h-3.5 text-cscm-gold;
+}
+
+.field-input {
+  @apply w-full px-4 py-3 border border-gray-200 rounded-xl outline-none font-sans text-sm text-gray-800 bg-[#f6f7fa] transition-all duration-200
+         placeholder:text-gray-400
+         focus:border-cscm-green focus:bg-white focus:ring-4 focus:ring-cscm-green/10;
+}
+
+.field-select {
+  @apply w-full px-4 py-3 border border-gray-200 rounded-xl outline-none font-sans text-sm text-gray-800 bg-[#f6f7fa] transition-all duration-200 appearance-none cursor-pointer
+         focus:border-cscm-green focus:bg-white focus:ring-4 focus:ring-cscm-green/10;
+}
+
+textarea.field-input {
+  @apply resize-none leading-relaxed;
+}
+
+/* ── Surfaces / cartes (contexte clair) ── */
+.surface-card {
+  @apply bg-white/60 backdrop-blur-xl rounded-3xl border border-white/50 shadow-[0_8px_40px_rgba(30,70,40,0.07)];
+}
+
+.surface-card-hover {
+  @apply transition-all duration-300 hover:shadow-[0_12px_40px_rgba(19,46,21,0.1)] hover:border-cscm-green/25 hover:-translate-y-0.5;
+}
+
+.stat-card {
+  @apply bg-white/60 backdrop-blur-xl rounded-3xl border border-white/50 shadow-[0_8px_40px_rgba(30,70,40,0.07)]
+         transition-all duration-300 hover:shadow-[0_12px_40px_rgba(30,70,40,0.12)] hover:border-white/70 hover:-translate-y-0.5
+         p-5 md:p-6 relative overflow-hidden;
+}
+
+/* ── En-têtes de page ── */
+.page-title {
+  @apply font-serif font-black text-2xl md:text-3xl text-[#12210E] tracking-tight;
+}
+
+.page-subtitle {
+  @apply text-sm font-semibold text-[#12210E]/50 mt-1;
+}
+
+/* ── Badges ── */
+.badge {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider;
+}
+.badge-green {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-cscm-green/10 text-cscm-green border border-cscm-green/20;
+}
+.badge-gold {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200;
+}
+.badge-neutral {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200;
+}
+.badge-danger {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200;
+}
+
+/* ── Full-width CTA (submit) ── */
+.btn-cta {
+  @apply w-full py-3.5 bg-gradient-to-b from-[#4A9B3C] to-[#3d8532] hover:from-[#52a844] hover:to-[#459B36]
+         text-white text-xs font-black uppercase tracking-wider rounded-2xl
+         transition-all duration-200 shadow-[0_8px_24px_rgba(74,155,60,0.35)] hover:shadow-[0_12px_32px_rgba(74,155,60,0.45)]
+         border border-white/20
+         flex items-center justify-center gap-2 cursor-pointer select-none font-sans active:scale-[0.99]
+         outline-none focus-visible:ring-4 focus-visible:ring-cscm-green/25
+         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[0_8px_24px_rgba(74,155,60,0.35)];
+}
+
+/* ═══════════════ Layout d'authentification ═══════════════ */
+.auth-page {
+  @apply min-h-screen bg-gradient-to-br from-[#f5faef] via-[#FAF9F5] to-[#fefbe3]
+         flex flex-col justify-center items-center p-4 md:p-8 relative
+         selection:bg-cscm-green selection:text-white;
+}
+
+.auth-shell {
+  @apply w-full max-w-5xl bg-white rounded-[2.25rem] shadow-[0_30px_80px_-20px_rgba(18,33,14,0.35)]
+         border border-gray-200/70 flex flex-col lg:flex-row overflow-hidden relative z-10;
+}
+
+.auth-form-panel {
+  @apply w-full lg:w-1/2 p-8 md:p-11 flex flex-col justify-center bg-white;
+}
+
+.auth-eyebrow {
+  @apply text-[11px] font-black uppercase tracking-[0.25em] text-cscm-gold;
+}
+
+.auth-title {
+  @apply font-serif font-black text-3xl md:text-[2.5rem] leading-none text-[#12210E] mt-2 tracking-tight;
+}
+
+.auth-subtitle {
+  @apply text-sm font-semibold text-[#12210E]/45 mt-2;
+}
+
+/* Panneau de marque (vert) */
+.auth-brand-panel {
+  @apply w-full lg:w-1/2 relative overflow-hidden p-8 md:p-12 flex flex-col items-center justify-center text-white
+         bg-gradient-to-br from-[#3D7A32] via-[#2F6B28] to-[#1A3D18] min-h-[280px] lg:min-h-full;
+}
+
+.brand-glass {
+  @apply relative z-10 w-full max-w-xs mx-auto text-center rounded-2xl border border-white/10 bg-white/[0.06]
+         backdrop-blur-md px-6 py-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)];
+}
+
+/* Bouton Google */
+.google-btn {
+  @apply w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-gray-200 bg-white
+         text-sm font-bold text-gray-700 transition-all duration-200
+         hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm active:scale-[0.99]
+         outline-none focus-visible:ring-4 focus-visible:ring-cscm-green/15
+         cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Séparateur "OU" */
+.auth-divider {
+  @apply flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 select-none;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  @apply h-px flex-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent;
+}
+
+/* ── Animations utilitaires ── */
+@keyframes cscm-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: cscm-float 6s ease-in-out infinite;
+}
+
+@keyframes cscm-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: cscm-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

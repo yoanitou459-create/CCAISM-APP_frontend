@@ -39,7 +39,6 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   const scrollPositions = React.useRef<Record<string, number>>({});
   const currentPathNameRef = React.useRef(location.pathname);
 
-  // Capture scroll position for the current pathname as the user scrolls
   const handleScroll = () => {
     if (scrollRef.current) {
       scrollPositions.current[currentPathNameRef.current] = scrollRef.current.scrollTop;
@@ -47,23 +46,16 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   };
 
   useEffect(() => {
-    // When path changes, restore the scroll position (or 0 if not visited yet)
     const savedScroll = scrollPositions.current[location.pathname] || 0;
-    
     if (scrollRef.current) {
       scrollRef.current.scrollTop = savedScroll;
     }
-
-    // Update path reference after we applied/restored scroll position
     currentPathNameRef.current = location.pathname;
-
-    // Double check after transitions complete to ensure exact positioning
     const timer = setTimeout(() => {
       if (scrollRef.current) {
         scrollRef.current.scrollTop = savedScroll;
       }
     }, 100);
-
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
@@ -74,9 +66,8 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   const [toastText, setToastText] = useState('');
   const [enterpriseCount, setEnterpriseCount] = useState(0);
 
-  // Collapsible sidebar state stored locally
   const [isExpanded, setIsExpanded] = useState(() => {
-    return localStorage.getItem('sidebar_expanded') !== 'false';
+    return localStorage.getItem('sidebar_expanded') === 'true';
   });
 
   const [user, setUser] = useState(() => {
@@ -93,8 +84,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   };
 
   const updateCountState = () => {
-    const list = getStoredEnterprises();
-    setEnterpriseCount(list.length);
+    setEnterpriseCount(getStoredEnterprises().length);
   };
 
   const toggleSidebar = () => {
@@ -103,16 +93,6 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
       localStorage.setItem('sidebar_expanded', String(next));
       return next;
     });
-  };
-
-  const handleAddEnterprise = (newEnt: any) => {
-    const current = getStoredEnterprises();
-    saveStoredEnterprises([...current, newEnt]);
-    setToastText("L'entreprise a été ajoutée avec succès !");
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-    // Reload state and trigger event
-    window.dispatchEvent(new Event('enterprises_updated'));
   };
 
   useEffect(() => {
@@ -128,7 +108,6 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   useEffect(() => {
     updateCountState();
     loadProfile();
-    // Listen for storage changes
     window.addEventListener('enterprises_updated', updateCountState);
     window.addEventListener('user_profile_updated', loadProfile);
     return () => {
@@ -161,569 +140,504 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
     setToastText("Données Excel importées et ajoutées !");
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
-    // Reload components that listen to events
     window.dispatchEvent(new Event('enterprises_updated'));
   };
 
+  const roleLabel = user.role === 'ADMIN' ? 'Administrateur' : user.role === 'MODERATEUR' ? 'Modérateur' : 'Membre';
+
   const navigationItems = [
-    { 
-      label: 'Tableau de bord', 
-      path: '/dashboard', 
-      icon: LayoutDashboard,
-      badge: null
-    },
-    { 
-      label: 'Liste des Entreprises', 
-      path: '/enterprises', 
-      icon: Building2,
-      badge: enterpriseCount > 0 ? `${enterpriseCount}` : null
-    },
+    { label: 'Tableau de bord', path: '/dashboard', icon: LayoutDashboard, badge: null as string | null },
+    { label: 'Liste des Entreprises', path: '/enterprises', icon: Building2, badge: enterpriseCount > 0 ? `${enterpriseCount}` : null },
     ...(user.role === 'ADMIN' ? [
-      { 
-        label: 'Suivi des Cotisations', 
-        path: '/cotisations', 
-        icon: Coins,
-        badge: null
-      },
-      {
-        label: 'Gestion Utilisateurs',
-        path: '/users',
-        icon: Users,
-        badge: null
-      }
+      { label: 'Suivi des Cotisations', path: '/cotisations', icon: Coins, badge: null as string | null },
+      { label: 'Gestion Utilisateurs', path: '/users', icon: Users, badge: null as string | null },
     ] : [])
   ];
 
+  const NavIconButton = ({
+    active,
+    onClick,
+    title,
+    children,
+    expanded,
+    label,
+    badge,
+  }: {
+    active: boolean;
+    onClick: () => void;
+    title: string;
+    children: React.ReactNode;
+    expanded?: boolean;
+    label?: string;
+    badge?: string | null;
+  }) => (
+    <button
+      onClick={onClick}
+      title={title}
+      className={`w-full flex items-center transition-all duration-300 cursor-pointer select-none ${
+        expanded ? 'justify-between gap-2 px-3 py-2.5 rounded-2xl' : 'justify-center p-0'
+      } ${
+        active
+          ? expanded
+            ? 'glass-nav-active font-bold'
+            : ''
+          : expanded
+            ? 'text-white/65 hover:text-white hover:bg-white/10 rounded-2xl'
+            : ''
+      }`}
+    >
+      <div className={`flex items-center ${expanded ? 'gap-3 min-w-0' : ''}`}>
+        <span
+          className={`inline-flex items-center justify-center transition-all duration-300 ${
+            expanded
+              ? `w-9 h-9 rounded-xl shrink-0 ${active ? 'bg-[#1A3D18]/8 text-white' : 'bg-white/5 text-white/70'}`
+              : `w-11 h-11 rounded-2xl ${active ? 'glass-nav-active' : 'text-white/70 hover:bg-white/10 hover:text-white'}`
+          }`}
+        >
+          {children}
+        </span>
+        {expanded && label && (
+          <span className={`text-xs truncate ${active ? 'text-[#1A3D18]' : ''}`}>{label}</span>
+        )}
+      </div>
+      {expanded && badge && (
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+          active ? 'bg-[#1A3D18]/10 text-[#1A3D18]' : 'bg-white/15 text-white/80'
+        }`}>
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+
   return (
     <SidebarLayoutContext.Provider value={true}>
-      <div className="h-[100dvh] w-full overflow-hidden bg-gradient-to-br from-[#f5faef] via-[#FAF9F5] to-[#fefbe3] flex font-sans">
-      {/* Toast Alert */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -40, x: '-50%' }}
-            animate={{ opacity: 1, y: 20, x: '-50%' }}
-            exit={{ opacity: 0, y: -40, x: '-50%' }}
-            className="fixed top-4 left-1/2 z-[100] bg-cscm-dark border border-cscm-gold/30 text-white rounded-2xl px-6 py-4 shadow-2xl flex items-center gap-3"
-          >
-            <div className="w-6 h-6 rounded-lg bg-cscm-gold/15 text-cscm-gold flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <span className="font-sans text-sm font-semibold">{toastText}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Desktop Sidebar (Resizing according to isExpanded) */}
-      <aside className={`hidden lg:flex flex-col transition-all duration-300 ${isExpanded ? 'w-72' : 'w-20'} bg-[#0a1208] border-r border-[#1a3315] text-white shrink-0 h-screen sticky top-0 relative z-30 overflow-hidden`}>
-        {/* Glow Effects */}
-        <div className="absolute -left-20 -top-20 w-44 h-44 rounded-full bg-cscm-green/25 blur-3xl pointer-events-none" />
-        <div className="absolute -right-20 -bottom-20 w-44 h-44 rounded-full bg-cscm-gold/15 blur-3xl pointer-events-none" />
-
-        {/* Sidebar Header Brand */}
-        <div className={`p-6 border-b border-[#112310] relative z-10 flex items-center ${isExpanded ? 'gap-3 justify-start' : 'justify-center'}`}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cscm-green to-[#12210e] flex items-center justify-center border border-white/10 shadow-lg shrink-0 overflow-hidden relative">
-            <img 
-              src={logoImg} 
-              alt="Logo" 
-              className="w-full h-full object-contain p-1" 
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-            <Building2 className="w-5 h-5 text-cscm-gold absolute -z-10" />
-          </div>
-          {isExpanded && (
-            <div className="overflow-hidden">
-              <h1 className="text-base font-serif font-black tracking-wide text-white truncate">Portail CSCM</h1>
-              <p className="text-[8px] text-cscm-gold uppercase font-black tracking-widest leading-none mt-0.5 truncate">Chambre Sénégalaise</p>
-            </div>
-          )}
+      <div className="h-[100dvh] w-full overflow-hidden app-ambient-bg flex flex-col font-sans relative">
+        {/* Ambient blobs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute top-[-10%] left-[-5%] w-[45%] h-[45%] rounded-full bg-[#a8d49a]/40 blur-3xl" />
+          <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-[#e8d9a0]/35 blur-3xl" />
+          <div className="absolute top-[40%] right-[20%] w-[25%] h-[25%] rounded-full bg-white/40 blur-3xl" />
         </div>
 
-        {/* User Mini Card (Clicking triggers Profile update) */}
-        <div 
-          onClick={() => setIsProfileOpen(true)}
-          className={`p-4 mx-3 mt-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer relative z-10 flex items-center ${isExpanded ? 'gap-3.5 mx-4 p-5 justify-start' : 'justify-center'}`}
-          title="Mon Profil Utilisateur"
-        >
-          <div className="w-10 h-10 rounded-full border-2 border-cscm-gold/40 bg-white/5 p-0.5 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-cscm-green/20">
-            {profilePhoto ? (
-              <img src={profilePhoto} alt="Profil" className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <UserCircle className="w-full h-full text-cscm-gold p-0.5" />
-            )}
-          </div>
-          {isExpanded && (
-            <div className="overflow-hidden">
-              <h4 className="text-xs font-bold text-white truncate">{user.prenom} {user.nom}</h4>
-              <p className="text-[8px] text-cscm-gold font-black uppercase tracking-wider mt-0.5 bg-cscm-green/20 px-1.5 py-0.5 rounded inline-block">
-                Role: {user.role || 'MEMBRE'}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Main Nav Items */}
-        <nav className="flex-1 px-3 py-6 space-y-2 relative z-10 overflow-y-auto">
-          {isExpanded && (
-            <span className="px-4 text-[9px] font-black uppercase text-white/30 tracking-widest block mb-3">Navigation</span>
-          )}
-          
-          {navigationItems.map(item => {
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center ${isExpanded ? 'justify-between px-4' : 'justify-center p-3'} py-3 rounded-2xl transition-all duration-300 font-sans text-sm font-semibold select-none cursor-pointer ${
-                  isActive 
-                    ? 'bg-cscm-green text-white shadow-lg shadow-cscm-green/20 border-l-4 border-cscm-gold pl-3' 
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
-                }`}
-                title={item.label}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-cscm-gold' : 'text-white/40'}`} />
-                  {isExpanded && <span className="text-xs">{item.label}</span>}
-                </div>
-                {isExpanded && item.badge && (
-                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-[#214118] text-cscm-gold' : 'bg-white/10 text-white/80'
-                  }`}>
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-
-          {user.role !== 'MEMBRE' && (
-            <div className="pt-4 mt-4 border-t border-white/10 space-y-1.5">
-              {isExpanded && (
-                <span className="px-4 text-[9px] font-black uppercase text-white/30 tracking-widest block mb-2">Actions de données</span>
-              )}
-              
-              <button
-                onClick={() => navigate('/enterprises/add')}
-                className={`w-full flex items-center ${isExpanded ? 'gap-3 px-4' : 'justify-center p-3'} py-3 rounded-2xl font-sans text-xs font-semibold cursor-pointer text-left transition-all ${
-                  location.pathname === '/enterprises/add'
-                    ? 'bg-cscm-green text-white shadow-lg shadow-cscm-green/20 border-l-4 border-cscm-gold pl-3'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
-                }`}
-                title="Ajouter une Entreprise"
-              >
-                <Plus className="w-5 h-5 text-cscm-gold shrink-0" />
-                {isExpanded && <span>Ajouter Entreprise</span>}
-              </button>
-
-              <button
-                onClick={() => setIsImportOpen(true)}
-                className={`w-full flex items-center ${isExpanded ? 'gap-3 px-4' : 'justify-center p-3'} py-3 rounded-2xl text-white/70 hover:text-white hover:bg-white/5 font-sans text-xs font-semibold cursor-pointer text-left transition-all`}
-                title="Importation Excel / CSV"
-              >
-                <FileSpreadsheet className="w-5 h-5 text-emerald-400 shrink-0" />
-                {isExpanded && <span>Importer Excel</span>}
-              </button>
-
-              <button
-                onClick={triggerExport}
-                className={`w-full flex items-center ${isExpanded ? 'gap-3 px-4' : 'justify-center p-3'} py-3 rounded-2xl text-white/70 hover:text-white hover:bg-white/5 font-sans text-xs font-semibold cursor-pointer text-left transition-all`}
-                title="Exportation de la Liste"
-              >
-                <Download className="w-5 h-5 text-cscm-gold shrink-0" />
-                {isExpanded && <span>Exporter Liste</span>}
-              </button>
-
-              {user.role === 'ADMIN' && (
-                <a
-                  href="https://console.firebase.google.com/project/aesthetic-computer-mjhcx/firestore/databases/ai-studio-1f26c2df-bc6a-4a47-bfae-9a0c0efaad81/data"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-full flex items-center ${isExpanded ? 'gap-3 px-4' : 'justify-center p-3'} py-3 rounded-2xl text-orange-400 hover:text-white hover:bg-amber-500/10 font-sans text-xs font-black cursor-pointer text-left transition-all`}
-                  title="Base de données Firebase (Firestore)"
-                >
-                  <Sparkles className="w-5 h-5 text-[#ffa600] shrink-0 fill-[#ffa600]/20 animate-pulse" />
-                  {isExpanded && <span>Firebase Database</span>}
-                </a>
-              )}
-            </div>
-          )}
-        </nav>
-
-        {/* Expand / Collapse Toggle row */}
-        <div className="px-2 py-2 border-t border-white/5 bg-white/5 relative z-10 shrink-0">
-          <button
-            onClick={toggleSidebar}
-            className={`w-full flex items-center ${isExpanded ? 'justify-start gap-3 px-4' : 'justify-center'} py-2 rounded-xl text-white/50 hover:text-white transition-all duration-200 text-xs font-bold cursor-pointer`}
-            title={isExpanded ? "Réduire le menu" : "Agrandir le menu"}
-          >
-            {isExpanded ? (
-              <>
-                <ChevronLeft className="w-4 h-4 text-cscm-gold shrink-0" />
-                <span className="text-[10px]">Plier le menu</span>
-              </>
-            ) : (
-              <ChevronRight className="w-5 h-5 text-cscm-gold shrink-0" />
-            )}
-          </button>
-        </div>
-
-        {/* Sidebar Logout Footer */}
-        <div className="p-3 border-t border-[#1a3116] relative z-10 bg-[#070d06] shrink-0">
-          <button
-            onClick={handleLogout}
-            className={`w-full flex items-center ${isExpanded ? 'gap-3 px-4 py-3' : 'justify-center p-3'} rounded-xl text-rose-400 hover:text-white hover:bg-rose-500/10 font-bold text-xs tracking-wide transition-colors cursor-pointer`}
-            title="Déconnexion"
-          >
-            <LogOut className="w-5 h-5 shrink-0" />
-            {isExpanded && <span>Déconnexion</span>}
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Container including Top Header Bar */}
-      <div className="flex-1 flex flex-col min-w-0 h-[100dvh] relative overflow-hidden">
-        
-        {/* Top Header Bar for Desktop - Elegant & High Contrast */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-white/95 backdrop-blur-xs border-b border-gray-200/85 shadow-xs shrink-0 sticky top-0 z-40">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse border border-white" />
-              <p className="text-xs font-semibold text-gray-600 bg-gray-55 bg-gray-100 px-3 py-1 rounded-full border border-gray-150">
-                Bienvenue <b className="text-[#132e15]">{user.prenom} {user.nom}</b> | {user.role === 'ADMIN' ? 'Administrateur CSCM' : user.role === 'MODERATEUR' ? 'Modérateur CSCM' : 'Membre CSCM'}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-100/60">
-              Chambre Active
-            </span>
-
-            <button 
-              onClick={() => setIsProfileOpen(true)}
-              className="flex items-center gap-2 bg-[#1b381c] hover:bg-[#122613] text-white px-4 py-2 rounded-xl text-xs font-extrabold tracking-wide transition-all shadow-md cursor-pointer shrink-0 select-none border border-white/10"
-            >
-              <Settings className="w-3.5 h-3.5 text-cscm-gold" />
-              <span>Réglages Profil</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Mobile Header Bar */}
-        <header className="lg:hidden bg-[#070d06]/95 backdrop-blur-xs border-b border-[#112310] text-white p-4 flex items-center justify-between shrink-0 sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsMobileOpen(true)}
-              className="p-2 hover:bg-white/10 rounded-xl transition-colors shrink-0"
-            >
-              <Menu className="w-6 h-6 text-cscm-gold" />
-            </button>
-            <div className="text-left">
-              <h1 className="text-base font-serif font-black leading-none">CSCM</h1>
-              <p className="text-[7px] text-cscm-gold uppercase tracking-widest font-black mt-0.5">Chambre Sénégalaise au Maroc</p>
-            </div>
-          </div>
-
-          <div 
-            onClick={() => setIsProfileOpen(true)}
-            className="w-8 h-8 rounded-full border border-cscm-gold/40 bg-white/5 p-0.5 flex items-center justify-center shrink-0 cursor-pointer overflow-hidden ring-2 ring-cscm-green/20"
-          >
-            {profilePhoto ? (
-              <img src={profilePhoto} alt="Profil" className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <UserCircle className="w-full h-full text-cscm-gold" />
-            )}
-          </div>
-        </header>
-
-        {/* Mobile Navigation Drawer Backdrop */}
+        {/* Toast */}
         <AnimatePresence>
-          {isMobileOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.6 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsMobileOpen(false)}
-                className="fixed inset-0 bg-black z-50 lg:hidden"
-              />
-              
-              <motion.aside
-                initial={{ x: '-100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '-100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed inset-y-0 left-0 w-80 bg-[#0a1208] text-white z-50 lg:hidden flex flex-col"
-              >
-                <div className="p-6 border-b border-[#112310] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-cscm-green flex items-center justify-center shrink-0 overflow-hidden relative">
-                      <img 
-                        src={logoImg} 
-                        alt="Logo" 
-                        className="w-full h-full object-contain p-1" 
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                      <Building2 className="w-5 h-5 text-cscm-gold absolute -z-10" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-serif font-black">CSCM</h2>
-                      <p className="text-[8px] text-cscm-gold uppercase font-black tracking-widest mt-0.5">Sénégal au Maroc</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setIsMobileOpen(false)}
-                    className="p-2 hover:bg-white/10 rounded-xl text-white/70 hover:text-white"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div 
-                  onClick={() => {
-                    setIsProfileOpen(true);
-                    setIsMobileOpen(false);
-                  }}
-                  className="p-6 flex items-center gap-3 border-b border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
-                  title="Modifier mon profil"
-                >
-                  <div className="w-10 h-10 rounded-full border-2 border-cscm-gold/40 bg-white/5 p-0.5 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-cscm-green/20">
-                    {profilePhoto ? (
-                      <img src={profilePhoto} alt="Profil" className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      <UserCircle className="w-full h-full text-cscm-gold p-0.5" />
-                    )}
-                  </div>
-                  <div className="overflow-hidden">
-                    <h4 className="text-sm font-bold text-white truncate">{user.prenom} {user.nom}</h4>
-                    <p className="text-[10px] text-cscm-gold/90 font-bold uppercase tracking-wider">{user.email}</p>
-                  </div>
-                </div>
-
-                <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-                  {navigationItems.map(item => {
-                    const isActive = location.pathname === item.path;
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.path}
-                        onClick={() => {
-                          navigate(item.path);
-                          setIsMobileOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all font-sans text-sm font-semibold select-none ${
-                          isActive 
-                            ? 'bg-cscm-green text-white shadow-lg shadow-cscm-green/15 border-l-4 border-cscm-gold pl-3' 
-                            : 'text-white/70 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className={`w-5 h-5 ${isActive ? 'text-cscm-gold' : 'text-white/40'}`} />
-                          <span>{item.label}</span>
-                        </div>
-                        {item.badge && (
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/15 text-white">
-                            {item.badge}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-
-                  {user.role !== 'MEMBRE' && (
-                    <div className="pt-6 mt-6 border-t border-white/10 space-y-1.5">
-                      <button
-                        onClick={() => {
-                          navigate('/enterprises/add');
-                          setIsMobileOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/70 hover:text-white hover:bg-white/5 font-sans text-sm font-semibold cursor-pointer text-left transition-colors"
-                      >
-                        <Plus className="w-5 h-5 text-cscm-gold shrink-0" />
-                        <span>Ajouter une Entreprise</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setIsImportOpen(true);
-                          setIsMobileOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/70 hover:text-white hover:bg-white/5 font-sans text-sm font-semibold cursor-pointer text-left transition-colors"
-                      >
-                        <FileSpreadsheet className="w-5 h-5 text-emerald-400 shrink-0" />
-                        <span>Importation Excel / CSV</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          triggerExport();
-                          setIsMobileOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/70 hover:text-white hover:bg-white/5 font-sans text-xs font-semibold cursor-pointer text-left transition-colors"
-                      >
-                        <Download className="w-5 h-5 text-cscm-gold shrink-0" />
-                        <span>Exportation de la Liste</span>
-                      </button>
-
-                      {user.role === 'ADMIN' && (
-                        <a
-                          href="https://console.firebase.google.com/project/aesthetic-computer-mjhcx/firestore/databases/ai-studio-1f26c2df-bc6a-4a47-bfae-9a0c0efaad81/data"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => {
-                            setIsMobileOpen(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-orange-400 hover:text-white hover:bg-amber-500/10 font-sans text-sm font-black cursor-pointer text-left transition-colors"
-                        >
-                          <Sparkles className="w-5 h-5 text-[#ffa600] shrink-0 fill-[#ffa600]/20" />
-                          <span>Console Firebase DB</span>
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </nav>
-
-                <div className="p-4 border-t border-white/5 bg-[#0e180b]">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-4 rounded-xl text-rose-400 hover:text-white hover:bg-rose-500/10 font-bold text-sm tracking-wide transition-colors"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    <span>Déconnexion</span>
-                  </button>
-                </div>
-              </motion.aside>
-            </>
+          {showToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -40, x: '-50%' }}
+              animate={{ opacity: 1, y: 20, x: '-50%' }}
+              exit={{ opacity: 0, y: -40, x: '-50%' }}
+              className="fixed top-4 left-1/2 z-[100] glass-panel !rounded-2xl px-6 py-4 flex items-center gap-3 text-[#1A3D18]"
+            >
+              <div className="w-6 h-6 rounded-lg bg-cscm-green/15 text-cscm-green flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-semibold">{toastText}</span>
+            </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Dynamic page main container - Independent Scrollable Area */}
-        {children ? (
-          <div className="flex-1 relative overflow-hidden w-full h-full">
-            {children}
-          </div>
-        ) : (
-          <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto pb-24 lg:pb-6 relative scroll-smooth">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full h-full"
+        {/* ═══ NAVBAR VERRE VERT (pleine largeur) ═══ */}
+        <header className="relative z-40 shrink-0 mx-3 mt-3 lg:mx-4 lg:mt-4">
+          <div className="flex items-center justify-between gap-4 px-4 py-3 lg:px-6 lg:py-3.5 rounded-[1.5rem] bg-gradient-to-r from-[#2E4D31] via-[#355a38] to-[#2E4D31] shadow-[0_10px_40px_rgba(46,77,49,0.35)] border border-white/10 backdrop-blur-xl">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={() => setIsMobileOpen(true)}
+                className="lg:hidden p-2 rounded-xl bg-white/10 hover:bg-white/15 text-white transition-colors"
               >
-                <Outlet />
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        )}
-      </div>
+                <Menu className="w-5 h-5" />
+              </button>
 
-      {/* Mobile Bottom Navigation Bar (Instagram/Facebook format) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070d06]/95 backdrop-blur-md border-t border-[#112310] pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.4)]">
-        <div className="flex justify-around items-center h-16 px-2">
-          {/* Dashboard tab */}
-          <button
-            onClick={() => navigate('/dashboard')}
-            className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors ${
-              location.pathname === '/dashboard' ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
-            }`}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Accueil</span>
-          </button>
+              <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-white flex items-center justify-center shadow-md shrink-0 overflow-hidden">
+                <img
+                  src={logoImg}
+                  alt="Logo CSCM"
+                  className="w-full h-full object-contain p-1"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              </div>
 
-          {/* Enterprises tab */}
-          <button
-            onClick={() => navigate('/enterprises')}
-            className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors relative ${
-              location.pathname === '/enterprises' ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
-            }`}
-          >
-            <Building2 className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Membres</span>
-            {enterpriseCount > 0 && (
-              <span className="absolute top-1 right-5 bg-cscm-gold text-[#0a1208] text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
-                {enterpriseCount}
+              <div className="leading-tight min-w-0">
+                <p className="text-sm lg:text-base font-extrabold text-white truncate">
+                  Bienvenue {user.prenom || 'System'}
+                </p>
+                <p className="text-[10px] lg:text-xs font-semibold text-white/70 truncate">
+                  {roleLabel}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-white/10 text-white/90 border border-white/15">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                Chambre Active
               </span>
-            )}
-          </button>
 
-          {/* Plus button (aligned and simple like the other buttons) */}
-          {user.role !== 'MEMBRE' ? (
-            <button
-              onClick={() => navigate('/enterprises/add')}
-              className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors ${
-                location.pathname === '/enterprises/add' ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
-              }`}
-              title="Ajouter une entreprise"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="text-[10px] tracking-tight">Ajouter</span>
-            </button>
-          ) : null}
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className="inline-flex items-center gap-2 bg-[#1e3a22]/80 hover:bg-[#162a19] text-white px-3.5 py-2 lg:px-4 rounded-full text-xs font-bold tracking-wide transition-all border border-white/20 shadow-inner cursor-pointer"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Réglages</span>
+              </button>
 
-          {/* 4th Button: Cotisations for Admin, Profile for everyone else (ensures max 5 items for perfect layout symmetry) */}
-          {user.role === 'ADMIN' ? (
-            <button
-              onClick={() => navigate('/cotisations')}
-              className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors ${
-                location.pathname === '/cotisations' ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <Coins className="w-5 h-5" />
-              <span className="text-[10px] tracking-tight">Suivi</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsProfileOpen(true)}
-              className={`flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors ${
-                isProfileOpen ? 'text-cscm-gold font-bold' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <div className="w-6 h-6 rounded-full border border-cscm-gold/40 bg-white/5 p-0.5 flex items-center justify-center overflow-hidden ring-2 ring-cscm-green/20">
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className="w-9 h-9 rounded-full border-2 border-white/30 bg-white/10 p-0.5 overflow-hidden hover:border-white/50 transition-all cursor-pointer"
+                title="Profil"
+              >
                 {profilePhoto ? (
                   <img src={profilePhoto} alt="Profil" className="w-full h-full rounded-full object-cover" />
                 ) : (
-                  <UserCircle className="w-full h-full text-cscm-gold" />
+                  <UserCircle className="w-full h-full text-white/90" />
                 )}
-              </div>
-              <span className="text-[10px] tracking-tight">Profil</span>
-            </button>
-          )}
+              </button>
+            </div>
+          </div>
+        </header>
 
-          {/* 5th Button: Drawer trigger for other action buttons */}
-          <button
-            onClick={() => setIsMobileOpen(true)}
-            className="flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 text-white/60 hover:text-white transition-colors"
+        {/* ═══ CORPS : sidebar flottante + contenu ═══ */}
+        <div className="flex-1 flex min-h-0 relative z-10 px-3 pb-3 lg:px-4 lg:pb-4 gap-3 lg:gap-4 pt-3">
+
+          {/* Sidebar verre sombre flottante (desktop) */}
+          <aside
+            className={`hidden lg:flex flex-col glass-sidebar rounded-[1.75rem] transition-all duration-300 shrink-0 overflow-hidden ${
+              isExpanded ? 'w-64' : 'w-[4.5rem]'
+            }`}
           >
-            <Menu className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Menu</span>
-          </button>
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[1.75rem]">
+              <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-cscm-green/20 blur-2xl" />
+              <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full bg-cscm-gold/15 blur-2xl" />
+            </div>
+
+            <div className={`relative z-10 flex flex-col h-full py-4 ${isExpanded ? 'px-3' : 'px-2.5'}`}>
+              {/* Brand mini */}
+              {isExpanded && (
+                <div className="px-2 mb-4">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cscm-gold/80">CSCM</p>
+                  <p className="text-xs font-bold text-white/90 mt-0.5">Navigation</p>
+                </div>
+              )}
+
+              <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-none">
+                {navigationItems.map(item => {
+                  const isActive = location.pathname === item.path ||
+                    (item.path === '/enterprises' && location.pathname.startsWith('/enterprises/') && location.pathname !== '/enterprises/add');
+                  const Icon = item.icon;
+                  return (
+                    <NavIconButton
+                      key={item.path}
+                      active={isActive}
+                      onClick={() => navigate(item.path)}
+                      title={item.label}
+                      expanded={isExpanded}
+                      label={item.label}
+                      badge={item.badge}
+                    >
+                      <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                    </NavIconButton>
+                  );
+                })}
+
+                {user.role !== 'MEMBRE' && (
+                  <div className={`${isExpanded ? 'pt-3 mt-2 border-t border-white/10' : 'pt-2'} space-y-2`}>
+                    <NavIconButton
+                      active={location.pathname === '/enterprises/add'}
+                      onClick={() => navigate('/enterprises/add')}
+                      title="Ajouter une Entreprise"
+                      expanded={isExpanded}
+                      label="Ajouter Entreprise"
+                    >
+                      <Plus className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                    </NavIconButton>
+                    <NavIconButton
+                      active={false}
+                      onClick={() => setIsImportOpen(true)}
+                      title="Importer Excel"
+                      expanded={isExpanded}
+                      label="Importer Excel"
+                    >
+                      <FileSpreadsheet className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                    </NavIconButton>
+                    <NavIconButton
+                      active={false}
+                      onClick={triggerExport}
+                      title="Exporter Liste"
+                      expanded={isExpanded}
+                      label="Exporter Liste"
+                    >
+                      <Download className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                    </NavIconButton>
+                    {user.role === 'ADMIN' && (
+                      <a
+                        href="https://console.firebase.google.com/project/aesthetic-computer-mjhcx/firestore/databases/ai-studio-1f26c2df-bc6a-4a47-bfae-9a0c0efaad81/data"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Firebase Database"
+                        className={`w-full flex items-center transition-all ${
+                          isExpanded ? 'gap-3 px-3 py-2.5 rounded-2xl text-amber-300/80 hover:bg-white/10' : 'justify-center'
+                        }`}
+                      >
+                        <span className={`inline-flex items-center justify-center ${isExpanded ? 'w-9 h-9 rounded-xl bg-white/5' : 'w-11 h-11 rounded-2xl text-amber-300/80 hover:bg-white/10'}`}>
+                          <Sparkles className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                        </span>
+                        {isExpanded && <span className="text-xs font-semibold">Firebase</span>}
+                      </a>
+                    )}
+                  </div>
+                )}
+              </nav>
+
+              {/* Footer actions sidebar */}
+              <div className={`relative z-10 space-y-2 pt-3 mt-2 border-t border-white/10 ${isExpanded ? '' : 'flex flex-col items-center'}`}>
+                <button
+                  onClick={toggleSidebar}
+                  title={isExpanded ? 'Réduire' : 'Agrandir'}
+                  className={`flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all cursor-pointer ${
+                    isExpanded ? 'w-full gap-2 px-3 py-2 rounded-xl text-xs font-bold' : 'w-11 h-11 rounded-2xl'
+                  }`}
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronLeft className="w-4 h-4" />
+                      <span>Réduire</span>
+                    </>
+                  ) : (
+                    <ChevronRight className="w-5 h-5" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setIsProfileOpen(true)}
+                  title="Réglages"
+                  className={`flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all cursor-pointer ${
+                    isExpanded ? 'w-full gap-2 px-3 py-2 rounded-xl text-xs font-bold' : 'w-11 h-11 rounded-2xl'
+                  }`}
+                >
+                  <Settings className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                  {isExpanded && <span>Réglages</span>}
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  title="Déconnexion"
+                  className={`flex items-center justify-center text-rose-300/70 hover:text-rose-200 hover:bg-rose-500/15 transition-all cursor-pointer ${
+                    isExpanded ? 'w-full gap-2 px-3 py-2 rounded-xl text-xs font-bold' : 'w-11 h-11 rounded-2xl'
+                  }`}
+                >
+                  <LogOut className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                  {isExpanded && <span>Déconnexion</span>}
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Zone contenu */}
+          <div className="flex-1 flex flex-col min-w-0 min-h-0 relative overflow-hidden rounded-[1.5rem]">
+            {/* Mobile drawer */}
+            <AnimatePresence>
+              {isMobileOpen && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.5 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsMobileOpen(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
+                  />
+                  <motion.aside
+                    initial={{ x: '-100%' }}
+                    animate={{ x: 0 }}
+                    exit={{ x: '-100%' }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="fixed inset-y-3 left-3 w-[min(20rem,85vw)] glass-sidebar text-white z-50 lg:hidden flex flex-col rounded-[1.75rem] overflow-hidden"
+                  >
+                    <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center overflow-hidden">
+                          <img src={logoImg} alt="Logo" className="w-full h-full object-contain p-1" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-serif font-black">CSCM</h2>
+                          <p className="text-[8px] text-cscm-gold uppercase font-black tracking-widest">Sénégal au Maroc</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setIsMobileOpen(false)} className="p-2 hover:bg-white/10 rounded-xl text-white/70">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div
+                      onClick={() => { setIsProfileOpen(true); setIsMobileOpen(false); }}
+                      className="p-5 flex items-center gap-3 border-b border-white/10 hover:bg-white/5 cursor-pointer"
+                    >
+                      <div className="w-10 h-10 rounded-full border border-white/20 bg-white/10 overflow-hidden">
+                        {profilePhoto ? (
+                          <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
+                        ) : (
+                          <UserCircle className="w-full h-full text-white/80 p-0.5" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold truncate">{user.prenom} {user.nom}</h4>
+                        <p className="text-[10px] text-cscm-gold/90 font-bold uppercase truncate">{user.email}</p>
+                      </div>
+                    </div>
+
+                    <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+                      {navigationItems.map(item => {
+                        const isActive = location.pathname === item.path;
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.path}
+                            onClick={() => { navigate(item.path); setIsMobileOpen(false); }}
+                            className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-sm font-semibold transition-all ${
+                              isActive ? 'glass-nav-active' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Icon className="w-5 h-5" strokeWidth={1.75} />
+                              <span>{item.label}</span>
+                            </div>
+                            {item.badge && (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-black/10' : 'bg-white/15'}`}>
+                                {item.badge}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+
+                      {user.role !== 'MEMBRE' && (
+                        <div className="pt-4 mt-2 border-t border-white/10 space-y-1.5">
+                          <button
+                            onClick={() => { navigate('/enterprises/add'); setIsMobileOpen(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-white/70 hover:bg-white/10 text-sm font-semibold"
+                          >
+                            <Plus className="w-5 h-5" /> Ajouter une Entreprise
+                          </button>
+                          <button
+                            onClick={() => { setIsImportOpen(true); setIsMobileOpen(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-white/70 hover:bg-white/10 text-sm font-semibold"
+                          >
+                            <FileSpreadsheet className="w-5 h-5" /> Importation Excel
+                          </button>
+                          <button
+                            onClick={() => { triggerExport(); setIsMobileOpen(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-white/70 hover:bg-white/10 text-sm font-semibold"
+                          >
+                            <Download className="w-5 h-5" /> Exportation
+                          </button>
+                        </div>
+                      )}
+                    </nav>
+
+                    <div className="p-3 border-t border-white/10">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-rose-300 hover:bg-rose-500/15 font-bold text-sm"
+                      >
+                        <LogOut className="w-5 h-5" /> Déconnexion
+                      </button>
+                    </div>
+                  </motion.aside>
+                </>
+              )}
+            </AnimatePresence>
+
+            {/* Contenu scrollable */}
+            {children ? (
+              <div className="flex-1 relative overflow-y-auto pb-24 lg:pb-4 w-full h-full">
+                {children}
+              </div>
+            ) : (
+              <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto pb-24 lg:pb-4 relative">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-full h-full"
+                  >
+                    <Outlet />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Footer mobile verre */}
+        <div className="lg:hidden fixed bottom-3 left-3 right-3 z-30">
+          <div className="glass-panel !rounded-[1.5rem] !bg-white/70 flex justify-around items-center h-16 px-2 border border-white/60 shadow-[0_8px_30px_rgba(30,70,40,0.12)]">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${
+                location.pathname === '/dashboard' ? 'text-[#2E4D31] font-bold' : 'text-[#2E4D31]/45 hover:text-[#2E4D31]'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" strokeWidth={1.75} />
+              <span className="text-[10px]">Accueil</span>
+            </button>
+            <button
+              onClick={() => navigate('/enterprises')}
+              className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors relative ${
+                location.pathname === '/enterprises' ? 'text-[#2E4D31] font-bold' : 'text-[#2E4D31]/45 hover:text-[#2E4D31]'
+              }`}
+            >
+              <Building2 className="w-5 h-5" strokeWidth={1.75} />
+              <span className="text-[10px]">Membres</span>
+            </button>
+            {user.role !== 'MEMBRE' && (
+              <button
+                onClick={() => navigate('/enterprises/add')}
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${
+                  location.pathname === '/enterprises/add' ? 'text-[#2E4D31] font-bold' : 'text-[#2E4D31]/45 hover:text-[#2E4D31]'
+                }`}
+              >
+                <Plus className="w-5 h-5" strokeWidth={1.75} />
+                <span className="text-[10px]">Ajouter</span>
+              </button>
+            )}
+            {user.role === 'ADMIN' ? (
+              <button
+                onClick={() => navigate('/cotisations')}
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${
+                  location.pathname === '/cotisations' ? 'text-[#2E4D31] font-bold' : 'text-[#2E4D31]/45 hover:text-[#2E4D31]'
+                }`}
+              >
+                <Coins className="w-5 h-5" strokeWidth={1.75} />
+                <span className="text-[10px]">Suivi</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${
+                  isProfileOpen ? 'text-[#2E4D31] font-bold' : 'text-[#2E4D31]/45 hover:text-[#2E4D31]'
+                }`}
+              >
+                <Settings className="w-5 h-5" strokeWidth={1.75} />
+                <span className="text-[10px]">Profil</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <ExcelImportModal
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          onImportSuccess={handleImportSuccess}
+        />
+        <ProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          onLogout={handleLogout}
+        />
       </div>
-
-      {/* Excel Import Modal */}
-      <ExcelImportModal 
-        isOpen={isImportOpen} 
-        onClose={() => setIsImportOpen(false)} 
-        onImportSuccess={handleImportSuccess}
-      />
-
-      {/* Profile Setting Modal */}
-      <ProfileModal 
-        isOpen={isProfileOpen} 
-        onClose={() => setIsProfileOpen(false)} 
-        onLogout={handleLogout}
-      />
-
-    </div>
     </SidebarLayoutContext.Provider>
   );
 };

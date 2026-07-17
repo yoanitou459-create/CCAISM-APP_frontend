@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Download, Shield, MapPin, Phone, Mail, Award, CheckCircle2, Star, FileText, AlertCircle } from 'lucide-react';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { jsPDF } from 'jspdf';
+import { ModalPortal } from './ModalPortal';
 
 interface EnterpriseSummaryModalProps {
   isOpen: boolean;
@@ -161,49 +162,49 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
   };
 
   return (
+    <ModalPortal>
     <AnimatePresence>
       {isOpen && enterprise && (
-        <div key="summary-modal-container" className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto selection:bg-[#132e15] selection:text-[#ebd078]">
+        <div key="summary-modal-container" className="modal-overlay selection:bg-[#2E4D31] selection:text-[#ebd078]">
           <motion.div
             key="summary-modal-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            className="modal-backdrop"
           />
           
           <motion.div
             key="summary-modal-body"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-[#FAF9F5] w-full max-w-4xl rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[95vh] border-2 border-[#132e15] font-sans text-[#132e15]"
+            initial={{ scale: 0.95, opacity: 0, y: 12 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 12 }}
+            className="modal-shell max-w-4xl bg-white/95 font-sans text-[#1A3D18]"
           >
-          {/* 1. Header with Dark Green Top Bar */}
-          <div className="p-6 bg-[#132e15] text-white flex justify-between items-center relative overflow-hidden shrink-0">
-            {/* Ambient luxury light overlay */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+          {/* Header verre vert */}
+          <div className="p-5 md:p-6 bg-gradient-to-r from-[#2E4D31] via-[#355a38] to-[#2E4D31] text-white flex justify-between items-start gap-4 relative overflow-hidden shrink-0 border-b border-white/10">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none blur-2xl" />
             
-            <div className="flex gap-4 items-center relative z-10">
-              <div className="w-16 h-16 rounded-2xl bg-[#0c1e0e] border-2 border-[#ebd078]/80 flex items-center justify-center font-black text-xs text-[#ebd078] overflow-hidden shadow-inner">
+            <div className="flex gap-4 items-center relative z-10 min-w-0 flex-1">
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white border-2 border-cscm-gold/50 flex items-center justify-center font-black text-xs text-[#2E4D31] overflow-hidden shadow-lg shrink-0">
                 {enterprise.logo ? (
                   <img src={enterprise.logo} alt={enterprise.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-center font-mono text-[10px] uppercase font-black tracking-tighter">CSCM</span>
                 )}
               </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-serif font-black text-white tracking-wide uppercase leading-none">
-                  Fiche Technique
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cscm-gold/90">Fiche technique</p>
+                <h1 className="text-lg md:text-2xl font-serif font-black text-white tracking-tight leading-tight mt-0.5">
+                  {enterprise.raisonSociale || enterprise.name}
                 </h1>
-                <p className="text-sm font-bold text-[#ebd078] mt-1">{enterprise.name}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <span className="text-[9px] bg-white/10 text-[#ebd078] border border-white/15 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                    Référence : {enterprise.memberNo || 'M001'}
+                  <span className="text-[9px] bg-white/15 text-white border border-white/20 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                    Réf. {enterprise.memberNo || 'M001'}
                   </span>
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wide ${
-                    enterprise.statutMembre === 'Actif' ? 'bg-[#51a351] text-white' : 'bg-red-600 text-white'
+                  <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wide ${
+                    enterprise.statutMembre === 'Actif' ? 'bg-emerald-400/25 text-emerald-100 border border-emerald-300/30' : 'bg-rose-500/30 text-rose-100 border border-rose-300/30'
                   }`}>
                     {enterprise.statutMembre || 'Actif'}
                   </span>
@@ -211,68 +212,62 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
               </div>
             </div>
 
-            <div className="flex items-center gap-3 relative z-10">
+            <div className="flex items-center gap-2 relative z-10 shrink-0">
               <button 
                 onClick={handleDownloadPDF} 
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#ebd078]/20 transition-all flex items-center justify-center text-[#ebd078] cursor-pointer"
+                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 transition-all flex items-center justify-center text-cscm-gold cursor-pointer shrink-0 border border-white/20"
                 title="Télécharger la fiche"
               >
                 <Download className="w-5 h-5" />
               </button>
               <button 
                 onClick={onClose} 
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center text-white cursor-pointer"
+                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 transition-all flex items-center justify-center text-white cursor-pointer shrink-0 border border-white/20"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* 2. Scrollable Body Content */}
-          <div className="p-6 md:p-8 overflow-y-auto space-y-6">
+          {/* Corps scrollable */}
+          <div className="p-6 md:p-8 overflow-y-auto space-y-6 bg-gradient-to-b from-white/40 to-transparent">
             
-            {/* Section: IDENTITÉ DE L'ENTREPRISE */}
+            {/* Section: IDENTITÉ */}
             <div className="space-y-3">
-              <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
-                <span className="w-5 h-5 rounded-lg bg-[#ebd078]/20 text-[#ebd078] flex items-center justify-center text-[10px] font-black tracking-tighter">ID</span>
+              <div className="bg-[#2E4D31]/90 backdrop-blur-sm px-4 py-2.5 rounded-2xl flex items-center gap-2.5 text-white shadow-md shadow-[#2E4D31]/15">
+                <span className="w-6 h-6 rounded-lg bg-cscm-gold/20 text-cscm-gold flex items-center justify-center text-[10px] font-black">ID</span>
                 <h2 className="text-xs font-black uppercase tracking-wider">Identité de l'entreprise</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {/* Raison Sociale card (soft green) */}
-                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Nom de l'entreprise (Raison sociale)</span>
-                  <span className="text-sm font-black text-[#132e15] mt-1.5 leading-tight">{enterprise.raisonSociale || enterprise.name}</span>
+                <div className="bg-white/70 backdrop-blur-md border border-white/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60">Nom de l'entreprise (Raison sociale)</span>
+                  <span className="text-sm font-black text-[#1A3D18] mt-1.5 leading-tight">{enterprise.raisonSociale || enterprise.name}</span>
                 </div>
 
-                {/* Date d'adhésion card */}
-                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Date d'adhésion</span>
-                  <span className="text-sm font-black text-[#132e15] mt-1.5 leading-tight">{enterprise.dateAdhesion || 'Non spécifiée'}</span>
+                <div className="bg-white/70 backdrop-blur-md border border-white/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60">Date d'adhésion</span>
+                  <span className="text-sm font-black text-[#1A3D18] mt-1.5 leading-tight">{enterprise.dateAdhesion || 'Non spécifiée'}</span>
                 </div>
 
-                {/* Forme Juridique card (soft purple) */}
-                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Forme Juridique</span>
-                  <span className="text-xs font-bold text-[#132e15] mt-1.5 leading-tight">{enterprise.formeJuridique || 'Société à Responsabilité Limitée'}</span>
+                <div className="bg-white/70 backdrop-blur-md border border-white/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60">Forme Juridique</span>
+                  <span className="text-xs font-bold text-[#1A3D18] mt-1.5 leading-tight">{enterprise.formeJuridique || 'Société à Responsabilité Limitée'}</span>
                 </div>
 
-                {/* Date de création card (soft yellow) */}
-                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Date de création</span>
-                  <span className="text-xs font-mono font-bold text-[#132e15] mt-1.5 leading-tight">{enterprise.dateCreation || 'N/A'}</span>
+                <div className="bg-white/70 backdrop-blur-md border border-white/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60">Date de création</span>
+                  <span className="text-xs font-mono font-bold text-[#1A3D18] mt-1.5 leading-tight">{enterprise.dateCreation || 'N/A'}</span>
                 </div>
 
-                {/* RC Card (soft red/pink) */}
-                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">N° Registre Commerce</span>
-                  <span className="text-xs font-mono font-bold text-[#132e15] mt-1.5 leading-tight">{enterprise.numRC || 'Non Spécifié'}</span>
+                <div className="bg-white/70 backdrop-blur-md border border-white/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60">N° Registre Commerce</span>
+                  <span className="text-xs font-mono font-bold text-[#1A3D18] mt-1.5 leading-tight">{enterprise.numRC || 'Non Spécifié'}</span>
                 </div>
 
-                {/* Ninea/ICE card (soft blue-gray) */}
-                <div className="bg-white border border-[#132e15]/20 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70">Ninea / ICE</span>
-                  <span className="text-xs font-mono font-bold text-[#132e15] mt-1.5 leading-tight">{enterprise.ninea || 'Non disponible'}</span>
+                <div className="bg-white/70 backdrop-blur-md border border-white/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60">Ninea / ICE</span>
+                  <span className="text-xs font-mono font-bold text-[#1A3D18] mt-1.5 leading-tight">{enterprise.ninea || 'Non disponible'}</span>
                 </div>
               </div>
             </div>
@@ -282,39 +277,39 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
               
               {/* Coordonnées */}
               <div className="space-y-3">
-                <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+                <div className="bg-[#2E4D31]/90 backdrop-blur-sm px-4 py-2.5 rounded-2xl flex items-center gap-2.5 text-white shadow-md shadow-[#2E4D31]/15">
                   <MapPin className="w-4 h-4 text-[#ebd078]" />
                   <h2 className="text-xs font-black uppercase tracking-wider">Coordonnées</h2>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-[#132e15]/15 space-y-4 shadow-sm">
                   <div className="flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15">
+                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#1A3D18] shrink-0 border border-[#132e15]/15">
                       <MapPin className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block">Adresse</span>
-                      <span className="text-xs font-bold text-[#132e15]">{enterprise.ville}, {enterprise.pays}</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60 block">Adresse</span>
+                      <span className="text-xs font-bold text-[#1A3D18]">{enterprise.ville}, {enterprise.pays}</span>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15">
+                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#1A3D18] shrink-0 border border-[#132e15]/15">
                       <Phone className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block">Téléphone</span>
-                      <span className="text-xs font-mono font-bold text-[#132e15]">{enterprise.telephone || 'Non disponible'}</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60 block">Téléphone</span>
+                      <span className="text-xs font-mono font-bold text-[#1A3D18]">{enterprise.telephone || 'Non disponible'}</span>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15">
+                    <div className="w-8 h-8 rounded-full bg-[#132e15]/10 flex items-center justify-center text-[#1A3D18] shrink-0 border border-[#132e15]/15">
                       <Mail className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block">E-mail de contact</span>
-                      <span className="text-xs font-mono font-bold text-[#132e15] break-all">{enterprise.email || 'Non disponible'}</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60 block">E-mail de contact</span>
+                      <span className="text-xs font-mono font-bold text-[#1A3D18] break-all">{enterprise.email || 'Non disponible'}</span>
                     </div>
                   </div>
                 </div>
@@ -322,16 +317,20 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
 
               {/* Statut & Effectif */}
               <div className="space-y-3">
-                <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+                <div className="bg-[#2E4D31]/90 backdrop-blur-sm px-4 py-2.5 rounded-2xl flex items-center gap-2.5 text-white shadow-md shadow-[#2E4D31]/15">
                   <Shield className="w-4 h-4 text-[#ebd078]" />
                   <h2 className="text-xs font-black uppercase tracking-wider">Statut & Effectif</h2>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-[#132e15]/15 flex flex-col justify-between h-[210px] shadow-sm">
+                <div className="bg-white p-5 rounded-2xl border border-[#132e15]/15 flex flex-col gap-4 shadow-sm">
                   <div className="flex justify-center">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#132e15]/10 text-[#132e15] border border-[#132e15]/20">
-                      <span className="w-2 h-2 rounded-full bg-[#132e15] animate-pulse" />
-                      Actif
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                      enterprise.statutMembre === 'Actif'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}>
+                      <span className={`w-2 h-2 rounded-full ${enterprise.statutMembre === 'Actif' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                      {enterprise.statutMembre || 'Actif'}
                     </span>
                   </div>
 
@@ -350,7 +349,7 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
 
             {/* Activité & Expertise */}
             <div className="space-y-3">
-              <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+              <div className="bg-[#2E4D31]/90 backdrop-blur-sm px-4 py-2.5 rounded-2xl flex items-center gap-2.5 text-white shadow-md shadow-[#2E4D31]/15">
                 <Award className="w-4 h-4 text-[#ebd078]" />
                 <h2 className="text-xs font-black uppercase tracking-wider">Activité & Expertise</h2>
               </div>
@@ -358,14 +357,14 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Sector Card */}
                 <div className="bg-white border border-[#132e15]/15 p-5 rounded-2xl shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block mb-1">Secteur d'activité</span>
-                  <span className="text-sm font-black text-[#132e15] leading-tight block">{enterprise.secteur}</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60 block mb-1">Secteur d'activité</span>
+                  <span className="text-sm font-black text-[#1A3D18] leading-tight block">{enterprise.secteur}</span>
                 </div>
 
                 {/* Tech Desc Card */}
                 <div className="bg-white border border-[#132e15]/15 p-5 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#132e15]/70 block mb-1">Description Technique</span>
-                  <span className="text-xs font-medium text-[#132e15] italic leading-relaxed block">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60 block mb-1">Description Technique</span>
+                  <span className="text-xs font-medium text-[#1A3D18] italic leading-relaxed block">
                     "{enterprise.description || "Nous faisons du conseil et accompagnement technique dans le secteur correspondant."}"
                   </span>
                 </div>
@@ -374,7 +373,7 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
 
             {/* Licences & Certificats techniques */}
             <div className="space-y-3">
-              <div className="bg-[#132e15] px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-white">
+              <div className="bg-[#2E4D31]/90 backdrop-blur-sm px-4 py-2.5 rounded-2xl flex items-center gap-2.5 text-white shadow-md shadow-[#2E4D31]/15">
                 <FileText className="w-4 h-4 text-[#ebd078]" />
                 <h2 className="text-xs font-black uppercase tracking-wider text-left">Certificats & Documents Techniques</h2>
               </div>
@@ -382,19 +381,19 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
               <div className="bg-white rounded-2xl border border-[#132e15]/15 overflow-hidden divide-y divide-[#132e15]/10 shadow-sm text-left">
                 {enterprise.certifications && enterprise.certifications.length > 0 ? (
                   enterprise.certifications.map((cert: any, index: number) => (
-                    <div key={index} className="p-4 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-[#132e15]/10 flex items-center justify-center text-[#132e15] shrink-0 border border-[#132e15]/15 font-black text-xs">
+                    <div key={index} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-[#132e15]/10 flex items-center justify-center text-[#1A3D18] shrink-0 border border-[#132e15]/15 font-black text-xs">
                           {index + 1}
                         </div>
-                        <div>
-                          <p className="font-bold text-[#132e15]">{cert.name}</p>
-                          <p className="text-[9px] text-[#132e15]/70 font-bold uppercase tracking-wider">
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#1A3D18] break-words">{cert.name}</p>
+                          <p className="text-[9px] text-[#2E4D31]/60 font-bold uppercase tracking-wider mt-0.5 break-words">
                             Réf: {cert.code || 'N/A'} | Délivré par : {cert.issuer || 'N/A'} le {cert.date || 'N/A'}
                           </p>
                         </div>
                       </div>
-                      <span className="text-[10px] bg-[#132e15] text-white font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                      <span className="text-[10px] bg-[#132e15] text-white font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shrink-0 self-start sm:self-center">
                         {cert.fileName ? "Document Joint" : "Validé"}
                       </span>
                     </div>
@@ -428,5 +427,6 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
       </div>
     )}
   </AnimatePresence>
+  </ModalPortal>
   );
 };

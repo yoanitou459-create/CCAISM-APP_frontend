@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, CheckCircle2, FileSpreadsheet, ShieldAlert, ArrowRight, Table, AlertTriangle } from 'lucide-react';
 import { getStoredEnterprises, saveStoredEnterprises } from '../../database/enterpriseStorage';
+import { ModalPortal } from './ModalPortal';
 
 interface ExcelImportModalProps {
   isOpen: boolean;
@@ -340,15 +341,16 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
   };
 
   return (
+    <ModalPortal>
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="modal-overlay">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={handleClose}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          className="modal-backdrop"
         />
 
         {/* Modal body */}
@@ -356,10 +358,10 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="bg-white text-cscm-dark w-full max-w-2xl rounded-3xl shadow-2xl relative z-10 overflow-hidden"
+          className="modal-shell max-w-2xl bg-white/95 text-cscm-dark"
         >
           {/* Header */}
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div className="p-6 border-b border-white/40 flex justify-between items-center bg-white/40 backdrop-blur-md shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-cscm-green/10 text-cscm-green flex items-center justify-center">
                 <FileSpreadsheet className="w-5 h-5" />
@@ -369,12 +371,12 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                 <p className="text-xs text-gray-400">Ajoutez plusieurs entreprises en quelques clics</p>
               </div>
             </div>
-            <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+            <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-white/50 transition-colors cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 max-h-[85vh] overflow-y-auto">
+          <div className="p-6 flex-1 overflow-y-auto">
             {step === 1 && (
               <div className="space-y-6">
                 <div className="bg-cscm-green/5 border border-cscm-green/10 p-4 rounded-2xl flex items-start gap-3">
@@ -421,12 +423,9 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                   <h4 className="font-bold text-base text-cscm-dark mb-1">Glissez-déposez votre fichier Excel ou CSV</h4>
                   <p className="text-xs text-gray-400 mb-2">ou</p>
                   
-                  {/* Browse button highlighted green/border wrapper with explicit red border highlight to match user intent */}
-                  <div className="inline-block my-2" style={{ border: '2px solid #e11d48', borderRadius: '14px', padding: '1px' }}>
-                    <span className="bg-[#123013] text-white hover:bg-[#1c471e] active:scale-95 font-bold px-6 py-2 rounded-[11px] text-xs uppercase tracking-wider block transition-all">
-                      Parcourir
-                    </span>
-                  </div>
+                  <span className="btn-primary my-2 text-xs uppercase tracking-wider">
+                    Parcourir
+                  </span>
 
                   <p className="text-xs text-gray-400 max-w-sm mx-auto mb-2 mt-1">
                     Formats acceptés: .xlsx, .xls, .csv • Taille max: 50 MB
@@ -447,7 +446,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
             )}
 
             {step === 2 && (
-              <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
+              <div className="space-y-6">
                 <div className="bg-[#edfdf6] border border-[#d1f7e4] p-4 rounded-2xl text-[#10b981] text-sm flex items-start gap-2.5 shadow-xs">
                   <CheckCircle2 className="w-5 h-5 text-[#10b981] shrink-0 mt-0.5" />
                   <div>
@@ -553,14 +552,14 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                 <div className="flex gap-3 justify-end pt-1">
                   <button 
                     onClick={() => setStep(1)}
-                    className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors"
+                    className="btn-secondary"
                   >
                     Retour
                   </button>
                   <button 
                     onClick={handleImportConfirm}
                     disabled={cleanParsedData.length === 0}
-                    className="bg-cscm-green hover:bg-[#326127] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2"
+                    className="btn-primary"
                   >
                     Confirmer l'importation ({cleanParsedData.length})
                   </button>
@@ -625,7 +624,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-4 border-t border-gray-100/90">
                   <button 
                     onClick={handleClose}
-                    className="bg-[#123013] hover:bg-[#1a441b] text-white py-3 px-6 text-xs font-black uppercase tracking-widest rounded-xl shadow-md transition-all text-center cursor-pointer"
+                    className="btn-primary text-xs uppercase tracking-widest"
                   >
                     Voir la liste des entreprises
                   </button>
@@ -637,7 +636,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                       setCleanParsedData([]);
                       setValidationReport({ errors: [], warnings: [], duplicatesInFile: [], duplicatesWithStored: [] });
                     }}
-                    className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-3 px-6 text-xs font-black uppercase tracking-widest rounded-xl shadow-md transition-all text-center cursor-pointer"
+                    className="btn-secondary text-xs uppercase tracking-widest"
                   >
                     Nouvel import
                   </button>
@@ -648,5 +647,6 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
         </motion.div>
       </div>
     </AnimatePresence>
+    </ModalPortal>
   );
 };

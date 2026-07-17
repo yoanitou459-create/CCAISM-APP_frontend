@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldCheck, Landmark, Lightbulb, Contact, Coins } from 'lucide-react';
 import { EditFormModal } from '../components/EditFormModal';
+import { ModalPortal } from '../components/ModalPortal';
 import { jsPDF } from 'jspdf';
 import { getLocalCotisationRules } from '../../database/cotisationRules';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -683,16 +684,16 @@ export const EnterpriseDetail: React.FC = () => {
       case 'Informations générales':
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center mb-8 max-w-2xl mx-auto">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8 max-w-2xl mx-auto">
               <h3 className="text-3xl font-serif font-black text-[#132e15]">Informations générales</h3>
               <button 
                 onClick={() => handleEdit('Informations générales')}
-                className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
+                className="btn-gold"
               >
                 <Pencil className="w-4 h-4" /> Modifier
               </button>
             </div>
-            <div className="bg-white p-4 sm:p-8 rounded-2xl border-2 border-[#132e15]/20 max-w-2xl mx-auto space-y-4 shadow-sm text-[#132e15]">
+            <div className="bg-white p-4 sm:p-8 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] max-w-2xl mx-auto space-y-4 text-[#132e15]">
               {[
                 { label: "Date d'adhésion", value: enterprise.dateAdhesion || '' },
                 { label: "Statut membre", value: enterprise.statutMembre || '' },
@@ -719,18 +720,18 @@ export const EnterpriseDetail: React.FC = () => {
       case 'Métiers & expertises':
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center mb-8 max-w-2xl mx-auto">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8 max-w-2xl mx-auto">
               <h3 className="text-3xl font-serif font-black text-[#132e15]">Métiers & expertises</h3>
               <div className="flex gap-3">
                 <button 
                   onClick={() => handleEdit('Métiers & expertises', 'edit')}
-                  className="bg-[#132e15] text-[#ebd078] px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer"
+                  className="btn-gold"
                 >
                   <Pencil className="w-4 h-4" /> Modifier
                 </button>
               </div>
             </div>
-            <div className="bg-white p-4 sm:p-8 rounded-2xl border-2 border-[#132e15]/20 max-w-2xl mx-auto space-y-4 shadow-sm text-[#132e15]">
+            <div className="bg-white p-4 sm:p-8 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] max-w-2xl mx-auto space-y-4 text-[#132e15]">
               {[
                 { label: "Secteur d'activité", value: enterprise.secteur || '' },
                 { label: "Expertise principale", value: enterprise.expertisePrincipale || '' },
@@ -754,16 +755,16 @@ export const EnterpriseDetail: React.FC = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-3xl mx-auto">
               <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Certifications</h3>
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button 
                   onClick={() => handleEdit('Certifications', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
+                  className="btn-gold flex-1 sm:flex-initial"
                 >
                   <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Certifications', 'edit', selectedItemIndex)}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
+                  className="btn-gold flex-1 sm:flex-initial"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
@@ -771,17 +772,17 @@ export const EnterpriseDetail: React.FC = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-hidden max-w-3xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
-              <table className="w-full border-collapse">
+            <div className="hidden md:block table-wrap max-w-3xl mx-auto shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
+              <table className="data-table-bordered w-full">
                 <thead>
-                  <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
-                    <th className="border border-[#132e15]/20 p-3 text-left">Certification (s)</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Code (s)</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Date</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Organisme</th>
+                  <tr>
+                    <th className="text-left min-w-[180px]">Certification(s)</th>
+                    <th className="text-left">Code(s)</th>
+                    <th className="text-left whitespace-nowrap">Date</th>
+                    <th className="text-left">Organisme</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white text-[#132e15] font-semibold text-xs divide-y divide-[#132e15]/10">
+                <tbody className="bg-white text-[#132e15] font-semibold text-xs">
                   {enterprise.certifications && enterprise.certifications.length > 0 ? (
                     enterprise.certifications.map((cert: any, i: number) => (
                       <tr 
@@ -800,7 +801,7 @@ export const EnterpriseDetail: React.FC = () => {
                                     setPreviewCert(cert);
                                   }}
                                   title="Visualiser le document en ligne"
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white transition-all text-[9px] tracking-wider font-extrabold uppercase px-2 py-1 rounded flex items-center gap-1 cursor-pointer hover:shadow-xs shrink-0"
+                                  className="btn-action-green shrink-0"
                                 >
                                   <Eye className="w-3 h-3" />
                                   Voir
@@ -816,7 +817,7 @@ export const EnterpriseDetail: React.FC = () => {
                                     document.body.removeChild(link);
                                   }}
                                   title="Télécharger la pièce justificative"
-                                  className="bg-[#132e15] hover:bg-emerald-800 text-white transition-all text-[9px] tracking-wider font-extrabold uppercase px-2 py-1 rounded flex items-center gap-1 cursor-pointer hover:shadow-xs shrink-0"
+                                  className="btn-action-blue shrink-0"
                                 >
                                   <Download className="w-3 h-3" />
                                   Doc
@@ -867,7 +868,7 @@ export const EnterpriseDetail: React.FC = () => {
                               e.stopPropagation();
                               setPreviewCert(cert);
                             }}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded flex items-center gap-1 cursor-pointer shrink-0"
+                            className="btn-action-green shrink-0"
                           >
                             <Eye className="w-3 h-3" /> Voir
                           </button>
@@ -881,7 +882,7 @@ export const EnterpriseDetail: React.FC = () => {
                               link.click();
                               document.body.removeChild(link);
                             }}
-                            className="bg-[#132e15] text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded flex items-center gap-1 cursor-pointer shrink-0"
+                            className="btn-action-blue shrink-0"
                           >
                             <Download className="w-3 h-3" /> Doc
                           </button>
@@ -987,7 +988,7 @@ export const EnterpriseDetail: React.FC = () => {
           const levierVal = capitauxPropres > 0 ? (totalActif / capitauxPropres).toFixed(2) : '0.00';
 
           return (
-            <div key={`${year}-${idx}`} className="bg-white border text-left border-gray-150 rounded-3xl p-6 shadow-xs space-y-6">
+            <div key={`${year}-${idx}`} className="bg-white text-left border border-[#12210E]/10 rounded-3xl p-6 shadow-[0_2px_20px_rgba(19,46,21,0.05)] space-y-6">
               {/* Card Header */}
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <div className="space-y-1">
@@ -1090,16 +1091,16 @@ export const EnterpriseDetail: React.FC = () => {
         };
 
         return (
-          <div className="space-y-8 max-w-4xl mx-auto pb-12 text-[#132e15]">
+          <div className="space-y-8 max-w-7xl mx-auto w-full pb-12 text-[#132e15]">
             {/* Header section with buttons */}
-            <div className="flex justify-between items-center bg-[#FAF9F5] p-4 rounded-3xl border border-[#132e15]/10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
               <h3 className="text-2xl md:text-3xl font-serif font-black text-[#132e15]">Données Financières</h3>
-              <div className="flex gap-3">
+              <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                 <button 
                   onClick={() => handleEdit('Données financières', 'add')}
-                  className="bg-[#132e15] hover:bg-[#1f4222] text-[#ebd078] px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer border border-[#ebd078]/20"
+                  className="btn-gold flex-1 sm:flex-initial"
                 >
-                  <Plus className="w-4 h-4 text-[#ebd078]" /> Ajouter donnée
+                  <Plus className="w-4 h-4" /> Ajouter donnée
                 </button>
                 {unifiedFinancials.length > 0 && (
                   <button 
@@ -1110,9 +1111,9 @@ export const EnterpriseDetail: React.FC = () => {
                         showFeedback('error', 'Seules les saisies manuelles dynamiques peuvent être modifiées.');
                       }
                     }}
-                    className="bg-[#132e15] hover:bg-[#1f4222] text-[#ebd078] px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer border border-[#ebd078]/20"
+                    className="btn-gold flex-1 sm:flex-initial"
                   >
-                    <Pencil className="w-4 h-4 text-[#ebd078]" /> Modifier dernière
+                    <Pencil className="w-4 h-4" /> Modifier dernière
                   </button>
                 )}
               </div>
@@ -1135,16 +1136,16 @@ export const EnterpriseDetail: React.FC = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-3xl mx-auto">
               <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Besoins</h3>
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button 
                   onClick={() => handleEdit('Besoins', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
+                  className="btn-gold flex-1 sm:flex-initial"
                 >
                   <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Besoins', 'edit', selectedItemIndex)}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
+                  className="btn-gold flex-1 sm:flex-initial"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
@@ -1152,17 +1153,17 @@ export const EnterpriseDetail: React.FC = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-hidden max-w-3xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
-              <table className="w-full border-collapse">
+            <div className="hidden md:block table-wrap max-w-3xl mx-auto shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
+              <table className="data-table-bordered w-full">
                 <thead>
-                  <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
-                    <th className="border border-[#132e15]/20 p-3 text-left">Titre</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Type</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Budget</th>
-                    <th className="border border-[#132e15]/20 p-3 text-left">Priorité</th>
+                  <tr>
+                    <th className="text-left">Titre</th>
+                    <th className="text-left">Type</th>
+                    <th className="text-left">Budget</th>
+                    <th className="text-left">Priorité</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white text-[#132e15] font-semibold text-xs divide-y divide-[#132e15]/10">
+                <tbody className="bg-white text-[#132e15] font-semibold text-xs">
                   {enterprise.besoins && enterprise.besoins.length > 0 ? (
                     enterprise.besoins.map((besoin: any, i: number) => (
                       <tr 
@@ -1234,18 +1235,18 @@ export const EnterpriseDetail: React.FC = () => {
       case 'Contacts':
         return (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-4xl mx-auto">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-7xl mx-auto w-full">
               <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Contacts</h3>
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button 
                   onClick={() => handleEdit('Contacts', 'add')}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
+                  className="btn-gold flex-1 sm:flex-initial"
                 >
                   <Plus className="w-4 h-4" /> Ajouter
                 </button>
                 <button 
                   onClick={() => handleEdit('Contacts', 'edit', selectedItemIndex)}
-                  className="bg-[#132e15] text-[#ebd078] px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold border border-[#ebd078]/40 hover:bg-[#132e15]/95 transition-colors cursor-pointer flex-1 sm:flex-initial"
+                  className="btn-gold flex-1 sm:flex-initial"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Modifier
                 </button>
@@ -1253,7 +1254,7 @@ export const EnterpriseDetail: React.FC = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-hidden max-w-4xl mx-auto rounded-2xl border border-[#132e15]/20 shadow-sm">
+            <div className="hidden md:block overflow-hidden max-w-7xl mx-auto w-full rounded-2xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
@@ -1291,7 +1292,7 @@ export const EnterpriseDetail: React.FC = () => {
             </div>
 
             {/* Mobile Cards View */}
-            <div className="block md:hidden space-y-4 max-w-4xl mx-auto">
+            <div className="block md:hidden space-y-4 max-w-7xl mx-auto w-full">
               {enterprise.contacts && enterprise.contacts.length > 0 ? (
                 enterprise.contacts.map((contact: any, i: number) => (
                   <div 
@@ -1339,16 +1340,16 @@ export const EnterpriseDetail: React.FC = () => {
         const payments = getPaymentsList(enterprise);
         
         return (
-          <div className="space-y-6 max-w-4xl mx-auto pb-12 text-[#132e15]">
+          <div className="space-y-6 max-w-7xl mx-auto w-full pb-12 text-[#132e15]">
             {/* Header with action buttons */}
-            <div className="flex justify-between items-center bg-[#FAF9F5] p-4 rounded-3xl border border-[#132e15]/10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
               <h3 className="text-2xl md:text-3xl font-serif font-black text-[#132e15]">Historique des cotisations</h3>
-              <div className="flex gap-3">
+              <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                 <button 
                   onClick={() => handleEdit('Cotisations', 'add')}
-                  className="bg-[#132e15] hover:bg-[#1f4222] text-[#ebd078] px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer border border-[#ebd078]/20"
+                  className="btn-gold flex-1 sm:flex-initial"
                 >
-                  <Plus className="w-4 h-4 text-[#ebd078]" /> Ajouter Cotisation
+                  <Plus className="w-4 h-4" /> Ajouter Cotisation
                 </button>
                 <button 
                   onClick={() => {
@@ -1358,11 +1359,8 @@ export const EnterpriseDetail: React.FC = () => {
                       handleEdit('Cotisations', 'edit', selectedItemIndex);
                     }
                   }}
-                  className={`px-5 py-2.5 rounded-full flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer border ${
-                    selectedItemIndex !== null 
-                      ? 'bg-[#132e15] hover:bg-[#1f4222] text-[#ebd078] border-[#ebd078]/20' 
-                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                  }`}
+                  className="btn-gold flex-1 sm:flex-initial"
+                  disabled={selectedItemIndex === null}
                 >
                   <Pencil className="w-4 h-4" /> Modifier
                 </button>
@@ -1370,13 +1368,13 @@ export const EnterpriseDetail: React.FC = () => {
             </div>
 
             {/* Currency conversion options & Total card matching Capture 1 */}
-            <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white/60 p-6 rounded-3xl border border-amber-100/40 shadow-xs">
-              <div className="flex flex-col gap-2 text-left">
-                <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">AFFICHER LES MONTANTS EN</span>
+            <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white p-6 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
+              <div className="flex flex-col gap-1 text-left">
+                <span className="field-label"><Coins /> Afficher les montants en</span>
                 <select 
                   value={displayCurrency} 
                   onChange={(e) => setDisplayCurrency(e.target.value)}
-                  className="bg-white border-2 border-amber-100/30 text-[#132e15] font-serif font-black text-xs py-2.5 px-4 rounded-xl shadow-xs outline-none cursor-pointer focus:border-[#132e15] transition-all min-w-[200px]"
+                  className="field-select min-w-[220px]"
                 >
                   {CURRENCIES.map(curr => (
                     <option key={curr.code} value={curr.code}>
@@ -1398,13 +1396,13 @@ export const EnterpriseDetail: React.FC = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-hidden rounded-3xl border border-[#132e15]/15 shadow-sm bg-white">
-              <table className="w-full border-collapse">
+            <div className="hidden md:block table-wrap shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
+              <table className="data-table w-full">
                 <thead>
-                  <tr className="bg-[#132e15] text-white text-[11px] font-black uppercase tracking-wider border-b border-[#132e15]/10">
-                    <th className="p-4 text-left font-serif">DATE</th>
-                    <th className="p-4 text-left font-serif">LIBELLÉ / MOTIF</th>
-                    <th className="p-4 text-right font-serif">MONTANT ({displayCurrency})</th>
+                  <tr>
+                    <th className="font-serif">DATE</th>
+                    <th className="font-serif">LIBELLÉ / MOTIF</th>
+                    <th className="font-serif text-right">MONTANT ({displayCurrency})</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white text-xs text-gray-700 font-semibold">
@@ -1534,29 +1532,35 @@ export const EnterpriseDetail: React.FC = () => {
 
   return (
     <SidebarLayout>
-      <div key="enterprise-detail-wrapper" className="w-full min-h-screen bg-[#FAF9F5] flex flex-col overflow-y-auto pb-24">
+      <div key="enterprise-detail-wrapper" className="w-full min-h-full flex flex-col">
         {/* Header Section */}
-        <div className="p-4 md:p-8 border-b border-[#132e15]/10 bg-white relative flex flex-col items-center">
-          <button onClick={() => navigate('/enterprises')} className="absolute top-4 left-4 md:top-8 md:left-8 p-2 hover:bg-gray-55 bg-gray-50 md:bg-transparent rounded-full transition-colors cursor-pointer" title="Retour">
-            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-[#132e15]" />
+        <div className="relative bg-gradient-to-br from-[#2E4D31] via-[#355a38] to-[#1A3D18] border-b border-[#ebd078]/20 overflow-hidden">
+          {/* Decorative gold glow */}
+          <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#ebd078]/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-[#2E4D31]/30 blur-3xl" />
+
+          <button onClick={() => navigate('/enterprises')} className="absolute top-4 left-4 md:top-6 md:left-6 z-10 inline-flex items-center justify-center p-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm text-[#ebd078] transition-all duration-200 cursor-pointer active:scale-95 outline-none focus-visible:ring-4 focus-visible:ring-[#ebd078]/30" title="Retour">
+            <ChevronLeft className="w-6 h-6 md:w-7 md:h-7" />
           </button>
 
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-10 md:mt-4 w-full max-w-4xl">
+          <div className="relative p-6 md:p-10">
+            <div className="flex flex-col md:flex-row items-center md:items-center justify-center md:justify-start gap-5 md:gap-8 mt-8 md:mt-2 w-full max-w-7xl mx-auto w-full text-center md:text-left">
               <label 
                 htmlFor={`upload-ent-logo-${enterprise.id}`}
-                className="w-32 h-32 rounded-2xl border-2 border-gray-300 flex items-center justify-center text-center p-2 text-xs font-black overflow-hidden bg-white text-black cursor-pointer relative group shadow-sm transition-all hover:border-[#132e15]"
+                className="w-32 h-32 rounded-3xl ring-2 ring-[#ebd078]/40 ring-offset-2 ring-offset-[#2E4D31] flex items-center justify-center text-center p-2 text-xs font-black overflow-hidden bg-white text-black cursor-pointer relative group shadow-xl shadow-black/30 transition-all hover:ring-[#ebd078] shrink-0"
                 title="Cliquer pour changer le logo de l'entreprise"
               >
                 {enterprise.logo ? (
                   <img src={enterprise.logo} alt={enterprise.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-black font-black leading-tight text-center">
+                  <div className="text-[#132e15] font-black leading-tight text-center">
                     LOGO<br/>
-                    <span className="text-[10px] font-black text-black uppercase">Entreprise</span>
+                    <span className="text-[10px] font-black text-[#132e15]/70 uppercase">Entreprise</span>
                   </div>
                 )}
                 
-                <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-black text-xs font-black flex-col gap-1 shadow-inner">
+                <div className="absolute inset-0 bg-[#12210E]/85 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[#ebd078] text-xs font-black flex-col gap-1">
+                  <Pencil className="w-4 h-4" />
                   <span className="tracking-wide">Changer Logo</span>
                 </div>
               </label>
@@ -1579,20 +1583,41 @@ export const EnterpriseDetail: React.FC = () => {
                   }
                 }}
               />
-              <div className="text-sm space-y-1 text-[#132e15] font-semibold">
-                <p><span className="font-bold">Numéro membre :</span> {enterprise.memberNo}</p>
-                <p><span className="font-bold">Statut membre :</span> {enterprise.statutMembre}</p>
-                <p><span className="font-bold">Date d'adhésion :</span> {enterprise.dateAdhesion}</p>
-                <p><span className="font-bold">Nom de l'entreprise (Raison sociale) :</span> {enterprise.raisonSociale || enterprise.name}</p>
-                <p><span className="font-bold">Secteur principal :</span> {enterprise.secteur}</p>
-                <p><span className="font-bold">Pays + ville :</span> {enterprise.pays} - {enterprise.ville}</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="font-serif font-black text-2xl md:text-4xl text-white tracking-tight break-words">
+                  {enterprise.raisonSociale || enterprise.name}
+                </h1>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-3">
+                  {enterprise.statutMembre && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#ebd078]/15 text-[#ebd078] border border-[#ebd078]/30">
+                      {enterprise.statutMembre}
+                    </span>
+                  )}
+                  {enterprise.secteur && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/10 text-white border border-white/20">
+                      {enterprise.secteur}
+                    </span>
+                  )}
+                  {enterprise.memberNo && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/10 text-white/80 border border-white/15">
+                      N° {enterprise.memberNo}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 mt-4 text-sm text-white/80 font-semibold">
+                  <p><span className="font-bold text-[#ebd078]/80">Date d'adhésion :</span> {enterprise.dateAdhesion || '—'}</p>
+                  <p><span className="font-bold text-[#ebd078]/80">Secteur principal :</span> {enterprise.secteur || '—'}</p>
+                  <p><span className="font-bold text-[#ebd078]/80">Pays + ville :</span> {enterprise.pays} - {enterprise.ville}</p>
+                  <p><span className="font-bold text-[#ebd078]/80">Numéro membre :</span> {enterprise.memberNo || '—'}</p>
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
           {/* Navigation Links / Buttons */}
-          <div className="py-3 border-b border-[#132e15]/10 bg-white sticky top-0 z-20 px-4 md:px-8">
-            <div className="max-w-4xl mx-auto grid grid-cols-4 sm:grid-cols-7 md:flex md:flex-wrap md:justify-center gap-2">
+          <div className="py-3 border-b border-cscm-green/10 bg-white/90 backdrop-blur-md sticky top-0 z-20 px-4 md:px-8">
+            <div className="max-w-7xl mx-auto w-full tab-nav md:flex-wrap md:justify-center">
               {tabs.map((tab) => {
                 const IconComponent = getTabIcon(tab);
                 const isActive = activeTab === tab;
@@ -1606,15 +1631,11 @@ export const EnterpriseDetail: React.FC = () => {
                       setActiveTab(tab);
                       setSelectedItemIndex(null);
                     }}
-                    className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2.5 py-2 md:px-4 md:py-2.5 rounded-2xl transition-all duration-250 cursor-pointer text-center md:text-left ${
-                      isActive 
-                        ? 'bg-[#132e15] text-[#ebd078] shadow-sm font-black ring-1 ring-[#ebd078]/20' 
-                        : 'text-[#132e15]/70 hover:bg-[#132e15]/5 hover:text-[#132e15] border border-gray-150 bg-[#FAF9F5]'
-                    }`}
+                    className={`tab-btn ${isActive ? 'tab-btn-active' : 'tab-btn-inactive'}`}
                     title={tab}
                   >
-                    <IconComponent className="w-4 h-4 md:w-4.5 md:h-4.5 shrink-0" />
-                    <span className="text-[9px] md:text-xs font-bold leading-none tracking-tight">{shortName}</span>
+                    <IconComponent className="w-4 h-4 shrink-0" />
+                    <span className="leading-none tracking-tight">{shortName}</span>
                   </button>
                 );
               })}
@@ -1622,7 +1643,7 @@ export const EnterpriseDetail: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div className="p-4 md:p-8 bg-white relative">
+          <div className="p-4 md:p-8 bg-gradient-to-b from-[#f0f7ec] via-[#FAF9F5] to-[#f7f4e8] relative min-h-[60vh]">
             <AnimatePresence>
               {feedbackMessage && (
                 <motion.div
@@ -1666,15 +1687,16 @@ export const EnterpriseDetail: React.FC = () => {
       />
 
       {/* Certification Document Preview Modal */}
+      <ModalPortal>
       <AnimatePresence>
         {previewCert && (
-          <div key="cert-preview-container" className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <div key="cert-preview-container" className="modal-overlay">
             <motion.div
               key="cert-preview-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.7 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"
+              className="modal-backdrop"
               onClick={() => setPreviewCert(null)}
             />
             <motion.div
@@ -1683,12 +1705,12 @@ export const EnterpriseDetail: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", duration: 0.4 }}
-              className="bg-[#FAF9F5] w-full max-w-5xl rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[85vh] border-2 border-[#132e15]"
+              className="modal-shell max-w-5xl max-h-[85vh]"
             >
               {/* Modal Header */}
-              <div className="p-5 border-b border-[#132e15]/10 flex items-center justify-between bg-white">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-100 shrink-0">
+              <div className="p-5 border-b border-white/40 flex flex-wrap items-center justify-between gap-3 bg-white/40 backdrop-blur-md shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50/80 text-emerald-800 flex items-center justify-center border border-emerald-100/80 shrink-0">
                     <Eye className="w-5 h-5" />
                   </div>
                   <div className="text-left">
@@ -1706,7 +1728,7 @@ export const EnterpriseDetail: React.FC = () => {
                       link.click();
                       document.body.removeChild(link);
                     }}
-                    className="px-3.5 py-2 hover:bg-gray-100 text-[#132e15] rounded-xl transition-all flex items-center gap-2 text-xs font-black border border-gray-250 cursor-pointer active:scale-95"
+                    className="btn-outline shrink-0"
                     title="Télécharger"
                   >
                     <Download className="w-4 h-4 text-emerald-800" />
@@ -1714,7 +1736,8 @@ export const EnterpriseDetail: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setPreviewCert(null)}
-                    className="p-2.5 hover:bg-gray-100 text-gray-600 rounded-xl transition-all cursor-pointer border border-transparent hover:border-gray-200 active:scale-95"
+                    className="btn-icon shrink-0"
+                    title="Fermer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1722,9 +1745,9 @@ export const EnterpriseDetail: React.FC = () => {
               </div>
 
               {/* Modal Body */}
-              <div className="flex-1 overflow-auto p-6 bg-gray-50 flex items-center justify-center min-h-[450px]">
+              <div className="flex-1 overflow-auto p-6 bg-white/20 flex items-center justify-center min-h-[450px]">
                 {previewCert.fileData?.startsWith('data:image/') ? (
-                  <div className="bg-white p-3 rounded-2xl border border-gray-150 shadow-sm max-w-full max-h-[70vh] overflow-auto flex items-center justify-center">
+                  <div className="bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-white/60 shadow-sm max-w-full max-h-[70vh] overflow-auto flex items-center justify-center">
                     <img
                       src={previewBlobUrl || previewCert.fileData}
                       alt={previewCert.name}
@@ -1733,7 +1756,7 @@ export const EnterpriseDetail: React.FC = () => {
                     />
                   </div>
                 ) : (previewCert.fileData?.startsWith('data:application/pdf') || previewCert.fileData?.includes('pdf') || previewCert.fileName?.toLowerCase().endsWith('.pdf')) ? (
-                  <div className="w-full h-[65vh] bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden flex flex-col">
+                  <div className="w-full h-[65vh] bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm overflow-hidden flex flex-col">
                     <iframe
                       src={previewBlobUrl || previewCert.fileData}
                       title={previewCert.name}
@@ -1741,7 +1764,7 @@ export const EnterpriseDetail: React.FC = () => {
                     />
                   </div>
                 ) : (
-                  <div className="text-center p-8 bg-white rounded-3xl border border-gray-150 shadow-sm max-w-md space-y-4">
+                  <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-3xl border border-white/60 shadow-sm max-w-md space-y-4">
                     <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-100">
                       <Download className="w-7 h-7" />
                     </div>
@@ -1760,7 +1783,7 @@ export const EnterpriseDetail: React.FC = () => {
                         link.click();
                         document.body.removeChild(link);
                       }}
-                      className="w-full bg-[#132e15] hover:bg-emerald-800 text-white font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-sm cursor-pointer"
+                      className="btn-cta"
                     >
                       Télécharger le document
                     </button>
@@ -1771,6 +1794,7 @@ export const EnterpriseDetail: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      </ModalPortal>
     </SidebarLayout>
   );
 };

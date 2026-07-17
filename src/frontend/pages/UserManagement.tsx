@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SidebarLayout } from '../components/SidebarLayout';
 import { ConfirmationModal } from '../components/ConfirmationModal';
+import { ModalPortal } from '../components/ModalPortal';
 import { getStoredUsers, saveStoredUsers, AppUser } from '../../database/userStorage';
 import { 
   Users, 
@@ -18,7 +19,6 @@ import {
   Lock, 
   Shield, 
   AlertCircle,
-  Eye,
   Settings,
   Building2
 } from 'lucide-react';
@@ -187,7 +187,7 @@ export const UserManagement: React.FC = () => {
 
   return (
     <SidebarLayout>
-      <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 min-h-screen bg-transparent font-sans">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto w-full space-y-8 min-h-screen bg-transparent font-sans">
         
         {/* Toast Notification */}
         <AnimatePresence>
@@ -207,7 +207,7 @@ export const UserManagement: React.FC = () => {
         </AnimatePresence>
 
         {/* Top welcome banner */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#1b381c] to-[#0a1208] rounded-[2.5rem] p-8 md:p-10 text-white shadow-xl border border-white/5">
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#3D7A32] to-[#1A3D18] rounded-[2.5rem] p-8 md:p-10 text-white shadow-xl border border-white/5">
           <div className="absolute -right-10 -bottom-10 w-96 h-96 rounded-full bg-cscm-gold/10 blur-3xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
@@ -225,7 +225,7 @@ export const UserManagement: React.FC = () => {
 
             <button
               onClick={handleOpenAdd}
-              className="bg-cscm-gold hover:bg-[#ebd078] text-cscm-dark font-extrabold px-6 py-3.5 rounded-2xl flex items-center gap-2.5 transition-all duration-200 shadow-lg shrink-0 text-xs select-none cursor-pointer border border-[#ebd078]"
+              className="btn-gold !bg-cscm-gold hover:!bg-[#ebd078] !text-cscm-dark !border-[#ebd078] !px-6 !py-3.5 shadow-lg shrink-0"
             >
               <UserPlus className="w-4 h-4" />
               Accréditer un utilisateur
@@ -236,7 +236,7 @@ export const UserManagement: React.FC = () => {
         {/* Row explaining roles privileges strictly as requested */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          <div className="bg-white rounded-2xl p-5 border border-gray-150 shadow-sm relative overflow-hidden">
+          <div className="surface-card surface-card-hover p-5 relative overflow-hidden">
             <div className="absolute top-4 right-4 text-rose-500/10">
               <Shield className="w-12 h-12" />
             </div>
@@ -266,7 +266,7 @@ export const UserManagement: React.FC = () => {
             </ul>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-gray-150 shadow-sm relative overflow-hidden">
+          <div className="surface-card surface-card-hover p-5 relative overflow-hidden">
             <div className="absolute top-4 right-4 text-amber-500/10">
               <Settings className="w-12 h-12" />
             </div>
@@ -296,7 +296,7 @@ export const UserManagement: React.FC = () => {
             </ul>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-gray-150 shadow-sm relative overflow-hidden">
+          <div className="surface-card surface-card-hover p-5 relative overflow-hidden">
             <div className="absolute top-4 right-4 text-blue-500/10">
               <User className="w-12 h-12" />
             </div>
@@ -329,22 +329,22 @@ export const UserManagement: React.FC = () => {
         </div>
 
         {/* Filter Bar */}
-        <div className="bg-white p-5 rounded-3xl border border-[#132e15]/20 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="surface-card p-5 flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-grow w-full">
-            <Search className="w-4 h-4 text-[#132e15] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-cscm-green/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
             <input 
               type="text" 
               placeholder="Saisissez un prénom, nom, ou email pour rechercher..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-cscm-green transition-all text-xs font-semibold text-[#132e15]"
+              className="field-input pl-10"
             />
           </div>
 
           <select 
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="w-full md:w-56 px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-cscm-green transition-all text-xs text-gray-700 font-bold"
+            className="field-select w-full md:w-56"
           >
             <option value="">Tous les Rôles ...</option>
             <option value="ADMIN">ADMINISTRATEUR</option>
@@ -354,17 +354,16 @@ export const UserManagement: React.FC = () => {
         </div>
 
         {/* Users list as high contrast table */}
-        <div className="bg-white rounded-3xl border border-[#132e15]/20 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[850px]">
+        <div className="table-wrap shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
+          <table className="data-table min-w-[850px]">
               <thead>
-                <tr className="bg-[#132e15] text-[11px] font-black uppercase text-white tracking-wider">
-                  <th className="p-5 border-b border-[#132e15]/20">Identité</th>
-                  <th className="p-5 border-b border-[#132e15]/20">Email</th>
-                  <th className="p-5 border-b border-[#132e15]/20">Niveau d'accréditation</th>
-                  <th className="p-5 border-b border-[#132e15]/20 font-bold text-center">Statut</th>
-                  <th className="p-5 border-b border-[#132e15]/20">Date de création</th>
-                  <th className="p-5 border-b border-[#132e15]/20 text-right">Actions</th>
+                <tr>
+                  <th>Identité</th>
+                  <th>Email</th>
+                  <th>Niveau d'accréditation</th>
+                  <th className="text-center">Statut</th>
+                  <th>Date de création</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-[#132e15]">
@@ -409,17 +408,17 @@ export const UserManagement: React.FC = () => {
                         <td className="p-5 font-mono text-xs text-[#132e15]/85 font-semibold">{u.email}</td>
                         <td className="p-5">
                           {u.role === 'ADMIN' ? (
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-red-50 text-red-700 font-extrabold uppercase px-2.5 py-1 rounded-full border border-red-100">
+                            <span className="badge-gold">
                               <ShieldAlert className="w-3.5 h-3.5" />
                               Admin
                             </span>
                           ) : u.role === 'MODERATEUR' ? (
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-amber-50 text-amber-700 font-extrabold uppercase px-2.5 py-1 rounded-full border border-amber-100">
+                            <span className="badge-green">
                               <ShieldCheck className="w-3.5 h-3.5" />
                               Modérateur
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-blue-50 text-blue-700 font-extrabold uppercase px-2.5 py-1 rounded-full border border-blue-100">
+                            <span className="badge-neutral">
                               <User className="w-3.5 h-3.5" />
                               Membre
                             </span>
@@ -427,21 +426,23 @@ export const UserManagement: React.FC = () => {
                         </td>
                         <td className="p-5 text-center">
                           {u.status === 'Inactif' ? (
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-rose-50 text-rose-700 font-extrabold uppercase px-2.5 py-1 rounded-full border border-rose-100">
+                            <span className="badge-danger">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                               Inactif
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-50 text-emerald-700 font-extrabold uppercase px-2.5 py-1 rounded-full border border-emerald-100">
+                            <span className="badge-green">
+                              <span className="w-1.5 h-1.5 rounded-full bg-cscm-green" />
                               Actif
                             </span>
                           )}
                         </td>
                         <td className="p-5 text-xs text-[#132e15]/80 font-bold">{u.dateCreation}</td>
                         <td className="p-5 text-right">
-                          <div className="flex justify-end gap-1.5 align-center">
+                          <div className="flex justify-end gap-1.5 items-center">
                             <button 
                               onClick={() => handleOpenEdit(u)}
-                              className="p-2 text-[#132e15] hover:text-cscm-green hover:bg-[#FAF9F5] rounded-xl transition-all cursor-pointer border border-[#132e15]/10"
+                              className="btn-icon hover:text-cscm-green"
                               title="Modifier l'utilisateur"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -449,11 +450,7 @@ export const UserManagement: React.FC = () => {
                             <button 
                               onClick={() => handleDeleteUser(u)}
                               disabled={isSelf}
-                              className={`p-2 rounded-xl transition-all cursor-pointer border ${
-                                isSelf 
-                                  ? 'text-gray-200 border-transparent cursor-not-allowed' 
-                                  : 'text-rose-700 border-rose-100 hover:text-red-600 hover:bg-rose-50'
-                              }`}
+                              className="btn-icon-danger disabled:hover:bg-white disabled:hover:border-rose-100"
                               title={isSelf ? "Vous ne pouvez pas vous supprimer" : "Supprimer définitivement"}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -465,30 +462,36 @@ export const UserManagement: React.FC = () => {
                   })
                 )}
               </tbody>
-            </table>
-          </div>
+          </table>
         </div>
 
       </div>
 
       {/* Add / Edit User Modal */}
+      <ModalPortal>
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black/50 z-[120] backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="modal-overlay">
+            <div className="modal-backdrop" onClick={() => setIsModalOpen(false)} />
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="bg-white rounded-[2rem] max-w-md w-full overflow-hidden border border-gray-150 shadow-2xl"
+              className="modal-shell-md overflow-hidden"
             >
-              <div className="p-6 bg-[#0a1208] text-white flex justify-between items-center border-b border-[#112310]">
-                <div>
-                  <h3 className="text-sm font-serif font-black text-cscm-gold tracking-wide">
-                    {editingUser ? "Modifier l'Accréditation" : "Accréditer un collaborateur"}
-                  </h3>
-                  <p className="text-[9px] text-white/65 uppercase tracking-wider font-bold mt-0.5">
-                    {editingUser ? "Éditer un compte existant" : "Enregistrer un nouveau compte"}
-                  </p>
+              <div className="modal-header-dark items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-cscm-gold/15 text-cscm-gold flex items-center justify-center shrink-0">
+                    <UserPlus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-serif font-black text-cscm-gold tracking-wide">
+                      {editingUser ? "Modifier l'Accréditation" : "Accréditer un collaborateur"}
+                    </h3>
+                    <p className="text-[9px] text-white/65 uppercase tracking-wider font-bold mt-0.5">
+                      {editingUser ? "Éditer un compte existant" : "Enregistrer un nouveau compte"}
+                    </p>
+                  </div>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(false)}
@@ -498,7 +501,8 @@ export const UserManagement: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div className="modal-body space-y-4">
                 {formError && (
                   <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 font-bold text-xs text-center flex items-center gap-1.5 justify-center">
                     <AlertCircle className="w-4 h-4" />
@@ -507,33 +511,39 @@ export const UserManagement: React.FC = () => {
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider">Prénom *</label>
+                  <div>
+                    <label className="field-label">
+                      <User />
+                      Prénom *
+                    </label>
                     <input 
                       type="text" 
                       required
                       placeholder="Saisissez le prénom (Ex: Ibrahima)"
                       value={prenom}
                       onChange={(e) => setPrenom(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
+                      className="field-input"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider">Nom *</label>
+                  <div>
+                    <label className="field-label">
+                      <User />
+                      Nom *
+                    </label>
                     <input 
                       type="text" 
                       required
                       placeholder="Saisissez le nom (Ex: Diop)"
                       value={nom}
                       onChange={(e) => setNom(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
+                      className="field-input"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider flex items-center gap-1">
-                    <Mail className="w-3.5 h-3.5 text-cscm-gold" />
+                <div>
+                  <label className="field-label">
+                    <Mail />
                     Adresse Email *
                   </label>
                   <input 
@@ -542,13 +552,13 @@ export const UserManagement: React.FC = () => {
                     placeholder="Saisissez l'adresse email professionnelle (Ex: i.diop@cscm.com)"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
+                    className="field-input"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider flex items-center gap-1">
-                    <Building2 className="w-3.5 h-3.5 text-cscm-gold" />
+                <div>
+                  <label className="field-label">
+                    <Building2 />
                     Entreprise / Raison Sociale
                   </label>
                   <input 
@@ -556,13 +566,13 @@ export const UserManagement: React.FC = () => {
                     placeholder="Saisissez le nom de l'entreprise (Optionnel)"
                     value={entreprise}
                     onChange={(e) => setEntreprise(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
+                    className="field-input"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5 text-cscm-gold" />
+                <div>
+                  <label className="field-label">
+                    <Lock />
                     Mot de passe *
                   </label>
                   <input 
@@ -571,19 +581,19 @@ export const UserManagement: React.FC = () => {
                     placeholder="Saisissez le mot de passe"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs transition-colors font-semibold text-[#132e15]"
+                    className="field-input"
                   />
                 </div>
 
-                <div className="space-y-1.5 pb-2">
-                  <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider flex items-center gap-1">
-                    <Shield className="w-3.5 h-3.5 text-cscm-gold" />
+                <div>
+                  <label className="field-label">
+                    <Shield />
                     Rôle / Droits d'Utilisation *
                   </label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs font-bold text-[#132e15] transition-colors"
+                    className="field-select"
                   >
                     <option value="MEMBRE">Membre (Fiche technique uniquement)</option>
                     <option value="MODERATEUR">Modérateur (Éditer / Exporter, sans suppression)</option>
@@ -591,34 +601,45 @@ export const UserManagement: React.FC = () => {
                   </select>
                 </div>
 
-                <div className="space-y-1.5 pb-2">
-                  <label className="text-[10px] font-black uppercase text-[#132e15] tracking-wider flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-cscm-gold" />
+                <div>
+                  <label className="field-label">
+                    <CheckCircle2 />
                     Statut du Compte *
                   </label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-cscm-green outline-none text-xs font-bold text-[#132e15] transition-colors"
+                    className="field-select"
                   >
                     <option value="Actif">Actif (Accès autorisé)</option>
                     <option value="Inactif">Inactif (Connexion bloquée)</option>
                   </select>
                 </div>
+                </div>
 
-                <div className="flex gap-3 pt-3 border-t border-gray-100">
+                <div className="modal-footer">
                   <button 
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="flex-1 py-3 text-xs font-bold text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-all cursor-pointer text-center"
+                    className="btn-secondary flex-1"
                   >
                     Fermer
                   </button>
                   <button 
                     type="submit"
-                    className="flex-1 py-3 text-xs font-black text-white bg-cscm-green hover:bg-[#132c14] rounded-xl transition-all cursor-pointer text-center shadow-md shadow-cscm-green/10"
+                    className="btn-cta flex-1"
                   >
-                    {editingUser ? "Sauvegarder" : "Inscrire l'utilisateur"}
+                    {editingUser ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        Sauvegarder
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4" />
+                        Inscrire l'utilisateur
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -626,6 +647,7 @@ export const UserManagement: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      </ModalPortal>
 
       <ConfirmationModal
         isOpen={deleteTargetUser !== null}
