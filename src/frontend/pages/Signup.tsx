@@ -204,7 +204,7 @@ export const Signup: React.FC = () => {
         {/* Panneau formulaire */}
         <div className="auth-form-panel">
           <div className="max-w-sm mx-auto w-full">
-            <p className="auth-eyebrow">CCAISM</p>
+            <p className="auth-eyebrow">CSCM</p>
             <h1 className="auth-title">Créer un compte</h1>
             <p className="auth-subtitle">Rejoignez le réseau de la Chambre Sénégalaise de Commerce au Maroc</p>
 
@@ -366,7 +366,7 @@ export const Signup: React.FC = () => {
               </div>
               <h3 className="font-serif font-bold text-lg text-cscm-gold">Rejoignez le réseau</h3>
               <p className="text-white/60 text-xs font-medium leading-relaxed mt-2">
-                Un espace unique pour valoriser votre entreprise et développer vos opportunités au sein de la communauté CCAISM.
+                Un espace unique pour valoriser votre entreprise et développer vos opportunités au sein de la communauté CSCM.
               </p>
             </div>
           </div>

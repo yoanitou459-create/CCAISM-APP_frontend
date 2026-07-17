@@ -251,7 +251,7 @@ const Dashboard = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#12210E]/10 pb-6">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.25em] text-cscm-gold mb-1.5">
-              CCAISM • Tableau de bord
+              CSCM • Tableau de bord
             </p>
             <h1 className="text-3xl md:text-4xl font-serif font-black text-[#12210E] tracking-tight">
               Pilotage administrative

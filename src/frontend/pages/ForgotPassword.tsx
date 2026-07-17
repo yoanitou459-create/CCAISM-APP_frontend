@@ -31,7 +31,7 @@ export const ForgotPassword: React.FC = () => {
         {/* Panneau formulaire */}
         <div className="auth-form-panel">
           <div className="max-w-sm mx-auto w-full">
-            <p className="auth-eyebrow">CCAISM</p>
+            <p className="auth-eyebrow">CSCM</p>
             <h1 className="auth-title">Mot de passe oublié ?</h1>
             <p className="auth-subtitle">Saisissez votre e-mail pour recevoir un lien d'accès sécurisé</p>
 
@@ -88,7 +88,7 @@ export const ForgotPassword: React.FC = () => {
               </div>
               <h3 className="font-serif font-bold text-lg text-cscm-gold">Récupération sécurisée</h3>
               <p className="text-white/60 text-xs font-medium leading-relaxed mt-2">
-                Nous vous aidons à retrouver l'accès à votre espace CCAISM en toute sécurité et en quelques instants.
+                Nous vous aidons à retrouver l'accès à votre espace CSCM en toute sécurité et en quelques instants.
               </p>
             </div>
           </div>

@@ -209,9 +209,9 @@ export const Login: React.FC = () => {
       >
         <div className="auth-form-panel">
           <div className="max-w-sm mx-auto w-full">
-            <p className="auth-eyebrow">CCAISM</p>
+            <p className="auth-eyebrow">CSCM</p>
             <h1 className="auth-title">Connexion</h1>
-            <p className="auth-subtitle">Accédez à la plateforme CCAISM</p>
+            <p className="auth-subtitle">Accédez à la plateforme CSCM</p>
 
             <div className="mt-7 space-y-5">
               <button

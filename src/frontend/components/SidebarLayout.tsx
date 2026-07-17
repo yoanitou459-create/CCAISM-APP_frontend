@@ -129,7 +129,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   });
 
   const [user, setUser] = useState(() => {
-    return JSON.parse(localStorage.getItem('user') || '{"nom": "Admin", "prenom": "System", "email": "admin@ccaism.com"}');
+    return JSON.parse(localStorage.getItem('user') || '{"nom": "Admin", "prenom": "System", "email": "admin@cscm.com"}');
   });
 
   const [profilePhoto, setProfilePhoto] = useState<string | null>(() => {
@@ -137,7 +137,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   });
 
   const loadProfile = () => {
-    setUser(JSON.parse(localStorage.getItem('user') || '{"nom": "Admin", "prenom": "System", "email": "admin@ccaism.com"}'));
+    setUser(JSON.parse(localStorage.getItem('user') || '{"nom": "Admin", "prenom": "System", "email": "admin@cscm.com"}'));
     setProfilePhoto(localStorage.getItem('profile_photo'));
   };
 

@@ -416,7 +416,7 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
               <span className="w-1.5 h-1.5 rounded-full bg-[#ebd078]" />
               Document officiel généré le {new Date().toLocaleDateString()}
               <span className="w-1.5 h-1.5 rounded-full bg-[#ebd078]" />
-              CCAISM Technical Database
+              CSCM Technical Database
             </p>
             <p className="text-[8px] font-bold text-white/50 tracking-wide uppercase">
               Ce document est strictement confidentiel et destiné aux vérifications administratives des membres de la CSCM.

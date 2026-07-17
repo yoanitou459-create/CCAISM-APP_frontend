@@ -16,12 +16,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onL
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const user = JSON.parse(localStorage.getItem('user') || '{"nom": "Admin", "prenom": "System", "email": "admin@ccaism.com"}');
+  const user = JSON.parse(localStorage.getItem('user') || '{"nom": "Admin", "prenom": "System", "email": "admin@cscm.com"}');
   
   const [formData, setFormData] = useState({
     nom: user.nom || 'Admin',
     prenom: user.prenom || 'System',
-    email: user.email || 'admin@ccaism.com',
+    email: user.email || 'admin@cscm.com',
     entreprise: user.entreprise || '',
     langue: 'Français',
     apparence: 'Clair'

@@ -551,7 +551,7 @@ export const EnterpriseDetail: React.FC = () => {
 
       <div class="footer-section">
         <div class="footer-left">
-          Reçu généré automatiquement depuis la plateforme CCAISM.
+          Reçu généré automatiquement depuis la plateforme CSCM.
         </div>
         <div class="footer-right">
           <div class="sig-line"></div>
