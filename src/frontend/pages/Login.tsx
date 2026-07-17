@@ -61,14 +61,18 @@ export const Login: React.FC = () => {
 
     const bootstrapGoogle = async () => {
       // 1) Retour d'un redirect Google
-      const redirected = await consumeGoogleRedirectResult();
-      if (cancelled) return;
-      if (redirected?.email) {
-        setIsVerifying(true);
-        setAutoStatus('Connexion Google en cours…');
-        await finishGoogleSession(redirected.email, redirected.displayName || '');
-        setIsVerifying(false);
-        return;
+      try {
+        const redirected = await consumeGoogleRedirectResult();
+        if (cancelled) return;
+        if (redirected?.email) {
+          setIsVerifying(true);
+          setAutoStatus('Connexion Google en cours…');
+          await finishGoogleSession(redirected.email, redirected.displayName || '');
+          setIsVerifying(false);
+          return;
+        }
+      } catch (e) {
+        console.error("Redirect check error:", e);
       }
 
       // 2) Session Google déjà active sur ce navigateur → connexion auto si inscrit
@@ -81,18 +85,23 @@ export const Login: React.FC = () => {
         autoLoginTried.current = true;
         setIsVerifying(true);
         setAutoStatus('Compte Google détecté — connexion automatique…');
-        const session = await establishAppSessionFromFirebaseUser(gUser, { allowCreate: false });
-        if (!cancelled && session.ok) {
-          setAutoStatus('Compte reconnu — connexion automatique…');
-          navigate('/dashboard', { replace: true });
-        } else if (!cancelled && !session.ok && 'reason' in session) {
-          if (session.reason === 'inactive') {
-            setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
+        try {
+          const session = await establishAppSessionFromFirebaseUser(gUser, { allowCreate: false });
+          if (!cancelled && session.ok) {
+            setAutoStatus('Compte reconnu — connexion automatique…');
+            navigate('/dashboard', { replace: true });
+          } else if (!cancelled && !session.ok && 'reason' in session) {
+            if (session.reason === 'inactive') {
+              setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
+            }
+            // not_found : on ne force pas l'erreur au chargement (l'utilisateur peut choisir un autre compte)
+            setAutoStatus('');
           }
-          // not_found : on ne force pas l'erreur au chargement (l'utilisateur peut choisir un autre compte)
-          setAutoStatus('');
+        } catch (e) {
+          console.error("Auto login check error:", e);
+        } finally {
+          setIsVerifying(false);
         }
-        setIsVerifying(false);
       });
 
       return unsub;
@@ -173,6 +182,8 @@ export const Login: React.FC = () => {
       }
       if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
         setError('');
+      } else if (err?.code === 'auth/unauthorized-domain') {
+        setError(`Domaine non autorisé dans Firebase : veuillez ajouter "${window.location.hostname}" aux domaines autorisés dans votre console Firebase (Authentication > Paramètres).`);
       } else {
         console.error('Google login error:', err);
         setError('Connexion Google impossible. Réessayez ou autorisez les fenêtres Google.');
@@ -181,6 +192,8 @@ export const Login: React.FC = () => {
       setIsVerifying(false);
     }
   };
+
+  const isIframe = window.self !== window.top;
 
   return (
     <div className="auth-page">
@@ -210,9 +223,6 @@ export const Login: React.FC = () => {
                 <GoogleIcon />
                 Continuer avec Google
               </button>
-              <p className="text-center text-[10px] font-semibold text-gray-400 -mt-2">
-                Le navigateur propose vos comptes Google déjà utilisés.
-              </p>
 
               <div className="auth-divider">ou</div>
 

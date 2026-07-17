@@ -170,7 +170,13 @@ export const Signup: React.FC = () => {
         setSuccessMessage('Redirection vers Google…');
         return;
       }
-      if (err?.code !== 'auth/popup-closed-by-user' && err?.code !== 'auth/cancelled-popup-request') {
+      if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+        setError('');
+        setSuccessMessage('');
+      } else if (err?.code === 'auth/unauthorized-domain') {
+        setError(`Domaine non autorisé dans Firebase : veuillez ajouter "${window.location.hostname}" aux domaines autorisés dans votre console Firebase (Authentication > Paramètres).`);
+        setSuccessMessage('');
+      } else {
         console.error('Google signup error:', err);
         setError('Inscription Google impossible. Réessayez ou autorisez les fenêtres Google.');
         setSuccessMessage('');
@@ -179,6 +185,8 @@ export const Signup: React.FC = () => {
       setIsVerifying(false);
     }
   };
+
+  const isIframe = window.self !== window.top;
 
   return (
     <div className="auth-page">
