@@ -8,9 +8,17 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{"nom": "Utilisateur", "prenom": "Démo"}');
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.setItem('cscm_manual_logout', '1');
+    try {
+      const { signOut } = await import('firebase/auth');
+      const { auth } = await import('../../database/firebase');
+      await signOut(auth);
+    } catch {
+      // ignore
+    }
     navigate('/login');
   };
 

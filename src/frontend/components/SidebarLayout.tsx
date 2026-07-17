@@ -130,9 +130,17 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.setItem('cscm_manual_logout', '1');
+    try {
+      const { signOut } = await import('firebase/auth');
+      const { auth } = await import('../../database/firebase');
+      await signOut(auth);
+    } catch {
+      // ignore
+    }
     navigate('/login');
   };
 

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { ModalPortal } from '../components/ModalPortal';
+import { motion } from 'motion/react';
 import { Logo } from '../components/Logo';
-import { Building2, User, Lock, Mail, Eye, EyeOff, X, Sparkles } from 'lucide-react';
-import { getStoredUsers, saveStoredUsers, fetchLatestUsers } from '../../database/userStorage';
-import { auth } from '../../database/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { Building2, User, Lock, Mail, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { saveStoredUsers, fetchLatestUsers } from '../../database/userStorage';
+import {
+  establishAppSessionFromGoogle,
+  signInWithGoogleAccountPicker,
+  consumeGoogleRedirectResult,
+  LAST_EMAIL_KEY,
+} from '../utils/googleAuth';
 
 const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -29,8 +32,6 @@ export const Signup: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [showGoogleFallback, setShowGoogleFallback] = useState(false);
-  const [fallbackEmail, setFallbackEmail] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,7 +39,33 @@ export const Signup: React.FC = () => {
     const token = localStorage.getItem('token');
     if (token) {
       navigate('/dashboard', { replace: true });
+      return;
     }
+
+    let cancelled = false;
+    (async () => {
+      const redirected = await consumeGoogleRedirectResult();
+      if (cancelled || !redirected?.email) return;
+      setIsVerifying(true);
+      setSuccessMessage('Compte Google détecté — connexion automatique…');
+      const session = await establishAppSessionFromGoogle(
+        redirected.email,
+        redirected.displayName || '',
+        { allowCreate: true }
+      );
+      if (!cancelled && session.ok) {
+        if (session.created) localStorage.setItem('cscm_just_registered', 'true');
+        navigate('/dashboard', { replace: true });
+      } else if (!cancelled && !session.ok) {
+        setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
+        setSuccessMessage('');
+      }
+      setIsVerifying(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,7 +120,10 @@ export const Signup: React.FC = () => {
           role: finalUser.role,
           entreprise: finalUser.entreprise
         }));
+        localStorage.setItem(LAST_EMAIL_KEY, finalUser.email);
+        localStorage.setItem('cscm_auth_provider', 'password');
         localStorage.setItem('cscm_just_registered', 'true');
+        localStorage.removeItem('cscm_manual_logout');
 
         window.dispatchEvent(new Event('user_profile_updated'));
         navigate('/dashboard', { replace: true });
@@ -112,47 +142,42 @@ export const Signup: React.FC = () => {
     setError('');
     setSuccessMessage('');
     setIsVerifying(true);
+    localStorage.removeItem('cscm_manual_logout');
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const gUser = result.user;
-      if (gUser && gUser.email) {
-        const email = gUser.email.toLowerCase();
-        const users = await fetchLatestUsers();
-        const matchedUser = users.find(u => u.email.toLowerCase() === email);
-
-        const names = gUser.displayName ? gUser.displayName.split(' ') : [];
-        const prenom = names[0] || (matchedUser ? matchedUser.prenom : '');
-        const nom = names.slice(1).join(' ') || (matchedUser ? matchedUser.nom : '');
-
-        setFormData({
-          nom,
-          prenom,
-          email,
-          password: '',
-          entreprise: matchedUser?.entreprise || '',
-        });
-
-        if (!matchedUser) {
-          setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) a été injectée. Veuillez maintenant choisir votre entreprise et mot de passe ci-dessous pour finaliser la création de votre compte.`);
-        } else {
-          setSuccessMessage(`Compte Google associé avec succès ! Votre adresse email (${email}) est déjà pré-autorisée. Veuillez maintenant choisir votre entreprise et mot de passe ci-dessous pour finaliser l'inscription.`);
+      const gUser = await signInWithGoogleAccountPicker();
+      if (gUser?.email) {
+        setSuccessMessage('Vérification du compte Google…');
+        const session = await establishAppSessionFromGoogle(
+          gUser.email,
+          gUser.displayName || '',
+          { allowCreate: true, companyName: formData.entreprise || undefined }
+        );
+        if (!session.ok) {
+          setError("Votre compte est inactif. Vous n'avez pas l'autorisation de vous connecter.");
+          setSuccessMessage('');
+          return;
         }
+        if (session.created) {
+          localStorage.setItem('cscm_just_registered', 'true');
+          setSuccessMessage('Compte créé avec Google — redirection…');
+        } else {
+          setSuccessMessage('Compte déjà reconnu — connexion automatique…');
+        }
+        navigate('/dashboard', { replace: true });
       }
     } catch (err: any) {
-      console.error("Google signup error:", err);
-      setShowGoogleFallback(true);
+      if (err?.code === 'auth/redirect-started') {
+        setSuccessMessage('Redirection vers Google…');
+        return;
+      }
+      if (err?.code !== 'auth/popup-closed-by-user' && err?.code !== 'auth/cancelled-popup-request') {
+        console.error('Google signup error:', err);
+        setError('Inscription Google impossible. Réessayez ou autorisez les fenêtres Google.');
+        setSuccessMessage('');
+      }
     } finally {
       setIsVerifying(false);
     }
-  };
-
-  const handleFallbackSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fallbackEmail.trim()) return;
-    setFormData({ ...formData, email: fallbackEmail.trim().toLowerCase() });
-    setSuccessMessage(`Adresse email (${fallbackEmail.trim().toLowerCase()}) injectée. Veuillez compléter les champs restants pour finaliser votre inscription.`);
-    setShowGoogleFallback(false);
   };
 
   return (
@@ -180,10 +205,13 @@ export const Signup: React.FC = () => {
                 <GoogleIcon />
                 S'inscrire avec Google
               </button>
+              <p className="text-center text-[10px] font-semibold text-gray-400 -mt-2">
+                Compte déjà inscrit ? Connexion automatique après le choix Google.
+              </p>
 
               <div className="auth-divider">ou</div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on" method="post">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="field-label">
@@ -222,15 +250,16 @@ export const Signup: React.FC = () => {
                     <Mail />
                     Adresse Email
                   </label>
-                  <input
-                    type="email"
-                    autoComplete="username"
-                    required
-                    placeholder="Saisissez votre adresse email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="field-input"
-                  />
+                    <input
+                      type="email"
+                      name="username"
+                      autoComplete="username email"
+                      required
+                      placeholder="Saisissez votre adresse email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="field-input"
+                    />
                 </div>
 
                 <div>
@@ -256,6 +285,7 @@ export const Signup: React.FC = () => {
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
+                      name="new-password"
                       autoComplete="new-password"
                       required
                       placeholder="Saisissez votre mot de passe"
@@ -334,61 +364,6 @@ export const Signup: React.FC = () => {
           </div>
         </div>
       </motion.div>
-
-      {/* Fallback Google (popup bloquée) */}
-      <ModalPortal>
-      <AnimatePresence>
-        {showGoogleFallback && (
-          <div className="modal-overlay">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowGoogleFallback(false)}
-              className="modal-backdrop"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className="modal-shell-md"
-            >
-              <div className="modal-header-dark">
-                <div className="flex items-center gap-3">
-                  <GoogleIcon className="shrink-0" />
-                  <div>
-                    <h3 className="font-serif font-bold text-lg text-[#ebd078]">Inscription Google</h3>
-                    <p className="text-white/60 text-xs font-medium">Saisissez votre email Google pour continuer</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowGoogleFallback(false)} className="text-white/60 hover:text-white transition-colors cursor-pointer">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <form onSubmit={handleFallbackSubmit} className="modal-body space-y-4">
-                <div>
-                  <label className="field-label">
-                    <Mail />
-                    Adresse Email Google
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    autoFocus
-                    placeholder="prenom.nom@gmail.com"
-                    value={fallbackEmail}
-                    onChange={(e) => setFallbackEmail(e.target.value)}
-                    className="field-input"
-                  />
-                </div>
-                <button type="submit" className="btn-cta">Continuer</button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-      </ModalPortal>
     </div>
   );
 };
