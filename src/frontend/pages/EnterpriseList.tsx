@@ -191,7 +191,7 @@ export const EnterpriseList = () => {
       try {
         const updated = enterprises.filter(e => e.id !== enterpriseToDelete.id);
         saveStoredEnterprises(updated);
-        setFeedbackMessage({ type: 'success', text: 'L\'entreprise a été supprimée avec succès.' });
+        setFeedbackMessage({ type: 'success', text: 'Entreprise supprimée.' });
         setEnterpriseToDelete(null);
         setTimeout(() => setFeedbackMessage(null), 3000);
       } catch (error) {
@@ -270,7 +270,7 @@ export const EnterpriseList = () => {
         setIsProcessingPayment(false);
         setFeedbackMessage({
           type: 'success',
-          text: `Paiement en ligne de ${finalAmountInFCFA.toLocaleString()} FCFA traité avec succès !`
+          text: `Paiement en ligne de ${finalAmountInFCFA.toLocaleString()} FCFA confirmé.`
         });
         setTimeout(() => setFeedbackMessage(null), 4000);
       }, 3400);
@@ -303,7 +303,7 @@ export const EnterpriseList = () => {
       setPaymentRef('');
       setFeedbackMessage({
         type: 'success',
-        text: `Paiement de ${finalAmountInFCFA.toLocaleString()} FCFA validé pour ${quickPaymentEnt.name} !`
+        text: `Paiement de ${finalAmountInFCFA.toLocaleString()} FCFA enregistré pour ${quickPaymentEnt.name}.`
       });
       setTimeout(() => setFeedbackMessage(null), 3500);
     }
@@ -785,6 +785,16 @@ export const EnterpriseList = () => {
         isOpen={!!enterpriseToDelete}
         onClose={() => setEnterpriseToDelete(null)}
         onConfirm={handleDeleteConfirm}
+        variant="danger"
+        title="Supprimer cette entreprise ?"
+        highlight={
+          enterpriseToDelete
+            ? (enterpriseToDelete.raisonSociale || enterpriseToDelete.name)
+            : undefined
+        }
+        description="Toutes les informations liées (fiche, cotisations, documents) seront définitivement perdues."
+        confirmLabel="Oui, supprimer"
+        cancelLabel="Annuler"
       />
       <EnterpriseSummaryModal 
         isOpen={!!enterpriseToSummary}

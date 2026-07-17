@@ -415,7 +415,7 @@ export const Cotisations: React.FC = () => {
     });
 
     setEditingPayment(null);
-    setToastText("Cotisation modifiée avec succès.");
+    setToastText("Cotisation mise à jour.");
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
     
@@ -460,7 +460,7 @@ export const Cotisations: React.FC = () => {
     });
 
     setDeleteTarget(null);
-    setToastText("Cotisation supprimée avec succès.");
+    setToastText("Reçu de cotisation supprimé.");
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
     
@@ -479,7 +479,7 @@ export const Cotisations: React.FC = () => {
     e.preventDefault();
     const parsedAmount = Number(newRuleAmount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setToastText("Montant invalide.");
+      setToastText("Montant invalide. Vérifiez la saisie.");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
@@ -497,14 +497,14 @@ export const Cotisations: React.FC = () => {
 
     try {
       await saveCotisationRules(updatedRules);
-      setToastText("Règles de cotisation actualisées avec succès !");
+      setToastText("Règles de cotisation enregistrées.");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       
       // Also update default payment amount input
       setPaymentAmount(String(parsedAmount));
     } catch (err) {
-      setToastText("Erreur lors de la mise à jour des règles.");
+      setToastText("Impossible d'enregistrer les règles. Réessayez.");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
@@ -847,7 +847,7 @@ export const Cotisations: React.FC = () => {
     if (paymentMode === 'online') {
       const apiKey = getEffectiveApiKey();
       if (!apiKey) {
-        setToastText("Erreur : Clé API manquante pour le paiement en ligne !");
+        setToastText("Clé API manquante pour le paiement en ligne.");
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
         return;
@@ -855,7 +855,7 @@ export const Cotisations: React.FC = () => {
       
       // Card details validation (simple simulation check)
       if (!cardName || !cardNumber || !cardExpiry || !cardCvv) {
-        setToastText("Veuillez remplir toutes les informations de votre carte bancaire.");
+        setToastText("Complétez toutes les informations de la carte.");
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
         return;
@@ -904,7 +904,7 @@ export const Cotisations: React.FC = () => {
         saveStoredEnterprises(updated);
         setSelectedEnt(null);
         setIsProcessingPayment(false);
-        setToastText(`Paiement en ligne de ${data.amount.toLocaleString()} FCFA traité avec succès !`);
+        setToastText(`Paiement en ligne de ${data.amount.toLocaleString()} FCFA confirmé.`);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 4000);
       }, 3400);
@@ -935,7 +935,7 @@ export const Cotisations: React.FC = () => {
 
       saveStoredEnterprises(updated);
       setSelectedEnt(null);
-      setToastText(`Cotisation pour "${selectedEnt.name}" enregistrée avec succès !`);
+      setToastText(`Cotisation pour "${selectedEnt.name}" enregistrée.`);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
@@ -1014,7 +1014,7 @@ export const Cotisations: React.FC = () => {
                 setIsRefreshing(true);
                 setTimeout(() => {
                   setIsRefreshing(false);
-                  setToastText("Données de cotisations actualisées avec succès.");
+                  setToastText("Données de cotisations actualisées.");
                   setShowToast(true);
                   setTimeout(() => setShowToast(false), 2000);
                 }, 750);
@@ -1584,7 +1584,7 @@ export const Cotisations: React.FC = () => {
                                 type="button"
                                 onClick={() => {
                                   if (apiKeyInput.trim()) {
-                                    setToastText("Clé API de test enregistrée !");
+                                    setToastText("Clé API de test enregistrée.");
                                     setShowToast(true);
                                     setTimeout(() => setShowToast(false), 2000);
                                   }
@@ -2132,7 +2132,20 @@ export const Cotisations: React.FC = () => {
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDeleteCotisation}
-        title={`Voulez-vous vraiment supprimer définitivement ce reçu d'un montant de ${formatAmount(deleteTarget?.payment?.amount || 0)} ?`}
+        variant="danger"
+        title="Supprimer ce reçu de cotisation ?"
+        highlight={
+          deleteTarget
+            ? `${formatAmount(deleteTarget.payment?.amount || 0)}${
+                deleteTarget.ent?.name || deleteTarget.ent?.raisonSociale
+                  ? ` · ${deleteTarget.ent.name || deleteTarget.ent.raisonSociale}`
+                  : ''
+              }`
+            : undefined
+        }
+        description="Le paiement sera retiré de l'historique. Cette opération est définitive et ne pourra pas être annulée."
+        confirmLabel="Oui, supprimer le reçu"
+        cancelLabel="Conserver"
       />
     </SidebarLayout>
   );

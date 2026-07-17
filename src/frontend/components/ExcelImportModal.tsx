@@ -561,7 +561,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                     disabled={cleanParsedData.length === 0}
                     className="btn-primary"
                   >
-                    Confirmer l'importation ({cleanParsedData.length})
+                    Confirmer l'import ({cleanParsedData.length})
                   </button>
                 </div>
               </div>

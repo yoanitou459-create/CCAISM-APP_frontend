@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldCheck, Landmark, Lightbulb, Contact, Coins } from 'lucide-react';
 import { EditFormModal } from '../components/EditFormModal';
 import { ModalPortal } from '../components/ModalPortal';
+import { FeedbackToast, buildDetailFeedbackMessage } from '../components/FeedbackToast';
 import { jsPDF } from 'jspdf';
 import { getLocalCotisationRules } from '../../database/cotisationRules';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -590,7 +591,7 @@ export const EnterpriseDetail: React.FC = () => {
 
   const showFeedback = (type: 'success' | 'error', text: string) => {
     setFeedbackMessage({ type, text });
-    setTimeout(() => setFeedbackMessage(null), 3000);
+    setTimeout(() => setFeedbackMessage(null), 3500);
   };
 
   const calculateTotalTreasury = () => {
@@ -613,7 +614,7 @@ export const EnterpriseDetail: React.FC = () => {
 
   const handleEdit = (type: string, mode: 'add' | 'edit' = 'edit', index: number | null = null) => {
     if (mode === 'edit' && index === null && ['Certifications', 'Données financières', 'Besoins', 'Contacts', 'Cotisations'].includes(type)) {
-      showFeedback('error', 'Veuillez d\'abord sélectionner une ligne à modifier.');
+      showFeedback('error', 'Sélectionnez d’abord une ligne à modifier.');
       return;
     }
     setEditType(type);
@@ -675,7 +676,7 @@ export const EnterpriseDetail: React.FC = () => {
       updatedEnterprise = { ...enterprise, ...data };
     }
     handleUpdateEnterprise(updatedEnterprise);
-    showFeedback('success', `Les modifications pour "${editType}" ont été enregistrées avec succès.`);
+    showFeedback('success', buildDetailFeedbackMessage(editType, editMode));
     setIsEditModalOpen(false);
   };
 
@@ -1108,7 +1109,7 @@ export const EnterpriseDetail: React.FC = () => {
                       if (enterprise.financialData && enterprise.financialData.length > 0) {
                         handleEdit('Données financières', 'edit', enterprise.financialData.length - 1);
                       } else {
-                        showFeedback('error', 'Seules les saisies manuelles dynamiques peuvent être modifiées.');
+                        showFeedback('error', 'Seules les saisies manuelles peuvent être modifiées.');
                       }
                     }}
                     className="btn-gold flex-1 sm:flex-initial"
@@ -1354,7 +1355,7 @@ export const EnterpriseDetail: React.FC = () => {
                 <button 
                   onClick={() => {
                     if (selectedItemIndex === null) {
-                      showFeedback('error', 'Veuillez sélectionner une cotisation personnalisée pour la modifier.');
+                      showFeedback('error', 'Sélectionnez une cotisation personnalisée à modifier.');
                     } else {
                       handleEdit('Cotisations', 'edit', selectedItemIndex);
                     }
@@ -1577,7 +1578,7 @@ export const EnterpriseDetail: React.FC = () => {
                     reader.onloadend = () => {
                       const updated = { ...enterprise, logo: reader.result as string };
                       handleUpdateEnterprise(updated);
-                      showFeedback('success', "Le logo de l'entreprise a été mis à jour !");
+                      showFeedback('success', 'Logo de l’entreprise mis à jour.');
                     };
                     reader.readAsDataURL(file);
                   }
@@ -1644,23 +1645,10 @@ export const EnterpriseDetail: React.FC = () => {
 
           {/* Content */}
           <div className="p-4 md:p-8 bg-gradient-to-b from-[#f0f7ec] via-[#FAF9F5] to-[#f7f4e8] relative min-h-[60vh]">
-            <AnimatePresence>
-              {feedbackMessage && (
-                <motion.div
-                  key="feedback-message"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-2 rounded-full shadow-lg font-bold text-sm border ${
-                    feedbackMessage.type === 'success' 
-                      ? 'bg-green-100 text-green-800 border-green-500' 
-                      : 'bg-red-100 text-red-800 border-red-500'
-                  }`}
-                >
-                  {feedbackMessage.text}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <FeedbackToast
+              message={feedbackMessage}
+              onDismiss={() => setFeedbackMessage(null)}
+            />
 
             <AnimatePresence mode="wait">
               <motion.div

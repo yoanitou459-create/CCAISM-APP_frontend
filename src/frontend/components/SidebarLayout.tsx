@@ -11,7 +11,6 @@ import {
   Menu, 
   X, 
   UserCircle, 
-  CheckCircle2, 
   Plus,
   Coins,
   ChevronLeft,
@@ -21,6 +20,7 @@ import {
   Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { FeedbackToast } from './FeedbackToast';
 import { ExcelImportModal } from './ExcelImportModal';
 import { ProfileModal } from './ProfileModal';
 import { getStoredEnterprises, saveStoredEnterprises } from '../../database/enterpriseStorage';
@@ -119,13 +119,13 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   const triggerExport = () => {
     const list = getStoredEnterprises();
     if (list.length === 0) {
-      setToastText("Aucune entreprise disponible pour l'export.");
+      setToastText("Aucune entreprise à exporter.");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
     }
     exportEnterprisesToCSV(list);
-    setToastText("Annuaire exporté avec succès ! (.csv)");
+    setToastText("Annuaire exporté (.csv).");
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
@@ -137,7 +137,7 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
   };
 
   const handleImportSuccess = () => {
-    setToastText("Données Excel importées et ajoutées !");
+    setToastText("Import Excel terminé.");
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
     window.dispatchEvent(new Event('enterprises_updated'));
@@ -221,21 +221,10 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
         </div>
 
         {/* Toast */}
-        <AnimatePresence>
-          {showToast && (
-            <motion.div
-              initial={{ opacity: 0, y: -40, x: '-50%' }}
-              animate={{ opacity: 1, y: 20, x: '-50%' }}
-              exit={{ opacity: 0, y: -40, x: '-50%' }}
-              className="fixed top-4 left-1/2 z-[100] glass-panel !rounded-2xl px-6 py-4 flex items-center gap-3 text-[#1A3D18]"
-            >
-              <div className="w-6 h-6 rounded-lg bg-cscm-green/15 text-cscm-green flex items-center justify-center">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-semibold">{toastText}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <FeedbackToast
+          message={showToast ? { type: 'success', text: toastText } : null}
+          onDismiss={() => setShowToast(false)}
+        />
 
         {/* ═══ NAVBAR VERRE VERT (pleine largeur) ═══ */}
         <header className="relative z-40 shrink-0 mx-3 mt-3 lg:mx-4 lg:mt-4">

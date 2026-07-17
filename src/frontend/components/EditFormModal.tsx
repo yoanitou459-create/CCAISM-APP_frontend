@@ -348,7 +348,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                     </div>
                     {formData.fileData ? (
                       <div className="space-y-1 text-center">
-                        <p className="text-xs font-black text-emerald-800">✓ Document téléversé avec succès</p>
+                        <p className="text-xs font-black text-emerald-800">Document téléversé</p>
                         <p className="text-[11px] text-gray-500 font-mono select-all font-semibold truncate max-w-md mx-auto">{formData.fileName}</p>
                         {formData.fileType?.startsWith('image/') && (
                           <div className="mt-3 flex justify-center">

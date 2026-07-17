@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { SidebarLayout } from '../components/SidebarLayout';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { ModalPortal } from '../components/ModalPortal';
 import { getStoredUsers, saveStoredUsers, AppUser } from '../../database/userStorage';
@@ -109,7 +108,7 @@ export const UserManagement: React.FC = () => {
 
   const handleDeleteUser = (user: AppUser) => {
     if (currentUser && currentUser.email.toLowerCase() === user.email.toLowerCase()) {
-      triggerToast("Invalide: Vous ne pouvez pas supprimer votre propre compte.");
+      triggerToast("Impossible de supprimer votre propre compte.");
       return;
     }
     setDeleteTargetUser(user);
@@ -119,7 +118,7 @@ export const UserManagement: React.FC = () => {
     if (!deleteTargetUser) return;
     const updated = users.filter(u => u.id !== deleteTargetUser.id);
     saveStoredUsers(updated);
-    triggerToast('Utilisateur supprimé avec succès.');
+    triggerToast('Utilisateur supprimé.');
     setDeleteTargetUser(null);
   };
 
@@ -155,7 +154,7 @@ export const UserManagement: React.FC = () => {
       });
       saveStoredUsers(updated);
       setIsModalOpen(false);
-      triggerToast("L'utilisateur a été mis à jour avec succès.");
+      triggerToast('Utilisateur mis à jour.');
     } else {
       // Add
       const newUser: AppUser = {
@@ -171,7 +170,7 @@ export const UserManagement: React.FC = () => {
       };
       saveStoredUsers([...users, newUser]);
       setIsModalOpen(false);
-      triggerToast("Nouvel utilisateur créé avec succès.");
+      triggerToast('Nouvel utilisateur créé.');
     }
   };
 
@@ -186,8 +185,8 @@ export const UserManagement: React.FC = () => {
   });
 
   return (
-    <SidebarLayout>
-      <div className="p-4 md:p-8 max-w-7xl mx-auto w-full space-y-8 min-h-screen bg-transparent font-sans">
+    <>
+      <div className="p-4 md:p-8 max-w-7xl mx-auto w-full space-y-6 font-sans bg-transparent">
         
         {/* Toast Notification */}
         <AnimatePresence>
@@ -206,35 +205,33 @@ export const UserManagement: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Top welcome banner */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#3D7A32] to-[#1A3D18] rounded-[2.5rem] p-8 md:p-10 text-white shadow-xl border border-white/5">
-          <div className="absolute -right-10 -bottom-10 w-96 h-96 rounded-full bg-cscm-gold/10 blur-3xl pointer-events-none" />
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-cscm-gold">
-                <Users className="w-5 h-5" />
-                <span className="text-xs font-black uppercase tracking-wider">Administration Générale</span>
-              </div>
-              <h1 className="text-2xl md:text-3xl font-serif font-black text-cscm-gold">
-                Gestion des Utilisateurs accrédités
-              </h1>
-              <p className="text-white/70 text-xs font-medium max-w-2xl leading-relaxed">
-                Configurez les comptes de connexion de la Chambre et paramétrez leurs niveaux d'accréditations réglementaires (Administrateur, Modérateur ou Membre).
-              </p>
+        {/* En-tête page + CTA principal */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#12210E]/10 pb-5">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-cscm-green mb-1.5">
+              <Users className="w-4 h-4" />
+              <span className="text-[11px] font-black uppercase tracking-[0.2em]">Administration</span>
             </div>
-
-            <button
-              onClick={handleOpenAdd}
-              className="btn-gold !bg-cscm-gold hover:!bg-[#ebd078] !text-cscm-dark !border-[#ebd078] !px-6 !py-3.5 shadow-lg shrink-0"
-            >
-              <UserPlus className="w-4 h-4" />
-              Accréditer un utilisateur
-            </button>
+            <h1 className="text-2xl md:text-3xl font-serif font-black text-[#12210E] tracking-tight">
+              Gestion des utilisateurs
+            </h1>
+            <p className="text-sm font-semibold text-[#1A3D18]/65 mt-1 max-w-xl leading-relaxed">
+              Créez et gérez les comptes (Admin, Modérateur, Membre) de la Chambre.
+            </p>
           </div>
+
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="btn-primary shrink-0 w-full sm:w-auto px-6 py-3 text-sm shadow-lg"
+          >
+            <UserPlus className="w-4 h-4" />
+            Ajouter un utilisateur
+          </button>
         </div>
 
-        {/* Row explaining roles privileges strictly as requested */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Rôles */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
           <div className="surface-card surface-card-hover p-5 relative overflow-hidden">
             <div className="absolute top-4 right-4 text-rose-500/10">
@@ -328,13 +325,13 @@ export const UserManagement: React.FC = () => {
 
         </div>
 
-        {/* Filter Bar */}
-        <div className="surface-card p-5 flex flex-col md:flex-row gap-4 items-center">
+        {/* Barre filtres + action */}
+        <div className="surface-card p-4 md:p-5 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
           <div className="relative flex-grow w-full">
             <Search className="w-4 h-4 text-cscm-green/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
             <input 
               type="text" 
-              placeholder="Saisissez un prénom, nom, ou email pour rechercher..."
+              placeholder="Rechercher un prénom, nom ou email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="field-input pl-10"
@@ -344,13 +341,22 @@ export const UserManagement: React.FC = () => {
           <select 
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="field-select w-full md:w-56"
+            className="field-select w-full lg:w-52 shrink-0"
           >
-            <option value="">Tous les Rôles ...</option>
-            <option value="ADMIN">ADMINISTRATEUR</option>
-            <option value="MODERATEUR">MODÉRATEUR</option>
-            <option value="MEMBRE">MEMBRE</option>
+            <option value="">Tous les rôles</option>
+            <option value="ADMIN">Administrateur</option>
+            <option value="MODERATEUR">Modérateur</option>
+            <option value="MEMBRE">Membre</option>
           </select>
+
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="btn-primary shrink-0 w-full lg:w-auto px-5 py-3"
+          >
+            <UserPlus className="w-4 h-4" />
+            Nouvel utilisateur
+          </button>
         </div>
 
         {/* Users list as high contrast table */}
@@ -370,7 +376,15 @@ export const UserManagement: React.FC = () => {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-10 text-center text-[#132e15]/60 font-bold text-xs">
-                      Aucun utilisateur ne correspond à votre recherche.
+                      <p className="mb-4">Aucun utilisateur ne correspond à votre recherche.</p>
+                      <button
+                        type="button"
+                        onClick={handleOpenAdd}
+                        className="btn-primary mx-auto"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Ajouter un utilisateur
+                      </button>
                     </td>
                   </tr>
                 ) : (
@@ -397,53 +411,34 @@ export const UserManagement: React.FC = () => {
                                   {u.entreprise}
                                 </p>
                               )}
-                              {isSelf && (
-                                <span className="inline-block text-[8px] bg-[#E1EADF] text-[#132e15] font-black uppercase rounded px-1.5 py-0.2 mt-0.5">
-                                  Votre Compte Actif
-                                </span>
-                              )}
                             </div>
                           </div>
                         </td>
-                        <td className="p-5 font-mono text-xs text-[#132e15]/85 font-semibold">{u.email}</td>
+                        <td className="p-5 text-xs font-semibold text-[#132e15]/80">{u.email}</td>
                         <td className="p-5">
-                          {u.role === 'ADMIN' ? (
-                            <span className="badge-gold">
-                              <ShieldAlert className="w-3.5 h-3.5" />
-                              Admin
-                            </span>
-                          ) : u.role === 'MODERATEUR' ? (
-                            <span className="badge-green">
-                              <ShieldCheck className="w-3.5 h-3.5" />
-                              Modérateur
-                            </span>
-                          ) : (
-                            <span className="badge-neutral">
-                              <User className="w-3.5 h-3.5" />
-                              Membre
-                            </span>
-                          )}
+                          <span className={`text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full ${
+                            u.role === 'ADMIN' ? 'bg-rose-100 text-rose-700' :
+                            u.role === 'MODERATEUR' ? 'bg-amber-100 text-amber-800' :
+                            'bg-blue-100 text-blue-700'
+                          }`}>
+                            {u.role}
+                          </span>
                         </td>
                         <td className="p-5 text-center">
-                          {u.status === 'Inactif' ? (
-                            <span className="badge-danger">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                              Inactif
-                            </span>
-                          ) : (
-                            <span className="badge-green">
-                              <span className="w-1.5 h-1.5 rounded-full bg-cscm-green" />
-                              Actif
-                            </span>
-                          )}
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${
+                            u.status === 'Actif' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {u.status === 'Actif' ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
+                            {u.status || 'Actif'}
+                          </span>
                         </td>
-                        <td className="p-5 text-xs text-[#132e15]/80 font-bold">{u.dateCreation}</td>
-                        <td className="p-5 text-right">
-                          <div className="flex justify-end gap-1.5 items-center">
+                        <td className="p-5 text-xs font-semibold text-[#132e15]/70">{u.dateCreation || '—'}</td>
+                        <td className="p-5">
+                          <div className="flex items-center justify-end gap-2">
                             <button 
                               onClick={() => handleOpenEdit(u)}
-                              className="btn-icon hover:text-cscm-green"
-                              title="Modifier l'utilisateur"
+                              className="btn-icon"
+                              title="Modifier"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
@@ -486,10 +481,10 @@ export const UserManagement: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-serif font-black text-cscm-gold tracking-wide">
-                      {editingUser ? "Modifier l'Accréditation" : "Accréditer un collaborateur"}
+                      {editingUser ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}
                     </h3>
                     <p className="text-[9px] text-white/65 uppercase tracking-wider font-bold mt-0.5">
-                      {editingUser ? "Éditer un compte existant" : "Enregistrer un nouveau compte"}
+                      {editingUser ? "Éditer un compte existant" : "Créer un nouveau compte"}
                     </p>
                   </div>
                 </div>
@@ -519,7 +514,7 @@ export const UserManagement: React.FC = () => {
                     <input 
                       type="text" 
                       required
-                      placeholder="Saisissez le prénom (Ex: Ibrahima)"
+                      placeholder="Ex: Ibrahima"
                       value={prenom}
                       onChange={(e) => setPrenom(e.target.value)}
                       className="field-input"
@@ -533,7 +528,7 @@ export const UserManagement: React.FC = () => {
                     <input 
                       type="text" 
                       required
-                      placeholder="Saisissez le nom (Ex: Diop)"
+                      placeholder="Ex: Diop"
                       value={nom}
                       onChange={(e) => setNom(e.target.value)}
                       className="field-input"
@@ -549,7 +544,7 @@ export const UserManagement: React.FC = () => {
                   <input 
                     type="email" 
                     required
-                    placeholder="Saisissez l'adresse email professionnelle (Ex: i.diop@cscm.com)"
+                    placeholder="ex: utilisateur@cscm.org"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="field-input"
@@ -558,27 +553,13 @@ export const UserManagement: React.FC = () => {
 
                 <div>
                   <label className="field-label">
-                    <Building2 />
-                    Entreprise / Raison Sociale
+                    <Lock />
+                    Mot de passe {editingUser ? '(laisser vide = inchangé)' : '*'}
                   </label>
                   <input 
                     type="text" 
-                    placeholder="Saisissez le nom de l'entreprise (Optionnel)"
-                    value={entreprise}
-                    onChange={(e) => setEntreprise(e.target.value)}
-                    className="field-input"
-                  />
-                </div>
-
-                <div>
-                  <label className="field-label">
-                    <Lock />
-                    Mot de passe *
-                  </label>
-                  <input 
-                    type="password" 
-                    required
-                    placeholder="Saisissez le mot de passe"
+                    required={!editingUser}
+                    placeholder={editingUser ? '••••••••' : 'Définir un mot de passe'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="field-input"
@@ -587,16 +568,30 @@ export const UserManagement: React.FC = () => {
 
                 <div>
                   <label className="field-label">
+                    <Building2 />
+                    Entreprise (optionnel)
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="Raison sociale liée"
+                    value={entreprise}
+                    onChange={(e) => setEntreprise(e.target.value)}
+                    className="field-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="field-label">
                     <Shield />
-                    Rôle / Droits d'Utilisation *
+                    Rôle *
                   </label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value as any)}
                     className="field-select"
                   >
-                    <option value="MEMBRE">Membre (Fiche technique uniquement)</option>
-                    <option value="MODERATEUR">Modérateur (Éditer / Exporter, sans suppression)</option>
+                    <option value="MEMBRE">MEMBRE (Consultation)</option>
+                    <option value="MODERATEUR">MODÉRATEUR (Édition)</option>
                     <option value="ADMIN">ADMINISTRATEUR (Tous les accès)</option>
                   </select>
                 </div>
@@ -604,7 +599,7 @@ export const UserManagement: React.FC = () => {
                 <div>
                   <label className="field-label">
                     <CheckCircle2 />
-                    Statut du Compte *
+                    Statut du compte *
                   </label>
                   <select
                     value={status}
@@ -623,21 +618,21 @@ export const UserManagement: React.FC = () => {
                     onClick={() => setIsModalOpen(false)}
                     className="btn-secondary flex-1"
                   >
-                    Fermer
+                    Annuler
                   </button>
                   <button 
                     type="submit"
-                    className="btn-cta flex-1"
+                    className="btn-primary flex-1"
                   >
                     {editingUser ? (
                       <>
                         <CheckCircle2 className="w-4 h-4" />
-                        Sauvegarder
+                        Enregistrer
                       </>
                     ) : (
                       <>
                         <UserPlus className="w-4 h-4" />
-                        Inscrire l'utilisateur
+                        Créer l'utilisateur
                       </>
                     )}
                   </button>
@@ -653,8 +648,17 @@ export const UserManagement: React.FC = () => {
         isOpen={deleteTargetUser !== null}
         onClose={() => setDeleteTargetUser(null)}
         onConfirm={confirmDeleteUser}
-        title={`Voulez-vous vraiment supprimer définitivement l'utilisateur ${deleteTargetUser?.prenom} ${deleteTargetUser?.nom} (${deleteTargetUser?.email}) ?`}
+        variant="danger"
+        title="Supprimer cet utilisateur ?"
+        highlight={
+          deleteTargetUser
+            ? `${deleteTargetUser.prenom} ${deleteTargetUser.nom} · ${deleteTargetUser.email}`
+            : undefined
+        }
+        description="Son compte sera retiré définitivement. Cette personne ne pourra plus se connecter à l'application."
+        confirmLabel="Oui, supprimer"
+        cancelLabel="Annuler"
       />
-    </SidebarLayout>
+    </>
   );
 };

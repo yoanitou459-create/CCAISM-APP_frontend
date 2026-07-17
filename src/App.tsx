@@ -651,19 +651,23 @@ const ProtectedLayout = () => {
           {PROTECTED_PAGES.map(page => {
             const isActive = page.match(location.pathname);
             return (
-              <div
+              <motion.div
                 key={page.key}
                 ref={el => { pageRefs.current[page.key] = el; }}
-                className={`absolute inset-0 overflow-y-auto pb-28 lg:pb-8 transition-opacity duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                initial={false}
+                animate={{ opacity: isActive ? 1 : 0 }}
+                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                aria-hidden={!isActive}
+                className={`absolute inset-0 overflow-y-auto pb-28 lg:pb-8 ${
                   isActive
-                    ? 'opacity-100 z-10 pointer-events-auto'
-                    : 'opacity-0 z-0 pointer-events-none invisible'
+                    ? 'z-10 pointer-events-auto'
+                    : 'z-0 pointer-events-none'
                 }`}
               >
                 <div className="page-shell">
                   {page.element}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -801,7 +805,7 @@ export default function App() {
             <Route path="/users" element={<UserManagement />} />
           </Route>
 
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<FallbackRedirect />} />
         </Routes>
       </Router>

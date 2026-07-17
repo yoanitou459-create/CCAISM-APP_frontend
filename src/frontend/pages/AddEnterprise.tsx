@@ -125,7 +125,7 @@ export const AddEnterprise: React.FC = () => {
     saveStoredEnterprises([...current, newEnterprise]);
 
     // Store a toast message in sessionStorage for persistent display after route change
-    sessionStorage.setItem('cscm_toast_message', "L'entreprise a été ajoutée avec succès !");
+    sessionStorage.setItem('cscm_toast_message', 'Entreprise ajoutée avec succès.');
 
     // Trigger update event across components
     window.dispatchEvent(new Event('enterprises_updated'));
