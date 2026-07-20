@@ -648,7 +648,7 @@ const ProtectedLayout = () => {
   useEffect(() => {
     const isProtectedRoute = PROTECTED_PAGES.some(p => p.match(location.pathname));
     if (isProtectedRoute) {
-      localStorage.setItem('cscm_last_route', location.pathname);
+      sessionStorage.setItem('cscm_last_route', location.pathname);
     }
   }, [location.pathname]);
 
@@ -686,7 +686,7 @@ const ProtectedLayout = () => {
 
 const RootRedirect = () => {
   const token = localStorage.getItem('token');
-  const lastRoute = localStorage.getItem('cscm_last_route');
+  const lastRoute = sessionStorage.getItem('cscm_last_route');
   
   if (token) {
     if (lastRoute && lastRoute !== '/') {
@@ -699,6 +699,9 @@ const RootRedirect = () => {
 
 export default function App() {
   useEffect(() => {
+    // Clean up legacy localStorage route key to avoid interference
+    localStorage.removeItem('cscm_last_route');
+
     // 1. Force enable Firebase active synchronization by default
     if (localStorage.getItem('cscm_firebase_active') !== 'true') {
       localStorage.setItem('cscm_firebase_active', 'true');
