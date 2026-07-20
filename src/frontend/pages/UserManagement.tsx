@@ -21,10 +21,11 @@ import {
   Settings,
   Building2
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const UserManagement: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -57,12 +58,14 @@ export const UserManagement: React.FC = () => {
     if (loggedUser) {
       const parsed = JSON.parse(loggedUser);
       setCurrentUser(parsed);
-      // Strictly verify if current user is ADMIN, otherwise redirect
-      if (parsed.role !== 'ADMIN') {
+      // Strictly verify if current user is ADMIN, otherwise redirect, but only if they are actively trying to access the users page
+      if (location.pathname === '/users' && parsed.role !== 'ADMIN') {
         navigate('/dashboard');
       }
     } else {
-      navigate('/login');
+      if (location.pathname === '/users') {
+        navigate('/login');
+      }
     }
   };
 
@@ -174,6 +177,10 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const countByRole = (role: 'ADMIN' | 'MODERATEUR' | 'MEMBRE') => {
+    return users.filter(u => u.role === role).length;
+  };
+
   const filteredUsers = users.filter(u => {
     const term = search.toLowerCase();
     const matchSearch = u.nom.toLowerCase().includes(term) || 
@@ -233,130 +240,141 @@ export const UserManagement: React.FC = () => {
         {/* Rôles */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          <div className="surface-card surface-card-hover p-5 relative overflow-hidden">
-            <div className="absolute top-4 right-4 text-rose-500/10">
-              <Shield className="w-12 h-12" />
-            </div>
-            <div className="flex items-center gap-2 mb-3.5">
-              <span className="text-[10px] bg-red-100 text-red-700 font-extrabold px-2 py-0.5 rounded uppercase">
-                ADMIN (Tous les accès)
+          <div className="surface-card surface-card-hover p-5 pr-20 relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+            <div className="absolute top-5 right-5 flex flex-col items-center justify-center bg-red-50 border-2 border-red-200/80 rounded-2xl p-2 w-14 h-14 shadow-sm shrink-0 select-none">
+              <span className="text-2xl font-black text-red-700 leading-none">
+                {countByRole('ADMIN')}
+              </span>
+              <span className="text-[8px] font-extrabold text-red-800 uppercase tracking-tight mt-0.5">
+                {countByRole('ADMIN') > 1 ? 'Membres' : 'Membre'}
               </span>
             </div>
-            <p className="text-[#132e15]/80 text-xs mb-3 font-semibold leading-relaxed">Niveau de contrôle total sur l'application.</p>
-            <ul className="space-y-1.5 text-xs text-gray-700 font-medium">
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Tableau de bord complet & finances
-              </li>
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Création / Modification d'entreprises
-              </li>
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Suppression définitive d'entreprises
-              </li>
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Gestion & Accréditations des comptes
-              </li>
-            </ul>
+            <div>
+              <div className="flex items-center gap-2 mb-3.5">
+                <span className="text-[10px] bg-red-100 text-red-700 font-extrabold px-2.5 py-1 rounded uppercase tracking-wider">
+                  ADMIN
+                </span>
+              </div>
+              <p className="text-[#132e15]/80 text-xs mb-3 font-semibold leading-relaxed">Niveau de contrôle total sur l'application.</p>
+              <ul className="space-y-1.5 text-xs text-gray-700 font-medium">
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Tableau de bord complet & finances
+                </li>
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Création / Modification d'entreprises
+                </li>
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Suppression définitive d'entreprises
+                </li>
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Gestion & Accréditations des comptes
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div className="surface-card surface-card-hover p-5 relative overflow-hidden">
-            <div className="absolute top-4 right-4 text-amber-500/10">
-              <Settings className="w-12 h-12" />
-            </div>
-            <div className="flex items-center gap-2 mb-3.5">
-              <span className="text-[10px] bg-amber-100 text-amber-700 font-extrabold px-2 py-0.5 rounded uppercase">
-                MODÉRATEUR (Édition sans suppression)
+          <div className="surface-card surface-card-hover p-5 pr-20 relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+            <div className="absolute top-5 right-5 flex flex-col items-center justify-center bg-amber-50 border-2 border-amber-200/80 rounded-2xl p-2 w-14 h-14 shadow-sm shrink-0 select-none">
+              <span className="text-2xl font-black text-amber-700 leading-none">
+                {countByRole('MODERATEUR')}
+              </span>
+              <span className="text-[8px] font-extrabold text-amber-800 uppercase tracking-tight mt-0.5">
+                {countByRole('MODERATEUR') > 1 ? 'Membres' : 'Membre'}
               </span>
             </div>
-            <p className="text-[#132e15]/80 text-xs mb-3 font-semibold leading-relaxed">Niveau de supervision et gestion opérationnelle locale.</p>
-            <ul className="space-y-1.5 text-xs text-gray-700 font-medium">
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Consultation du tableau de bord
-              </li>
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Ajout & Édition d'entreprises
-              </li>
-              <li className="flex items-center gap-2 text-red-700 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
-                INTERDIT : Suppression d'une entreprise
-              </li>
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Exportation autorisée (.CSV, Rapports)
-              </li>
-            </ul>
+            <div>
+              <div className="flex items-center gap-2 mb-3.5">
+                <span className="text-[10px] bg-amber-100 text-amber-700 font-extrabold px-2.5 py-1 rounded uppercase tracking-wider">
+                  MODÉRATEUR
+                </span>
+              </div>
+              <p className="text-[#132e15]/80 text-xs mb-3 font-semibold leading-relaxed">Niveau de supervision et gestion opérationnelle locale.</p>
+              <ul className="space-y-1.5 text-xs text-gray-700 font-medium">
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Consultation du tableau de bord
+                </li>
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Ajout & Édition d'entreprises
+                </li>
+                <li className="flex items-center gap-2 text-red-700 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                  INTERDIT : Suppression d'une entreprise
+                </li>
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Exportation autorisée (.CSV, Rapports)
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div className="surface-card surface-card-hover p-5 relative overflow-hidden">
-            <div className="absolute top-4 right-4 text-blue-500/10">
-              <User className="w-12 h-12" />
-            </div>
-            <div className="flex items-center gap-2 mb-3.5">
-              <span className="text-[10px] bg-blue-100 text-blue-700 font-extrabold px-2 py-0.5 rounded uppercase">
-                MEMBRE (Consultation simple)
+          <div className="surface-card surface-card-hover p-5 pr-20 relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+            <div className="absolute top-5 right-5 flex flex-col items-center justify-center bg-blue-50 border-2 border-blue-200/80 rounded-2xl p-2 w-14 h-14 shadow-sm shrink-0 select-none">
+              <span className="text-2xl font-black text-blue-700 leading-none">
+                {countByRole('MEMBRE')}
+              </span>
+              <span className="text-[8px] font-extrabold text-blue-800 uppercase tracking-tight mt-0.5">
+                {countByRole('MEMBRE') > 1 ? 'Membres' : 'Membre'}
               </span>
             </div>
-            <p className="text-[#132e15]/80 text-xs mb-3 font-semibold leading-relaxed">Niveau d'observation membre de l'annuaire bilatéral.</p>
-            <ul className="space-y-1.5 text-xs text-gray-700 font-medium">
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Consultation de base du tableau de bord
-              </li>
-              <li className="flex items-center gap-2 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
-                Voir la liste complète des membres
-              </li>
-              <li className="flex items-center gap-2 text-amber-700 font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
-                Accès exclusif : Fiche technique uniquement
-              </li>
-              <li className="flex items-center gap-2 text-rose-700 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                Bloqué : Ajout, Édition, Suppression, Export
-              </li>
-            </ul>
+            <div>
+              <div className="flex items-center gap-2 mb-3.5">
+                <span className="text-[10px] bg-blue-100 text-blue-700 font-extrabold px-2.5 py-1 rounded uppercase tracking-wider">
+                  MEMBRE
+                </span>
+              </div>
+              <p className="text-[#132e15]/80 text-xs mb-3 font-semibold leading-relaxed">Niveau d'observation membre de l'annuaire bilatéral.</p>
+              <ul className="space-y-1.5 text-xs text-gray-700 font-medium">
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Consultation de base du tableau de bord
+                </li>
+                <li className="flex items-center gap-2 text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  Voir la liste complète des membres
+                </li>
+                <li className="flex items-center gap-2 text-amber-700 font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                  Accès exclusif : Fiche technique uniquement
+                </li>
+                <li className="flex items-center gap-2 text-rose-700 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  Bloqué : Ajout, Édition, Suppression, Export
+                </li>
+              </ul>
+            </div>
           </div>
 
         </div>
 
         {/* Barre filtres + action */}
-        <div className="surface-card p-4 md:p-5 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
-          <div className="relative flex-grow w-full">
-            <Search className="w-4 h-4 text-cscm-green/60 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
+        <div className="surface-card p-4 md:p-5 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div className="relative flex-1 w-full">
+            <Search className="w-5 h-5 text-cscm-green/50 absolute left-4 top-1/2 -translate-y-1/2 z-10" />
             <input 
               type="text" 
-              placeholder="Rechercher un prénom, nom ou email..."
+              placeholder="Rechercher par nom, prénom, email ou entreprise..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="field-input pl-10"
+              className="w-full pl-11 pr-10 py-3.5 bg-[#FAF9F5]/70 hover:bg-white focus:bg-white border border-[#132e15]/10 hover:border-cscm-green/30 focus:border-cscm-green rounded-2xl outline-none font-sans text-sm text-[#132e15] font-semibold transition-all duration-300 shadow-inner focus:ring-4 focus:ring-cscm-green/10"
             />
+            {search && (
+              <button 
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-[#132e15] transition-all cursor-pointer"
+                title="Effacer la recherche"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
-
-          <select 
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="field-select w-full lg:w-52 shrink-0"
-          >
-            <option value="">Tous les rôles</option>
-            <option value="ADMIN">Administrateur</option>
-            <option value="MODERATEUR">Modérateur</option>
-            <option value="MEMBRE">Membre</option>
-          </select>
-
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="btn-primary shrink-0 w-full lg:w-auto px-5 py-3"
-          >
-            <UserPlus className="w-4 h-4" />
-            Nouvel utilisateur
-          </button>
         </div>
 
         {/* Users list as high contrast table */}

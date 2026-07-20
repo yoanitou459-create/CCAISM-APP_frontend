@@ -6,7 +6,7 @@ import { ModalPortal } from '../components/ModalPortal';
 import { FeedbackToast, buildDetailFeedbackMessage } from '../components/FeedbackToast';
 import { jsPDF } from 'jspdf';
 import { getLocalCotisationRules } from '../../database/cotisationRules';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getStoredEnterprises, saveStoredEnterprises } from '../../database/enterpriseStorage';
 import { SidebarLayout } from '../components/SidebarLayout';
 
@@ -46,6 +46,7 @@ const getTabIcon = (tab: string) => {
 export const EnterpriseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [enterprise, setEnterprise] = useState<any>(null);
 
   const [activeTab, setActiveTab] = useState('Informations générales');
@@ -89,6 +90,12 @@ export const EnterpriseDetail: React.FC = () => {
   }, [previewCert]);
 
   const loadEnterprise = () => {
+    // Only perform redirections if we are actively on an enterprise detail page
+    const isDetailRoute = location.pathname.startsWith('/enterprises/') && 
+                          location.pathname !== '/enterprises/add' && 
+                          location.pathname !== '/enterprises';
+    if (!isDetailRoute) return;
+
     const freshList = getStoredEnterprises();
     const found = freshList.find(e => String(e.id) === String(id));
     if (found) {

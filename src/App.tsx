@@ -644,6 +644,14 @@ const ProtectedLayout = () => {
     }
   }, [location.pathname]);
 
+  // Sauvegarder la route actuelle pour la restaurer lors de l'actualisation
+  useEffect(() => {
+    const isProtectedRoute = PROTECTED_PAGES.some(p => p.match(location.pathname));
+    if (isProtectedRoute) {
+      localStorage.setItem('cscm_last_route', location.pathname);
+    }
+  }, [location.pathname]);
+
   return (
     <ProtectedRoute>
       <SidebarLayout>
@@ -674,6 +682,19 @@ const ProtectedLayout = () => {
       </SidebarLayout>
     </ProtectedRoute>
   );
+};
+
+const RootRedirect = () => {
+  const token = localStorage.getItem('token');
+  const lastRoute = localStorage.getItem('cscm_last_route');
+  
+  if (token) {
+    if (lastRoute && lastRoute !== '/') {
+      return <Navigate to={lastRoute} replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <Navigate to="/login" replace />;
 };
 
 export default function App() {
@@ -805,7 +826,7 @@ export default function App() {
             <Route path="/users" element={<UserManagement />} />
           </Route>
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<RootRedirect />} />
           <Route path="*" element={<FallbackRedirect />} />
         </Routes>
       </Router>

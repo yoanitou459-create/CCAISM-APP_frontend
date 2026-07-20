@@ -275,14 +275,6 @@ export const SidebarLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
 
               <button
                 onClick={() => setIsProfileOpen(true)}
-                className="inline-flex items-center gap-2 bg-[#1e3a22]/80 hover:bg-[#162a19] text-white px-3.5 py-2 lg:px-4 rounded-full text-xs font-bold tracking-wide transition-all border border-white/20 shadow-inner cursor-pointer"
-              >
-                <Settings className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Réglages</span>
-              </button>
-
-              <button
-                onClick={() => setIsProfileOpen(true)}
                 className="w-9 h-9 rounded-full border-2 border-white/30 bg-white/10 p-0.5 overflow-hidden hover:border-white/50 transition-all cursor-pointer"
                 title="Profil"
               >
