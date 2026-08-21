@@ -52,7 +52,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
 
   // Map raw column name to canonical column name
   const mapToCanonicalKey = (normalized: string): string => {
-    // ICE mapping (identifiant commun de l'entreprise)
+    // ICE / NINEA mapping (ICE = NINEA)
     if (
       normalized === 'ice' ||
       normalized === 'code_ice' ||
@@ -68,6 +68,13 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
       normalized === 'identifiant_commun' ||
       normalized === 'i_c_e' ||
       normalized === 'num_i_c_e' ||
+      normalized === 'ice_ninea' ||
+      normalized === 'ninea_ice' ||
+      normalized === 'ice_ou_ninea' ||
+      normalized === 'identifiant_fiscal' ||
+      normalized === 'id_fiscal' ||
+      normalized === 'numero_fiscal' ||
+      normalized === 'fiscal' ||
       normalized.includes('ice')
     ) {
       return 'ice';
@@ -131,6 +138,90 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
       normalized === 'marque'
     ) {
       return 'nom_commercial';
+    }
+
+    // Responsables / Adhérents / Dirigeants / Contacts (Noms & Prénoms)
+    if (
+      normalized === 'nom' ||
+      normalized === 'noms' ||
+      normalized === 'nom_adherent' ||
+      normalized === 'nom_responsable' ||
+      normalized === 'nom_dirigeant' ||
+      normalized === 'nom_representant' ||
+      normalized === 'nom_contact' ||
+      normalized === 'nom_du_responsable' ||
+      normalized === 'nom_du_contact' ||
+      normalized === 'nom_de_l_adherent' ||
+      normalized === 'nom_adherant' ||
+      normalized === 'nom_rep' ||
+      normalized === 'nom_gerant' ||
+      normalized === 'nom_famille' ||
+      normalized === 'nom_personne' ||
+      normalized === 'last_name' ||
+      normalized === 'lastname' ||
+      normalized === 'surname'
+    ) {
+      return 'nom_adherent';
+    }
+
+    if (
+      normalized === 'prenom' ||
+      normalized === 'prenoms' ||
+      normalized === 'prenom_adherent' ||
+      normalized === 'prenom_responsable' ||
+      normalized === 'prenom_dirigeant' ||
+      normalized === 'prenom_representant' ||
+      normalized === 'prenom_contact' ||
+      normalized === 'prenom_du_responsable' ||
+      normalized === 'prenom_du_contact' ||
+      normalized === 'prenom_de_l_adherent' ||
+      normalized === 'prenom_adherant' ||
+      normalized === 'prenom_rep' ||
+      normalized === 'prenom_gerant' ||
+      normalized === 'first_name' ||
+      normalized === 'firstname'
+    ) {
+      return 'prenom_adherent';
+    }
+
+    if (
+      normalized === 'responsable' ||
+      normalized === 'nom_responsable_complet' ||
+      normalized === 'nom_complet_responsable' ||
+      normalized === 'nom_et_prenom_responsable' ||
+      normalized === 'nom_et_prenom' ||
+      normalized === 'nom_et_prenoms' ||
+      normalized === 'prenom_et_nom' ||
+      normalized === 'nom_prenom' ||
+      normalized === 'prenom_nom' ||
+      normalized === 'nom_complet' ||
+      normalized === 'contact' ||
+      normalized === 'contact_nom_prenom' ||
+      normalized === 'responsable_entreprise' ||
+      normalized === 'dirigeant' ||
+      normalized === 'gerant' ||
+      normalized === 'directeur' ||
+      normalized === 'president' ||
+      normalized === 'representant' ||
+      normalized === 'representant_legal' ||
+      normalized === 'contact_principal'
+    ) {
+      return 'responsable';
+    }
+
+    if (
+      normalized === 'fonction' ||
+      normalized === 'fonction_adherent' ||
+      normalized === 'fonction_responsable' ||
+      normalized === 'fonction_contact' ||
+      normalized === 'poste' ||
+      normalized === 'poste_responsable' ||
+      normalized === 'titre' ||
+      normalized === 'titre_responsable' ||
+      normalized === 'qualite' ||
+      normalized === 'role'
+    ) {
+      return 'fonction_adherent';
     }
 
     // Forme juridique
@@ -201,11 +292,10 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
       const duplicatesInFile: string[] = [];
       const duplicatesWithStored: string[] = [];
 
-      const hasMemberNo = canonicalHeaders.includes('numero_membre');
       const hasName = canonicalHeaders.includes('raison_sociale') || canonicalHeaders.includes('nom_commercial');
 
-      if (!hasName && !hasMemberNo) {
-        errors.push(`Erreur de structure : Le fichier doit contenir au minimum les colonnes 'raison_sociale' (ou nom d'entreprise) et 'numero_membre'.`);
+      if (!hasName && canonicalHeaders.length === 0) {
+        errors.push(`Erreur de structure : Le fichier doit contenir des informations d'entreprises valides.`);
       }
 
       const knownHeaders = [
@@ -213,6 +303,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
         'date_adhesion', 'date_creation', 'numero_rc', 'ninea', 'ice', 'secteur', 'forme_juridique',
         'pays', 'ville', 'adresse_complete', 'code_postal', 'telephone_principale', 'telephone_secondaire',
         'email_principal', 'site_web', 'effectif', 'description_activite', 'nom_adherent', 'prenom_adherent',
+        'responsable', 'fonction_adherent',
         'cotisation_2023', 'cotisation_2024', 'cotisation_2025', 'chiffre_affaires_2023', 'chiffre_affaires_2024',
         'ca_export_2023', 'ca_export_2024', 'ca_maroc_2023', 'ca_maroc_2024', 'ca_senegal_2023', 'ca_senegal_2024',
         'resultat_net_2023', 'resultat_net_2024', 'total_actif_2023', 'total_actif_2024', 'capitaux_propres_2023',
@@ -222,7 +313,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
 
       canonicalHeaders.forEach(h => {
         if (!knownHeaders.includes(h) && h !== '') {
-          warnings.push(`Colonne insolite : "${h}" importée en métadonnée libre.`);
+          warnings.push(`Colonne additionnelle : "${h}" importée avec succès.`);
         }
       });
 
@@ -245,17 +336,73 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
           row[canonKey] = strVal;
         });
 
-        const name = row.nom_commercial || row.raison_sociale || `Entreprise Importée ${i + 1}`;
+        const name = row.nom_commercial || row.raison_sociale || `Entreprise Adhérente ${stored.length + i + 1}`;
         const raisonSociale = row.raison_sociale || name;
-        const memberNo = row.numero_membre || `M${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+        
+        // Even if there is no member number in file, generate sequential clean member number
+        const rawMember = (row.numero_membre || '').trim();
+        const memberNo = rawMember || `M${String(100 + stored.length + i + 1).padStart(3, '0')}`;
         
         // Clean ICE / NINEA number (ICE = NINEA)
         const rawIce = (row.ice || '').trim();
         const rawNinea = (row.ninea || '').trim();
         const fiscalId = rawIce || rawNinea || '';
 
-        if (fiscalId && fiscalId !== 'N/A') {
+        if (fiscalId && fiscalId !== 'N/A' && fiscalId !== '—' && fiscalId !== '-') {
           iceCount++;
+        }
+
+        // Extract Responsable / Contact (Noms & Prénoms)
+        let nomAdherent = (row.nom_adherent || row.nom_contact || row.nom || row.nom_responsable || row.nom_dirigeant || row.nom_rep || row.nom_gerant || '').trim();
+        let prenomAdherent = (row.prenom_adherent || row.prenom_contact || row.prenom || row.prenom_responsable || row.prenom_dirigeant || row.prenom_rep || row.prenom_gerant || '').trim();
+        const rawResponsable = (row.responsable || row.contact_principal || row.contact || '').trim();
+        const fonctionAdherent = (row.fonction_adherent || row.fonction || row.poste || row.titre || 'Dirigeant / Représentant légal').trim();
+        const telContact = (row.telephone_principale || row.telephone_secondaire || row.telephone || '').trim();
+        const emailContact = (row.email_principal || row.email || '').trim();
+
+        if (!nomAdherent && !prenomAdherent && rawResponsable) {
+          const parts = rawResponsable.split(/\s+/);
+          if (parts.length > 1) {
+            prenomAdherent = parts[0];
+            nomAdherent = parts.slice(1).join(' ');
+          } else {
+            nomAdherent = rawResponsable;
+          }
+        }
+
+        const fullRespName = prenomAdherent && nomAdherent 
+          ? `${prenomAdherent} ${nomAdherent}`.trim() 
+          : (nomAdherent || prenomAdherent || rawResponsable || '');
+
+        const contactsList: any[] = [];
+        if (fullRespName || nomAdherent || prenomAdherent) {
+          contactsList.push({
+            id: `c-resp-${Date.now()}-${i}`,
+            name: fullRespName || `${prenomAdherent} ${nomAdherent}`.trim(),
+            prenom: prenomAdherent,
+            nom: nomAdherent,
+            function: fonctionAdherent || 'Dirigeant / Représentant légal',
+            phone: telContact,
+            email: emailContact,
+            isPrimary: 'Oui'
+          });
+        }
+
+        // Secondary contact check in raw row
+        const rawContact2Name = (rawRow.nom_contact_2 || rawRow.contact_2 || rawRow.contact2 || '').trim();
+        const rawContact2Prenom = (rawRow.prenom_contact_2 || rawRow.prenom2 || '').trim();
+        if (rawContact2Name || rawContact2Prenom) {
+          const full2 = rawContact2Prenom && rawContact2Name ? `${rawContact2Prenom} ${rawContact2Name}`.trim() : (rawContact2Name || rawContact2Prenom);
+          contactsList.push({
+            id: `c-sec-${Date.now()}-${i}`,
+            name: full2,
+            prenom: rawContact2Prenom,
+            nom: rawContact2Name,
+            function: rawRow.fonction_2 || rawRow.fonction_contact_2 || 'Contact',
+            phone: rawRow.telephone_2 || rawRow.tel_2 || rawRow.mobile_2 || '',
+            email: rawRow.email_2 || rawRow.email_contact_2 || rawRow.mail_2 || '',
+            isPrimary: 'Non'
+          });
         }
 
         // Handle standard sector merging
@@ -271,46 +418,107 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
             parsedSecteur = matchingSec;
           } else {
             parsedSecteur = rawSecteur || 'Autre';
-            if (rawSecteur && !appSectors.includes(rawSecteur)) {
-              warnings.push(`Ligne ${rowNum} : Secteur "${rawSecteur}" conservé.`);
-            }
           }
         }
 
+        // Capture all custom or unmapped columns from the uploaded row
+        const customAttributes: Record<string, string> = {};
+        Object.entries(rawRow).forEach(([k, v]) => {
+          if (v !== null && v !== undefined && String(v).trim() !== '') {
+            customAttributes[k] = String(v).trim();
+          }
+        });
+
+        // Automatically populate structured financialData for any year columns present
+        const autoFinancials: any[] = [];
+        const yearsDetected = ['2023', '2024', '2025'];
+        yearsDetected.forEach(yr => {
+          const caVal = row[`chiffre_affaires_${yr}`];
+          const expVal = row[`ca_export_${yr}`];
+          const marVal = row[`ca_maroc_${yr}`];
+          const senVal = row[`ca_senegal_${yr}`];
+          const resVal = row[`resultat_net_${yr}`];
+          const actVal = row[`total_actif_${yr}`];
+          const capVal = row[`capitaux_propres_${yr}`];
+          const endVal = row[`endettement_${yr}`];
+
+          if (caVal || expVal || marVal || senVal || resVal || actVal || capVal || endVal) {
+            autoFinancials.push({
+              year: yr,
+              devise: 'XOF - Franc CFA Ouest Africain',
+              ca: caVal || '',
+              export: expVal || '',
+              ca_maroc: marVal || '',
+              ca_senegal: senVal || '',
+              resultatNet: resVal || '',
+              totalActif: actVal || '',
+              capitauxPropres: capVal || '',
+              endettement: endVal || '',
+              source: 'Import Excel',
+              visibilite: 'Publique'
+            });
+          }
+        });
+
         const enterpriseObj = {
+          // Spread all raw and canonical fields first so nothing is lost
+          ...row,
+
           id: Date.now() + i,
           name,
           memberNo,
-          statutMembre: row.statut_adhesion || 'Actif',
+          statutMembre: row.statut_adhesion || row.statut_membre || row.statut || 'Actif',
+          statut_adhesion: row.statut_adhesion || row.statut_membre || row.statut || 'Actif',
           dateAdhesion: row.date_adhesion || new Date().toISOString().split('T')[0],
+          date_adhesion: row.date_adhesion || new Date().toISOString().split('T')[0],
           raisonSociale,
+          raison_sociale: raisonSociale,
+          nomCommercial: row.nom_commercial || name,
+          nom_commercial: row.nom_commercial || name,
+          typeMembre: row.type_membre || 'Adhérent',
+          type_membre: row.type_membre || 'Adhérent',
           pays: row.pays || 'Sénégal',
           ville: row.ville || 'Dakar',
           secteur: parsedSecteur,
           effectif: row.effectif || 'N/A',
           formeJuridique: row.forme_juridique || 'SARL',
+          forme_juridique: row.forme_juridique || 'SARL',
           numRC: row.numero_rc || 'N/A',
+          numero_rc: row.numero_rc || 'N/A',
           ninea: fiscalId || 'N/A',
           ice: fiscalId || 'N/A',
+          ice_ou_ninea: fiscalId || 'N/A',
           dateCreation: row.date_creation || '2022-01-01',
-          adresse: row.adresse_complete || 'N/A',
-          telephone: row.telephone_principale || row.telephone_secondaire || 'N/A',
-          email: row.email_principal || `contact@${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+          date_creation: row.date_creation || '2022-01-01',
+          adresse: row.adresse_complete || row.adresse || 'N/A',
+          adresse_complete: row.adresse_complete || row.adresse || 'N/A',
+          codePostal: row.code_postal || '',
+          code_postal: row.code_postal || '',
+          telephone: row.telephone_principale || row.telephone_secondaire || row.telephone || 'N/A',
+          telephone_principale: row.telephone_principale || '',
+          telephoneSecondaire: row.telephone_secondaire || '',
+          telephone_secondaire: row.telephone_secondaire || '',
+          email: row.email_principal || row.email || `contact@${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+          email_principal: row.email_principal || row.email || '',
           siteWeb: row.site_web || '',
-          description: row.description_activite || 'Importé par fichier CSV/Excel.',
+          site_web: row.site_web || '',
+          description: row.description_activite || row.description || 'Importé par fichier CSV/Excel.',
+          description_activite: row.description_activite || row.description || '',
           logo: null,
           cotisations: [],
 
-          // Store the specific required fields for the application
-          type_membre: row.type_membre || 'Inscrit',
-          statut_adhesion: row.statut_adhesion || 'Actif',
-          code_postal: row.code_postal || '',
-          telephone_principale: row.telephone_principale || '',
-          telephone_secondaire: row.telephone_secondaire || '',
-          email_principal: row.email_principal || '',
-          description_activite: row.description_activite || '',
-          nom_adherent: row.nom_adherent || '',
-          prenom_adherent: row.prenom_adherent || '',
+          // Responsable fields
+          nom_adherent: nomAdherent,
+          prenom_adherent: prenomAdherent,
+          nom_responsable: nomAdherent,
+          prenom_responsable: prenomAdherent,
+          fonction_adherent: fonctionAdherent,
+          fonction_responsable: fonctionAdherent,
+          nomContact: nomAdherent,
+          prenomContact: prenomAdherent,
+          fonction: fonctionAdherent,
+          responsable: fullRespName,
+          contacts: contactsList,
           
           // Contribution years stored as explicit fields to count on totals
           cotisation_2023: row.cotisation_2023 || '',
@@ -318,6 +526,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
           cotisation_2025: row.cotisation_2025 || '',
 
           // Financial Indicators
+          financialData: autoFinancials,
           chiffre_affaires_2023: row.chiffre_affaires_2023 || '',
           chiffre_affaires_2024: row.chiffre_affaires_2024 || '',
           ca_export_2023: row.ca_export_2023 || '',
@@ -336,12 +545,23 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
           endettement_2024: row.endettement_2024 || '',
 
           // Production/Capabilities Indicators
-          produits_services: row.produits_services || '',
-          technologies_utilisees: row.technologies_utilisees || '',
-          marches_cibles: row.marches_cibles || '',
-          clients_references: row.clients_references || '',
-          niveau_expertise: row.niveau_expertise || '',
-          capacite_production: row.capacite_production || ''
+          produitsServices: row.produits_services || row.produits || row.services || '',
+          produits_services: row.produits_services || row.produits || row.services || '',
+          technologies: row.technologies_utilisees || row.technologies || '',
+          technologies_utilisees: row.technologies_utilisees || row.technologies || '',
+          marchesCibles: row.marches_cibles || row.marches || '',
+          marches_cibles: row.marches_cibles || row.marches || '',
+          clientsReferences: row.clients_references || row.clients || '',
+          clients_references: row.clients_references || row.clients || '',
+          niveauExpertise: row.niveau_expertise || row.expertise || '',
+          niveau_expertise: row.niveau_expertise || row.expertise || '',
+          capaciteProduction: row.capacite_production || row.capacite || '',
+          capacite_production: row.capacite_production || row.capacite || '',
+          expertisePrincipale: row.expertise_principale || row.niveau_expertise || '',
+
+          // Raw data & custom attributes preserving 100% of user data
+          custom_attributes: customAttributes,
+          raw_excel_data: rawRow
         };
 
         const nameLower = raisonSociale.trim().toLowerCase();
@@ -349,18 +569,12 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
 
         let isDup = false;
 
-        // Dynamic checks for Expertise Level consistency
-        const currentExpertise = row.niveau_expertise || '';
-        if (currentExpertise && !['Débutant', 'Intermédiaire', 'Expert'].includes(currentExpertise)) {
-          warnings.push(`Ligne ${rowNum} : Niveau expertise '${currentExpertise}' non reconnu - valeur ignorée`);
-        }
-
         // Check internal duplicates
         if (seenFileNames.has(nameLower)) {
           duplicatesInFile.push(`Ligne ${rowNum} : Doublon de raison sociale "${raisonSociale}" dans le fichier.`);
           warnings.push(`Ligne ${rowNum} : Entreprise "${raisonSociale}" existe déjà - non mise à jour`);
           isDup = true;
-        } else if (seenFileMembers.has(memberLower)) {
+        } else if (rawMember && seenFileMembers.has(memberLower)) {
           duplicatesInFile.push(`Ligne ${rowNum} : Doublon de numéro de membre "${memberNo}" dans le fichier.`);
           warnings.push(`Ligne ${rowNum} : Entreprise avec numéro ${memberNo} existe déjà - non mise à jour`);
           isDup = true;
@@ -372,7 +586,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
           duplicatesWithStored.push(`Ligne ${rowNum} : "${raisonSociale}" existe déjà dans l'annuaire actuel.`);
           warnings.push(`Ligne ${rowNum} : Entreprise "${raisonSociale}" existe déjà - non mise à jour`);
           isDup = true;
-        } else {
+        } else if (rawMember) {
           const alreadyStoredByNo = stored.some(s => (s.memberNo || '').trim().toLowerCase() === memberLower);
           if (alreadyStoredByNo) {
             duplicatesWithStored.push(`Ligne ${rowNum} : Numéro de membre "${memberNo}" déjà attribué.`);
@@ -382,7 +596,9 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
         }
 
         seenFileNames.add(nameLower);
-        seenFileMembers.add(memberLower);
+        if (rawMember) {
+          seenFileMembers.add(memberLower);
+        }
 
         mappedEnterprises.push(enterpriseObj);
         if (!isDup) {
@@ -537,17 +753,18 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
   };
 
   const downloadTemplate = () => {
-    // Official template containing ICE column prominently
-    const headers = "numero_membre,raison_sociale,nom_commercial,type_membre,statut_adhesion,date_adhesion,date_creation,numero_rc,ninea,ice,secteur,forme_juridique,pays,ville,adresse_complete,code_postal,telephone_principale,telephone_secondaire,email_principal,site_web,effectif,description_activite,nom_adherent,prenom_adherent,cotisation_2023,cotisation_2024,cotisation_2025,chiffre_affaires_2023,chiffre_affaires_2024,ca_export_2023,ca_export_2024,ca_maroc_2023,ca_maroc_2024,ca_senegal_2023,ca_senegal_2024,resultat_net_2023,resultat_net_2024,total_actif_2023,total_actif_2024,capitaux_propres_2023,capitaux_propres_2024,endettement_2023,endettement_2024,produits_services,technologies_utilisees,marches_cibles,clients_references,niveau_expertise,capacite_production\n";
-    const sample = "M305,Innov Senegal Maroc SARL,Innov Tech,Fondateur,Actif,2023-01-15,2022-01-01,RC-DKR-303,00281923G3,001523456000089,IT,SARL,Maroc,Casablanca,Point E Rue 14,20000,+212522001122,+212661001122,contact@innov.ma,www.innov.ma,35,Développement informatique et solutions digitales,El Mansouri,Youssef,250000,250000,250000,50000000,65000000,10000000,15000000,40000000,50000000,10000000,15000000,5000000,7500000,25000000,32000000,15000000,22500000,3000000,2000000,Logiciels ERP,React Node PostgreSQL,Sénégal Maroc FMCG,Partenaires CSCM,Expert,Haute\n";
+    // Official template containing Responsable and ICE/NINEA columns prominently
+    const headers = "numero_membre,raison_sociale,nom_commercial,nom_responsable,prenom_responsable,fonction_responsable,ice_ou_ninea,type_membre,statut_adhesion,date_adhesion,date_creation,numero_rc,secteur,forme_juridique,pays,ville,adresse_complete,code_postal,telephone_principale,telephone_secondaire,email_principal,site_web,effectif,description_activite,cotisation_2023,cotisation_2024,cotisation_2025,chiffre_affaires_2023,chiffre_affaires_2024,ca_export_2023,ca_export_2024,ca_maroc_2023,ca_maroc_2024,ca_senegal_2023,ca_senegal_2024,resultat_net_2023,resultat_net_2024,total_actif_2023,total_actif_2024,capitaux_propres_2023,capitaux_propres_2024,endettement_2023,endettement_2024,produits_services,technologies_utilisees,marches_cibles,clients_references,niveau_expertise,capacite_production\n";
+    const sample = "M305,Innov Senegal Maroc SARL,Innov Tech,El Mansouri,Youssef,Directeur Général,001523456000089,Fondateur,Actif,2023-01-15,2022-01-01,RC-DKR-303,IT,SARL,Maroc,Casablanca,Point E Rue 14,20000,+212522001122,+212661001122,contact@innov.ma,www.innov.ma,35,Développement informatique et solutions digitales,250000,250000,250000,50000000,65000000,10000000,15000000,40000000,50000000,10000000,15000000,5000000,7500000,25000000,32000000,15000000,22500000,3000000,2000000,Logiciels ERP,React Node PostgreSQL,Sénégal Maroc FMCG,Partenaires CSCM,Expert,Haute\n";
     const blob = new Blob([headers + sample], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "gabarit_importation_cscm_avec_ice.csv");
+    link.setAttribute("download", "gabarit_importation_cscm_complet.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -718,12 +935,13 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                 )}
 
                 {/* Preview Table */}
-                <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-inner max-h-[220px] overflow-y-auto">
+                <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-inner max-h-[240px] overflow-y-auto">
                   <table className="w-full text-left text-xs text-gray-600">
                     <thead className="bg-gray-50/90 font-bold uppercase tracking-wider text-gray-500 sticky top-0 border-b border-gray-200/60">
                       <tr>
                         <th className="p-3">Numéro</th>
                         <th className="p-3">Raison Sociale</th>
+                        <th className="p-3">Responsable</th>
                         <th className="p-3">ICE / NINEA</th>
                         <th className="p-3">Secteur</th>
                         <th className="p-3">Cotisation 2024</th>
@@ -731,30 +949,42 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 bg-white">
-                      {cleanParsedData.slice(0, 8).map((row, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50/60 transition-colors">
-                          <td className="p-3 font-mono text-cscm-green font-bold">{row.memberNo}</td>
-                          <td className="p-3 font-semibold text-cscm-dark">{row.raisonSociale}</td>
-                          <td className="p-3">
-                            {(row.ninea && row.ninea !== 'N/A') || (row.ice && row.ice !== 'N/A') ? (
-                              <span className="font-mono font-bold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[10px]">
-                                {row.ninea !== 'N/A' ? row.ninea : row.ice}
+                      {cleanParsedData.slice(0, 8).map((row, idx) => {
+                        const respName = row.responsable || (row.prenom_adherent && row.nom_adherent ? `${row.prenom_adherent} ${row.nom_adherent}` : row.nom_adherent || row.prenom_adherent || '—');
+                        return (
+                          <tr key={idx} className="hover:bg-gray-50/60 transition-colors">
+                            <td className="p-3 font-mono text-cscm-green font-bold">{row.memberNo}</td>
+                            <td className="p-3 font-semibold text-cscm-dark">{row.raisonSociale}</td>
+                            <td className="p-3">
+                              {respName && respName !== '—' ? (
+                                <span className="font-semibold text-[#1A3D18]">
+                                  {respName}
+                                </span>
+                              ) : (
+                                <span className="text-gray-300 text-[10px] italic">—</span>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              {(row.ninea && row.ninea !== 'N/A') || (row.ice && row.ice !== 'N/A') ? (
+                                <span className="font-mono font-bold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[10px]">
+                                  {row.ninea !== 'N/A' ? row.ninea : row.ice}
+                                </span>
+                              ) : (
+                                <span className="text-gray-300 text-[10px] italic">—</span>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full uppercase text-[9px] font-bold">
+                                {row.secteur}
                               </span>
-                            ) : (
-                              <span className="text-gray-300 text-[10px] italic">—</span>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full uppercase text-[9px] font-bold">
-                              {row.secteur}
-                            </span>
-                          </td>
-                          <td className="p-3 font-bold text-emerald-700">
-                            {row.cotisation_2024 ? `${Number(row.cotisation_2024).toLocaleString()} FCFA` : '0 FCFA'}
-                          </td>
-                          <td className="p-3">{row.ville}</td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="p-3 font-bold text-emerald-700">
+                              {row.cotisation_2024 ? `${Number(row.cotisation_2024).toLocaleString()} FCFA` : '0 FCFA'}
+                            </td>
+                            <td className="p-3">{row.ville}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                   {cleanParsedData.length > 8 && (

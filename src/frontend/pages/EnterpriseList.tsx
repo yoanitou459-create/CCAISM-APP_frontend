@@ -54,6 +54,40 @@ const getSectorStyle = (sector: string) => {
   return 'bg-slate-50 text-slate-700 border-slate-200/60';
 };
 
+const getFiscalId = (ent: any): string => {
+  if (!ent) return '';
+  const candidates = [
+    ent.ninea,
+    ent.ice,
+    ent.ice_ninea,
+    ent.identifiantFiscal,
+    ent.numero_ice,
+    ent.numero_ninea,
+    ent.code_ice,
+    ent.code_ninea
+  ];
+  for (const c of candidates) {
+    if (c && typeof c === 'string' && c.trim() && c.trim().toUpperCase() !== 'N/A' && c.trim() !== '—' && c.trim() !== '-') {
+      return c.trim();
+    }
+  }
+  return '';
+};
+
+const getRespName = (ent: any): string => {
+  if (!ent) return '';
+  const prenom = ent.prenomContact || ent.prenom_adherent || ent.prenom_responsable || ent.prenom_dirigeant || ent.prenomRep || '';
+  const nom = ent.nomContact || ent.nom_adherent || ent.nom_responsable || ent.nom_dirigeant || ent.nomRep || ent.dirigeant || ent.responsable || '';
+  if (prenom && nom) return `${prenom} ${nom}`.trim();
+  if (nom) return nom.trim();
+  if (prenom) return prenom.trim();
+  if (ent.contacts && Array.isArray(ent.contacts) && ent.contacts.length > 0) {
+    const primary = ent.contacts.find((c: any) => c.isPrimary === 'Oui') || ent.contacts[0];
+    if (primary && primary.name) return primary.name;
+  }
+  return '';
+};
+
 export const EnterpriseList = () => {
   const navigate = useNavigate();
   const [selectedEnterprise, setSelectedEnterprise] = useState<any>(null);
@@ -619,8 +653,8 @@ export const EnterpriseList = () => {
                   <div className="flex items-center gap-2 rounded-xl bg-[#f4f8f2] px-3 py-2.5 border border-cscm-green/10">
                     <Users className="w-3.5 h-3.5 text-cscm-green shrink-0" />
                     <div className="min-w-0">
-                      <p className="font-bold text-[#1A3D18]">{ent.effectif || '—'} pers.</p>
-                      <p className="text-[9px] font-bold uppercase text-[#1A3D18]/45">Effectif</p>
+                      <p className="font-bold text-[#1A3D18] truncate">{getRespName(ent) || (ent.effectif ? `${ent.effectif} pers.` : '—')}</p>
+                      <p className="text-[9px] font-bold uppercase text-[#1A3D18]/45 truncate">{getRespName(ent) ? 'Responsable' : 'Effectif'}</p>
                     </div>
                   </div>
                 </div>
@@ -707,11 +741,16 @@ export const EnterpriseList = () => {
                         </div>
                         <div>
                           <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.raisonSociale || ent.name}</div>
-                          <div className="flex items-center gap-2 mt-0.5">
+                          <div className="flex flex-wrap items-center gap-2 mt-0.5">
                             <span className="text-[10px] text-[#1A3D18]/60 font-bold uppercase tracking-wider">{ent.formeJuridique || '—'}</span>
-                            {((ent.ninea && ent.ninea !== 'N/A') || (ent.ice && ent.ice !== 'N/A')) && (
+                            {getRespName(ent) && (
+                              <span className="text-[10px] text-cscm-green font-bold truncate max-w-[170px]" title={`Responsable: ${getRespName(ent)}`}>
+                                • {getRespName(ent)}
+                              </span>
+                            )}
+                            {getFiscalId(ent) && (
                               <span className="font-mono text-[9px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200" title="Identifiant ICE / NINEA">
-                                ICE/NINEA: {ent.ninea && ent.ninea !== 'N/A' ? ent.ninea : ent.ice}
+                                ICE/NINEA: {getFiscalId(ent)}
                               </span>
                             )}
                           </div>

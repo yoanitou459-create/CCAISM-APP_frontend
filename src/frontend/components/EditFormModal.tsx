@@ -57,9 +57,41 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
           visibilite: 'Publique' 
         });
       } else if (type === 'Contacts' && mode === 'edit' && itemIndex !== null && enterprise.contacts) {
-        setFormData(enterprise.contacts[itemIndex] || {});
+        const c = enterprise.contacts[itemIndex] || {};
+        let pName = c.prenom || '';
+        let nName = c.nom || '';
+        if (!pName && !nName && c.name) {
+          const parts = String(c.name).trim().split(/\s+/);
+          if (parts.length > 1) {
+            pName = parts[0];
+            nName = parts.slice(1).join(' ');
+          } else {
+            nName = c.name;
+          }
+        }
+        setFormData({
+          ...c,
+          prenom: pName,
+          nom: nName,
+          name: c.name || (pName && nName ? `${pName} ${nName}` : nName || pName)
+        });
       } else if (type === 'Contacts' && mode === 'add') {
-        setFormData({ name: '', function: '', phone: '', email: '', isPrimary: 'Non' });
+        setFormData({ prenom: '', nom: '', name: '', function: '', phone: '', email: '', isPrimary: 'Non' });
+      } else if (type === 'Informations générales') {
+        const ent = enterprise || {};
+        const nom = ent.nom_adherent || ent.nomContact || ent.nom_responsable || ent.nom_dirigeant || ent.nomRep || ent.dirigeant || ent.responsable || '';
+        const prenom = ent.prenom_adherent || ent.prenomContact || ent.prenom_responsable || ent.prenom_dirigeant || ent.prenomRep || '';
+        const fonc = ent.fonction_adherent || ent.fonction || ent.fonction_responsable || ent.fonctionResponsable || ent.poste || '';
+        const iceNinea = ent.ninea || ent.ice || ent.ice_ninea || ent.identifiantFiscal || '';
+
+        setFormData({
+          ...ent,
+          nom_adherent: nom,
+          prenom_adherent: prenom,
+          fonction: fonc,
+          ninea: iceNinea,
+          ice: iceNinea
+        });
       } else {
         setFormData(enterprise || {});
       }
@@ -113,6 +145,9 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
               { label: "Forme juridique", key: 'formeJuridique', type: 'select', options: ['SARL', 'SA', 'SNC', 'Auto-entrepreneur'] },
               { label: "Numéro RC", key: 'numRC', placeholder: "Saisir numéro d'inscription RC" },
               { label: "ICE / NINEA", key: 'ninea', placeholder: "Ex: 001523456000089 ou 0028192-3G3" },
+              { label: "Nom du Responsable", key: 'nom_adherent', placeholder: "Ex: Ndiaye ou Dupont" },
+              { label: "Prénom du Responsable", key: 'prenom_adherent', placeholder: "Ex: Amadou ou Marc" },
+              { label: "Fonction du Responsable", key: 'fonction', placeholder: "Ex: Directeur Général" },
               { label: "Date création", key: 'dateCreation', type: 'date' },
               { label: "Pays", key: 'pays', placeholder: "Ex: Maroc" },
               { label: "Ville", key: 'ville', placeholder: "Ex: Casablanca" },
@@ -615,8 +650,9 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
         return (
           <div className="space-y-5 max-w-2xl mx-auto text-gray-900">
             {[
-              { label: "Nom complet du contact", key: 'name', placeholder: "Ex: Moustapha Diop" },
-              { label: "Fonction institutionnelle", key: 'function', placeholder: "Ex: Directeur Général" },
+              { label: "Prénom du contact", key: 'prenom', placeholder: "Ex: Moustapha ou Amadou" },
+              { label: "Nom de famille", key: 'nom', placeholder: "Ex: Diop ou Ndiaye" },
+              { label: "Fonction / Rôle", key: 'function', placeholder: "Ex: Directeur Général / Gérant" },
               { label: "Téléphone", key: 'phone', placeholder: "Ex: +221 77 000 00 00" },
               { label: "Email de contact", key: 'email', placeholder: "Ex: moustapha@entreprise.com" },
               { label: "Contact principal ?", key: 'isPrimary', type: 'select', options: ['Oui', 'Non'] },
@@ -636,7 +672,15 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                   <input 
                     type="text" 
                     value={formData[field.key!] || ''}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => {
+                      const updated = { ...prev, [field.key!]: e.target.value };
+                      if (field.key === 'prenom' || field.key === 'nom') {
+                        const p = field.key === 'prenom' ? e.target.value : (prev.prenom || '');
+                        const n = field.key === 'nom' ? e.target.value : (prev.nom || '');
+                        updated.name = (p && n ? `${p} ${n}` : n || p).trim();
+                      }
+                      return updated;
+                    })}
                     placeholder={field.placeholder}
                     className="field-input flex-1"
                   />
@@ -729,7 +773,36 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
             </button>
             <button 
               onClick={() => {
-                onSave(formData);
+                let toSave = { ...formData };
+                if (type === 'Contacts') {
+                  const p = (formData.prenom || '').trim();
+                  const n = (formData.nom || '').trim();
+                  const fullName = p && n ? `${p} ${n}` : (n || p || formData.name || 'Contact');
+                  toSave = {
+                    ...toSave,
+                    prenom: p,
+                    nom: n,
+                    name: fullName
+                  };
+                }
+                if (type === 'Informations générales') {
+                  const cleanIceNinea = formData.ninea || formData.ice || '';
+                  toSave = {
+                    ...toSave,
+                    ice: cleanIceNinea,
+                    ninea: cleanIceNinea,
+                    nomContact: formData.nom_adherent || formData.nomContact || '',
+                    nom_adherent: formData.nom_adherent || formData.nomContact || '',
+                    nom_responsable: formData.nom_adherent || formData.nomContact || '',
+                    prenomContact: formData.prenom_adherent || formData.prenomContact || '',
+                    prenom_adherent: formData.prenom_adherent || formData.prenomContact || '',
+                    prenom_responsable: formData.prenom_adherent || formData.prenomContact || '',
+                    fonction: formData.fonction || '',
+                    fonction_adherent: formData.fonction || '',
+                    fonction_responsable: formData.fonction || ''
+                  };
+                }
+                onSave(toSave);
                 onClose();
               }}
               className="btn-primary px-8 text-xs uppercase tracking-wider"

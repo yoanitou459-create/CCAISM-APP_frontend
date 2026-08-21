@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldCheck, Landmark, Lightbulb, Contact, Coins } from 'lucide-react';
+import { X, ChevronLeft, Pencil, Plus, Eye, Download, Info, Briefcase, ShieldCheck, Landmark, Lightbulb, Contact, Coins, FileText, Building2, UserCheck, MapPin, Layers, Globe, Star, DollarSign, Mail, Phone, User, Trash2 } from 'lucide-react';
 import { EditFormModal } from '../components/EditFormModal';
+import { EnterpriseSummaryModal } from '../components/EnterpriseSummaryModal';
 import { ModalPortal } from '../components/ModalPortal';
 import { FeedbackToast, buildDetailFeedbackMessage } from '../components/FeedbackToast';
 import { jsPDF } from 'jspdf';
@@ -26,6 +27,8 @@ const getTabIcon = (tab: string) => {
   switch (tab) {
     case 'Informations générales':
       return Info;
+    case 'Fiche technique':
+      return FileText;
     case 'Métiers & expertises':
       return Briefcase;
     case 'Certifications':
@@ -50,6 +53,7 @@ export const EnterpriseDetail: React.FC = () => {
   const [enterprise, setEnterprise] = useState<any>(null);
 
   const [activeTab, setActiveTab] = useState('Informations générales');
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editType, setEditType] = useState<string | null>(null);
   const [editMode, setEditMode] = useState<'add' | 'edit'>('edit');
@@ -588,6 +592,7 @@ export const EnterpriseDetail: React.FC = () => {
 
   const tabs = [
     'Informations générales',
+    'Fiche technique',
     'Métiers & expertises',
     'Certifications',
     'Données financières',
@@ -619,6 +624,82 @@ export const EnterpriseDetail: React.FC = () => {
     return `${converted.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr.symbol || curr.code}`;
   };
 
+  const getEnterpriseContacts = (ent: any): any[] => {
+    if (!ent) return [];
+    const list: any[] = [];
+    const seenKeys = new Set<string>();
+
+    // 1. From existing contacts array
+    if (ent.contacts && Array.isArray(ent.contacts)) {
+      ent.contacts.forEach((c: any, idx: number) => {
+        let pName = (c.prenom || '').trim();
+        let nName = (c.nom || '').trim();
+        let fName = (c.name || '').trim();
+
+        if (!pName && !nName && fName) {
+          const parts = fName.split(/\s+/);
+          if (parts.length > 1) {
+            pName = parts[0];
+            nName = parts.slice(1).join(' ');
+          } else {
+            nName = fName;
+          }
+        }
+        if (!fName && (pName || nName)) {
+          fName = `${pName} ${nName}`.trim();
+        }
+
+        const key = `${pName.toLowerCase()}_${nName.toLowerCase()}_${fName.toLowerCase()}`;
+        if (fName && !seenKeys.has(key)) {
+          seenKeys.add(key);
+          list.push({
+            id: c.id || `c-${idx}`,
+            prenom: pName,
+            nom: nName,
+            name: fName,
+            function: c.function || c.fonction || 'Contact',
+            phone: c.phone || c.telephone || '',
+            email: c.email || c.mail || '',
+            isPrimary: c.isPrimary || (idx === 0 ? 'Oui' : 'Non')
+          });
+        }
+      });
+    }
+
+    // 2. From enterprise root fields (Nom adhérent, Prénom adhérent, Responsable, etc.)
+    const prenom = (ent.prenom_adherent || ent.prenomContact || ent.prenom_responsable || ent.prenom_dirigeant || ent.prenomRep || ent.prenom || '').trim();
+    const nom = (ent.nom_adherent || ent.nomContact || ent.nom_responsable || ent.nom_dirigeant || ent.nomRep || ent.nom || '').trim();
+    const rawResp = (ent.responsable || ent.dirigeant || '').trim();
+    const fonction = (ent.fonction_adherent || ent.fonction || ent.fonction_responsable || ent.fonctionResponsable || ent.poste || 'Dirigeant / Représentant légal').trim();
+    const phone = (ent.telephone_principale || ent.mobileContact || ent.telephoneSecondaire || ent.telephone_secondaire || ent.telephone || '').trim();
+    const email = (ent.email_principal || ent.emailContact || ent.email || '').trim();
+
+    let fullRespName = '';
+    if (prenom && nom) fullRespName = `${prenom} ${nom}`.trim();
+    else if (nom) fullRespName = nom;
+    else if (prenom) fullRespName = prenom;
+    else if (rawResp) fullRespName = rawResp;
+
+    if (fullRespName && fullRespName !== 'Non spécifié') {
+      const key = `${prenom.toLowerCase()}_${nom.toLowerCase()}_${fullRespName.toLowerCase()}`;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        list.unshift({
+          id: `c-root-${ent.id || '0'}`,
+          prenom: prenom || (rawResp ? rawResp.split(/\s+/)[0] : ''),
+          nom: nom || (rawResp ? rawResp.split(/\s+/).slice(1).join(' ') : ''),
+          name: fullRespName,
+          function: fonction,
+          phone: phone,
+          email: email,
+          isPrimary: 'Oui'
+        });
+      }
+    }
+
+    return list;
+  };
+
   const handleEdit = (type: string, mode: 'add' | 'edit' = 'edit', index: number | null = null) => {
     if (mode === 'edit' && index === null && ['Certifications', 'Données financières', 'Besoins', 'Contacts', 'Cotisations'].includes(type)) {
       showFeedback('error', 'Sélectionnez d’abord une ligne à modifier.');
@@ -628,6 +709,21 @@ export const EnterpriseDetail: React.FC = () => {
     setEditMode(mode);
     setSelectedItemIndex(index);
     setIsEditModalOpen(true);
+  };
+
+  const handleDeleteContact = (indexToDelete: number) => {
+    const currentList = getEnterpriseContacts(enterprise);
+    if (indexToDelete < 0 || indexToDelete >= currentList.length) return;
+    
+    const contactToDelete = currentList[indexToDelete];
+    const confirmDelete = window.confirm(`Voulez-vous vraiment supprimer le contact ${contactToDelete.name || 'sélectionné'} ?`);
+    if (!confirmDelete) return;
+
+    const newContacts = currentList.filter((_, idx) => idx !== indexToDelete);
+    const updatedEnterprise = { ...enterprise, contacts: newContacts };
+    handleUpdateEnterprise(updatedEnterprise);
+    setSelectedItemIndex(null);
+    showFeedback('success', 'Contact supprimé avec succès.');
   };
 
   const handleUpdateEnterprise = (updatedEnterprise: any) => {
@@ -672,13 +768,34 @@ export const EnterpriseDetail: React.FC = () => {
       }
       updatedEnterprise = { ...enterprise, financialData: newFinancials };
     } else if (editType === 'Contacts') {
-      const newContacts = [...(enterprise.contacts || [])];
+      const currentContacts = getEnterpriseContacts(enterprise);
+      const newContacts = [...currentContacts];
       if (editMode === 'add') {
         newContacts.push(data);
-      } else if (selectedItemIndex !== null) {
+      } else if (selectedItemIndex !== null && selectedItemIndex < newContacts.length) {
         newContacts[selectedItemIndex] = data;
+      } else if (newContacts.length > 0) {
+        newContacts[0] = data;
+      } else {
+        newContacts.push(data);
       }
-      updatedEnterprise = { ...enterprise, contacts: newContacts };
+
+      const isPrimary = data.isPrimary === 'Oui';
+      updatedEnterprise = { 
+        ...enterprise, 
+        contacts: newContacts,
+        ...(isPrimary ? {
+          nom_adherent: data.nom || data.name || '',
+          prenom_adherent: data.prenom || '',
+          nomContact: data.nom || data.name || '',
+          prenomContact: data.prenom || '',
+          responsable: data.name || `${data.prenom || ''} ${data.nom || ''}`.trim(),
+          fonction: data.function || enterprise.fonction,
+          fonction_adherent: data.function || enterprise.fonction_adherent,
+          ...(data.phone ? { telephone: data.phone } : {}),
+          ...(data.email ? { email: data.email } : {})
+        } : {})
+      };
     } else {
       updatedEnterprise = { ...enterprise, ...data };
     }
@@ -687,44 +804,385 @@ export const EnterpriseDetail: React.FC = () => {
     setIsEditModalOpen(false);
   };
 
+  const getFiscalId = (ent: any): string => {
+    if (!ent) return '';
+    const candidates = [
+      ent.ninea,
+      ent.ice,
+      ent.ice_ninea,
+      ent.identifiantFiscal,
+      ent.numero_ice,
+      ent.numero_ninea,
+      ent.code_ice,
+      ent.code_ninea
+    ];
+    for (const c of candidates) {
+      if (c && typeof c === 'string' && c.trim() !== '' && c.trim().toUpperCase() !== 'N/A' && c.trim() !== '—' && c.trim() !== '-') {
+        return c.trim();
+      }
+    }
+    return '';
+  };
+
+  const getResponsableInfo = (ent: any) => {
+    if (!ent) return { name: '', fonction: '', phone: '', email: '' };
+    
+    // 1. Direct fields from enterprise
+    const prenom = ent.prenomContact || ent.prenom_adherent || ent.prenom_responsable || ent.prenom_dirigeant || ent.prenomRep || '';
+    const nom = ent.nomContact || ent.nom_adherent || ent.nom_responsable || ent.nom_dirigeant || ent.nomRep || ent.dirigeant || ent.responsable || '';
+    
+    let fullName = '';
+    if (prenom && nom) fullName = `${prenom} ${nom}`.trim();
+    else if (nom) fullName = nom.trim();
+    else if (prenom) fullName = prenom.trim();
+    
+    let fonction = ent.fonction || ent.fonction_adherent || ent.fonction_responsable || ent.fonctionResponsable || ent.poste || '';
+    let phone = ent.mobileContact || ent.telephoneSecondaire || ent.telephone_secondaire || ent.telephone || '';
+    let email = ent.emailContact || ent.email_principal || ent.email || '';
+
+    // 2. Primary contact fallback from contacts list
+    if ((!fullName || fullName === 'Non spécifié') && ent.contacts && Array.isArray(ent.contacts) && ent.contacts.length > 0) {
+      const primary = ent.contacts.find((c: any) => c.isPrimary === 'Oui') || ent.contacts[0];
+      if (primary) {
+        if (!fullName) fullName = primary.name || '';
+        if (!fonction) fonction = primary.function || '';
+        if (!phone) phone = primary.phone || '';
+        if (!email) email = primary.email || '';
+      }
+    }
+
+    return { name: fullName, fonction, phone, email };
+  };
+
   const renderContent = () => {
     switch (activeTab) {
-      case 'Informations générales':
+      case 'Informations générales': {
+        const fiscalVal = getFiscalId(enterprise);
+        const respVal = getResponsableInfo(enterprise);
+        const customAttrs = enterprise.custom_attributes || {};
+        const extraEntries = Object.entries(customAttrs).filter(([k, v]) => {
+          return v && String(v).trim() !== '';
+        });
+
         return (
-          <div className="space-y-6">
-            <div className="flex flex-wrap justify-between items-center gap-3 mb-8 max-w-2xl mx-auto">
-              <h3 className="text-3xl font-serif font-black text-[#132e15]">Informations générales</h3>
-              <button 
-                onClick={() => handleEdit('Informations générales')}
-                className="btn-gold"
-              >
-                <Pencil className="w-4 h-4" /> Modifier
-              </button>
+          <div className="space-y-6 max-w-4xl mx-auto">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+              <div>
+                <h3 className="text-2xl md:text-3xl font-serif font-black text-[#132e15]">Informations générales</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Données d'enregistrement, coordonnées et attributs importés</p>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setIsSummaryModalOpen(true)}
+                  className="btn-gold"
+                  title="Ouvrir la fiche technique imprimable"
+                >
+                  <FileText className="w-4 h-4" /> Fiche Technique (PDF)
+                </button>
+                <button 
+                  onClick={() => handleEdit('Informations générales')}
+                  className="btn-gold"
+                >
+                  <Pencil className="w-4 h-4" /> Modifier
+                </button>
+              </div>
             </div>
-            <div className="bg-white p-4 sm:p-8 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] max-w-2xl mx-auto space-y-4 text-[#132e15]">
+
+            {/* Main General Info Card */}
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] space-y-4 text-[#132e15]">
               {[
-                { label: "Date d'adhésion", value: enterprise.dateAdhesion || '' },
-                { label: "Statut membre", value: enterprise.statutMembre || '' },
-                { label: "Raison sociale", value: enterprise.raisonSociale || '' },
-                { label: "Forme Juridique", value: enterprise.formeJuridique || '' },
-                { label: "Numéro RC", value: enterprise.numRC || '' },
-                { label: "ICE / NINEA", value: enterprise.ninea || enterprise.ice || '' },
-                { label: "Date création", value: enterprise.dateCreation || '' },
-                { label: "Adresse", value: enterprise.adresse || '' },
-                { label: "Téléphone", value: enterprise.telephone || '' },
-                { label: "Email", value: enterprise.email || '' },
-                { label: "Site web", value: enterprise.siteWeb || '' },
-                { label: "Description", value: enterprise.description || '' },
+                { label: "Date d'adhésion", value: enterprise.dateAdhesion || enterprise.date_adhesion || '' },
+                { label: "Statut membre", value: enterprise.statutMembre || enterprise.statut_adhesion || '' },
+                { label: "Raison sociale", value: enterprise.raisonSociale || enterprise.name || '' },
+                { label: "Nom commercial", value: enterprise.nomCommercial || enterprise.nom_commercial || enterprise.name || '' },
+                { label: "N° Membre CSCM", value: enterprise.memberNo || 'M001' },
+                { label: "Type de membre", value: enterprise.typeMembre || enterprise.type_membre || 'Adhérent' },
+                { label: "Forme Juridique", value: enterprise.formeJuridique || enterprise.forme_juridique || '' },
+                { label: "Numéro RC", value: enterprise.numRC || enterprise.numero_rc || '' },
+                { 
+                  label: "ICE / NINEA", 
+                  value: fiscalVal || 'Non disponible',
+                  isFiscal: true
+                },
+                { 
+                  label: "Responsable / Dirigeant", 
+                  value: respVal.name || 'Non spécifié',
+                  isResp: true
+                },
+                { 
+                  label: "Fonction du Responsable", 
+                  value: respVal.fonction || 'Non spécifié' 
+                },
+                { label: "Date création", value: enterprise.dateCreation || enterprise.date_creation || '' },
+                { label: "Effectif", value: enterprise.effectif ? `${enterprise.effectif} personnes` : '' },
+                { label: "Pays", value: enterprise.pays || '' },
+                { label: "Ville", value: enterprise.ville || '' },
+                { label: "Adresse complète", value: enterprise.adresse || enterprise.adresse_complete || '' },
+                { label: "Code postal", value: enterprise.codePostal || enterprise.code_postal || '' },
+                { label: "Téléphone principal", value: enterprise.telephone || enterprise.telephone_principale || '' },
+                { label: "Téléphone secondaire", value: enterprise.telephoneSecondaire || enterprise.telephone_secondaire || '' },
+                { label: "Email de contact", value: enterprise.email || enterprise.email_principal || '' },
+                { label: "Site web officiel", value: enterprise.siteWeb || enterprise.site_web || '' },
+                { label: "Description de l'activité", value: enterprise.description || enterprise.description_activite || '' },
                 { label: "Secteur d'activité", value: enterprise.secteur || '' },
-              ].map((item) => (
-                <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-[#132e15]/5 pb-2 last:border-b-0 last:pb-0 text-left">
-                  <span className="font-extrabold text-[#132e15] sm:min-w-[190px] shrink-0">{item.label} :</span>
-                  <span className={`break-words ${item.label.includes('ICE') || item.label.includes('NINEA') ? 'font-mono font-bold text-amber-900 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200/50 inline-block w-fit' : 'font-semibold text-[#132e15]/90'}`}>{item.value || 'Non spécifié'}</span>
+              ].map((item: any) => (
+                <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-[#132e15]/5 pb-2.5 last:border-b-0 last:pb-0 text-left">
+                  <span className="font-extrabold text-[#132e15] sm:min-w-[220px] shrink-0 text-xs sm:text-sm">{item.label} :</span>
+                  {item.isFiscal ? (
+                    <span className="font-mono font-bold text-amber-900 bg-amber-50/90 px-2.5 py-0.5 rounded-lg border border-amber-200/60 inline-block w-fit text-xs">
+                      {item.value}
+                    </span>
+                  ) : item.isResp && item.value !== 'Non spécifié' ? (
+                    <span className="font-bold text-[#132e15] bg-emerald-50/80 px-2.5 py-0.5 rounded-lg border border-emerald-200/60 inline-block w-fit text-xs">
+                      {item.value}
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-[#132e15]/90 break-words text-xs sm:text-sm">{item.value || 'Non spécifié'}</span>
+                  )}
                 </div>
               ))}
             </div>
+
+            {/* Custom Excel Attributes Sub-Section */}
+            {extraEntries.length > 0 && (
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                  <Layers className="w-5 h-5 text-emerald-800" />
+                  <h4 className="font-serif font-black text-lg text-[#132e15]">Données & Colonnes Importées du Fichier Excel</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
+                  {extraEntries.map(([k, v], idx) => (
+                    <div key={idx} className="p-3 bg-gray-50/80 rounded-2xl border border-gray-100/90 text-left">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-gray-500 block truncate" title={k}>
+                        {k.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-xs font-bold text-[#132e15] mt-1 block break-words">
+                        {String(v)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         );
+      }
+      case 'Fiche technique': {
+        const fiscalVal = getFiscalId(enterprise);
+        const respVal = getResponsableInfo(enterprise);
+        const customAttrs = enterprise.custom_attributes || {};
+        const extraEntries = Object.entries(customAttrs).filter(([k, v]) => v && String(v).trim() !== '');
+
+        return (
+          <div className="space-y-6 max-w-5xl mx-auto">
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
+              <div>
+                <h3 className="text-2xl md:text-3xl font-serif font-black text-[#132e15]">Fiche Technique Officielle</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Dossier technique consolidé de l'entreprise (100% des données importées)</p>
+              </div>
+              <button 
+                onClick={() => setIsSummaryModalOpen(true)}
+                className="btn-gold flex items-center gap-2"
+                title="Générer et télécharger la fiche technique au format PDF"
+              >
+                <Download className="w-4 h-4" /> Télécharger en PDF
+              </button>
+            </div>
+
+            {/* 1. Identité légale */}
+            <div className="bg-white p-6 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] space-y-4 text-left">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                <Building2 className="w-5 h-5 text-emerald-800" />
+                <h4 className="font-serif font-black text-lg text-[#132e15]">1. Identité Légale & Enregistrement</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Raison Sociale</span>
+                  <span className="text-xs font-black text-[#132e15] block mt-0.5">{enterprise.raisonSociale || enterprise.name}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Nom Commercial</span>
+                  <span className="text-xs font-bold text-[#132e15] block mt-0.5">{enterprise.nomCommercial || enterprise.nom_commercial || enterprise.name}</span>
+                </div>
+                <div className="p-3 bg-amber-50/80 border border-amber-200/60 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-amber-800 block">ICE / NINEA</span>
+                  <span className="text-xs font-mono font-black text-amber-900 block mt-0.5">{fiscalVal || 'Non disponible'}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">N° Registre Commerce</span>
+                  <span className="text-xs font-mono font-bold text-[#132e15] block mt-0.5">{enterprise.numRC || enterprise.numero_rc || 'Non spécifié'}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Forme Juridique</span>
+                  <span className="text-xs font-bold text-[#132e15] block mt-0.5">{enterprise.formeJuridique || enterprise.forme_juridique || 'SARL'}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Statut / Type Membre</span>
+                  <span className="text-xs font-bold text-[#132e15] block mt-0.5">{enterprise.statutMembre || enterprise.statut_adhesion || 'Actif'} ({enterprise.typeMembre || enterprise.type_membre || 'Adhérent'})</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Dirigeant & Responsable */}
+            <div className="bg-white p-6 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] space-y-4 text-left">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                <UserCheck className="w-5 h-5 text-emerald-800" />
+                <h4 className="font-serif font-black text-lg text-[#132e15]">2. Dirigeant & Responsables</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Nom & Prénom</span>
+                  <span className="text-xs font-black text-[#132e15] block mt-0.5">{respVal.name || 'Non spécifié'}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Fonction / Titre</span>
+                  <span className="text-xs font-bold text-[#132e15] block mt-0.5">{respVal.fonction || 'Dirigeant / Représentant'}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Téléphone direct</span>
+                  <span className="text-xs font-mono font-bold text-[#132e15] block mt-0.5">{respVal.phone || enterprise.telephone || 'Non renseigné'}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Email direct</span>
+                  <span className="text-xs font-mono font-bold text-[#132e15] block mt-0.5 break-all">{respVal.email || enterprise.email || 'Non renseigné'}</span>
+                </div>
+              </div>
+
+              {/* Extra contacts list if available */}
+              {(() => {
+                const contacts = getEnterpriseContacts(enterprise);
+                if (contacts.length > 1) {
+                  return (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-2">Autres contacts enregistrés ({contacts.length - 1})</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        {contacts.slice(1).map((c: any, cIdx: number) => (
+                          <div key={cIdx} className="p-2.5 bg-gray-50 rounded-xl border border-gray-100 flex flex-col justify-between">
+                            <div>
+                              <span className="font-extrabold text-xs text-[#132e15] block">{c.name || `${c.prenom || ''} ${c.nom || ''}`.trim()}</span>
+                              <span className="text-[10px] text-gray-500 font-bold block">{c.function || 'Contact'}</span>
+                            </div>
+                            <div className="text-[10px] font-semibold text-gray-600 mt-1.5 space-y-0.5">
+                              {c.phone && <span className="block text-emerald-800 font-bold">Tél: {c.phone}</span>}
+                              {c.email && <span className="block text-blue-700 font-bold break-all">Email: {c.email}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+
+            {/* 3. Métiers & Capacités */}
+            <div className="bg-white p-6 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] space-y-4 text-left">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                <Briefcase className="w-5 h-5 text-emerald-800" />
+                <h4 className="font-serif font-black text-lg text-[#132e15]">3. Métiers, Expertises & Capacités de Production</h4>
+              </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <span className="text-[9px] font-black uppercase text-gray-400 block">Secteur d'activité</span>
+                    <span className="text-xs font-black text-[#132e15] block mt-0.5">{enterprise.secteur || 'Non renseigné'}</span>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <span className="text-[9px] font-black uppercase text-gray-400 block">Niveau d'expertise</span>
+                    <span className="text-xs font-bold text-[#132e15] block mt-0.5">{enterprise.niveauExpertise || enterprise.niveau_expertise || 'Standard'}</span>
+                  </div>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-gray-400 block">Description technique</span>
+                  <p className="text-xs text-gray-700 italic mt-1 font-medium">"{enterprise.description || enterprise.description_activite || 'Conseil et accompagnement technique.'}"</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <span className="text-[9px] font-black uppercase text-gray-400 block">Produits / Services</span>
+                    <span className="text-xs font-medium text-[#132e15] block mt-0.5">{enterprise.produitsServices || enterprise.produits_services || 'Non spécifié'}</span>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <span className="text-[9px] font-black uppercase text-gray-400 block">Technologies</span>
+                    <span className="text-xs font-medium text-[#132e15] block mt-0.5">{enterprise.technologies || enterprise.technologies_utilisees || 'Non spécifié'}</span>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <span className="text-[9px] font-black uppercase text-gray-400 block">Marchés cibles</span>
+                    <span className="text-xs font-medium text-[#132e15] block mt-0.5">{enterprise.marchesCibles || enterprise.marches_cibles || 'Non spécifié'}</span>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <span className="text-[9px] font-black uppercase text-gray-400 block">Clients références</span>
+                    <span className="text-xs font-medium text-[#132e15] block mt-0.5">{enterprise.clientsReferences || enterprise.clients_references || 'Non spécifié'}</span>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <span className="text-[9px] font-black uppercase text-gray-400 block">Capacité de production</span>
+                    <span className="text-xs font-medium text-[#132e15] block mt-0.5">{enterprise.capaciteProduction || enterprise.capacite_production || 'Non spécifié'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Données Financières & Cotisations */}
+            {(enterprise.chiffre_affaires_2023 || enterprise.chiffre_affaires_2024 || enterprise.cotisation_2023 || enterprise.cotisation_2024 || enterprise.cotisation_2025) && (
+              <div className="bg-white p-6 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] space-y-4 text-left">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                  <DollarSign className="w-5 h-5 text-emerald-800" />
+                  <h4 className="font-serif font-black text-lg text-[#132e15]">4. Indicateurs Financiers & Cotisations</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  {enterprise.chiffre_affaires_2024 && (
+                    <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl">
+                      <span className="text-[9px] font-black uppercase text-blue-600 block">CA 2024</span>
+                      <span className="text-xs font-black text-blue-900 mt-0.5 block">{Number(enterprise.chiffre_affaires_2024).toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                  )}
+                  {enterprise.chiffre_affaires_2023 && (
+                    <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl">
+                      <span className="text-[9px] font-black uppercase text-blue-600 block">CA 2023</span>
+                      <span className="text-xs font-black text-blue-900 mt-0.5 block">{Number(enterprise.chiffre_affaires_2023).toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                  )}
+                  {enterprise.cotisation_2024 && (
+                    <div className="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl">
+                      <span className="text-[9px] font-black uppercase text-emerald-600 block">Cotisation 2024</span>
+                      <span className="text-xs font-black text-emerald-900 mt-0.5 block">{Number(enterprise.cotisation_2024).toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                  )}
+                  {enterprise.cotisation_2025 && (
+                    <div className="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl">
+                      <span className="text-[9px] font-black uppercase text-emerald-600 block">Cotisation 2025</span>
+                      <span className="text-xs font-black text-emerald-900 mt-0.5 block">{Number(enterprise.cotisation_2025).toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 5. Attributs Excel Complémentaires */}
+            {extraEntries.length > 0 && (
+              <div className="bg-white p-6 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] space-y-4 text-left">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                  <Layers className="w-5 h-5 text-emerald-800" />
+                  <h4 className="font-serif font-black text-lg text-[#132e15]">5. Autres Attributs Importés du Fichier</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {extraEntries.map(([k, v], idx) => (
+                    <div key={idx} className="p-3 bg-gray-50 rounded-xl">
+                      <span className="text-[9px] font-black uppercase text-gray-400 block truncate" title={k}>
+                        {k.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-xs font-bold text-[#132e15] mt-0.5 block break-words">
+                        {String(v)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
       case 'Métiers & expertises':
         return (
           <div className="space-y-6">
@@ -742,7 +1200,7 @@ export const EnterpriseDetail: React.FC = () => {
             <div className="bg-white p-4 sm:p-8 rounded-3xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] max-w-2xl mx-auto space-y-4 text-[#132e15]">
               {[
                 { label: "Secteur d'activité", value: enterprise.secteur || '' },
-                { label: "Expertise principale", value: enterprise.expertisePrincipale || '' },
+                { label: "Expertise principale", value: enterprise.expertisePrincipale || enterprise.niveau_expertise || '' },
                 { label: "Produits / Services", value: enterprise.produitsServices || enterprise.produits_services || '' },
                 { label: "Technologies utilisées", value: enterprise.technologies || enterprise.technologies_utilisees || '' },
                 { label: "Marchés cibles", value: enterprise.marchesCibles || enterprise.marches_cibles || '' },
@@ -1240,57 +1698,134 @@ export const EnterpriseDetail: React.FC = () => {
             </div>
           </div>
         );
-      case 'Contacts':
+      case 'Contacts': {
+        const contactsList = getEnterpriseContacts(enterprise);
+
         return (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 max-w-7xl mx-auto w-full">
-              <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Contacts</h3>
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#132e15] text-left">Contacts & Dirigeants</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Gérez les interlocuteurs, représentants légaux et contacts opérationnels de l'adhérent.</p>
+              </div>
               <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                 <button 
                   onClick={() => handleEdit('Contacts', 'add')}
-                  className="btn-gold flex-1 sm:flex-initial"
+                  className="btn-gold flex-1 sm:flex-initial shadow-sm hover:scale-[1.02] transition-transform"
                 >
-                  <Plus className="w-4 h-4" /> Ajouter
+                  <Plus className="w-4 h-4" /> Ajouter un contact
                 </button>
-                <button 
-                  onClick={() => handleEdit('Contacts', 'edit', selectedItemIndex)}
-                  className="btn-gold flex-1 sm:flex-initial"
-                >
-                  <Pencil className="w-3.5 h-3.5" /> Modifier
-                </button>
+                {contactsList.length > 0 && selectedItemIndex !== null && (
+                  <button 
+                    onClick={() => handleEdit('Contacts', 'edit', selectedItemIndex)}
+                    className="btn-gold flex-1 sm:flex-initial shadow-sm"
+                  >
+                    <Pencil className="w-3.5 h-3.5" /> Modifier
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-hidden max-w-7xl mx-auto w-full rounded-2xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)]">
+            <div className="hidden md:block overflow-hidden max-w-7xl mx-auto w-full rounded-2xl border border-[#12210E]/10 shadow-[0_2px_20px_rgba(19,46,21,0.05)] bg-white">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#132e15] text-white text-xs font-black uppercase tracking-wider">
+                    <th className="border border-[#132e15]/20 p-3 text-left">Contact (Nom & Prénom)</th>
+                    <th className="border border-[#132e15]/20 p-3 text-left">Prénom</th>
                     <th className="border border-[#132e15]/20 p-3 text-left">Nom</th>
                     <th className="border border-[#132e15]/20 p-3 text-left">Fonction</th>
                     <th className="border border-[#132e15]/20 p-3 text-left">Téléphone</th>
                     <th className="border border-[#132e15]/20 p-3 text-left">Email</th>
-                    <th className="border border-[#132e15]/20 p-3 text-center">Principal</th>
+                    <th className="border border-[#132e15]/20 p-3 text-center">Statut</th>
+                    <th className="border border-[#132e15]/20 p-3 text-center w-24">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white text-[#132e15] font-semibold text-xs divide-y divide-[#132e15]/10">
-                  {enterprise.contacts && enterprise.contacts.length > 0 ? (
-                    enterprise.contacts.map((contact: any, i: number) => (
-                      <tr 
-                        key={i}
-                        onClick={() => setSelectedItemIndex(i)}
-                        className={`cursor-pointer transition-colors ${selectedItemIndex === i ? 'bg-[#132e15]/10 font-bold' : 'hover:bg-[#132e15]/5'}`}
-                      >
-                        <td className="border border-[#132e15]/15 p-3 h-10">{contact.name}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{contact.function}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{contact.phone}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10">{contact.email}</td>
-                        <td className="border border-[#132e15]/15 p-3 h-10 text-center font-bold text-[#132e15]">{contact.isPrimary}</td>
-                      </tr>
-                    ))
+                  {contactsList && contactsList.length > 0 ? (
+                    contactsList.map((contact: any, i: number) => {
+                      const isSelected = selectedItemIndex === i;
+                      const isPrimary = contact.isPrimary === 'Oui';
+                      return (
+                        <tr 
+                          key={i}
+                          onClick={() => setSelectedItemIndex(i)}
+                          className={`cursor-pointer transition-colors ${isSelected ? 'bg-[#132e15]/10 font-bold' : 'hover:bg-[#132e15]/5'}`}
+                        >
+                          <td className="border border-[#132e15]/15 p-3 h-12">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full bg-[#132e15]/10 text-[#132e15] flex items-center justify-center font-black text-[11px] shrink-0 border border-[#132e15]/20">
+                                {contact.prenom ? contact.prenom.charAt(0).toUpperCase() : (contact.nom ? contact.nom.charAt(0).toUpperCase() : 'C')}
+                              </div>
+                              <span className="font-extrabold text-[#132e15]">{contact.name || `${contact.prenom || ''} ${contact.nom || ''}`.trim() || '—'}</span>
+                            </div>
+                          </td>
+                          <td className="border border-[#132e15]/15 p-3 h-12 text-gray-700">{contact.prenom || '—'}</td>
+                          <td className="border border-[#132e15]/15 p-3 h-12 font-bold text-gray-900">{contact.nom || '—'}</td>
+                          <td className="border border-[#132e15]/15 p-3 h-12 text-gray-700">{contact.function || '—'}</td>
+                          <td className="border border-[#132e15]/15 p-3 h-12">
+                            {contact.phone ? (
+                              <a 
+                                href={`tel:${contact.phone}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1.5 text-emerald-800 hover:text-emerald-950 font-bold hover:underline"
+                              >
+                                <Phone className="w-3 h-3 text-emerald-700" />
+                                {contact.phone}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="border border-[#132e15]/15 p-3 h-12">
+                            {contact.email ? (
+                              <a 
+                                href={`mailto:${contact.email}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-900 font-semibold hover:underline break-all"
+                              >
+                                <Mail className="w-3 h-3 text-blue-600 shrink-0" />
+                                {contact.email}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="border border-[#132e15]/15 p-3 h-12 text-center">
+                            {isPrimary ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#E6C657]/25 text-[#6B5416] border border-[#E6C657]/50">
+                                Principal
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-200">
+                                Secondaire
+                              </span>
+                            )}
+                          </td>
+                          <td className="border border-[#132e15]/15 p-3 h-12 text-center" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => handleEdit('Contacts', 'edit', i)}
+                                title="Modifier ce contact"
+                                className="p-1.5 rounded-lg text-[#132e15] hover:bg-[#132e15]/10 transition-colors"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteContact(i)}
+                                title="Supprimer ce contact"
+                                className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan={5} className="p-6 text-center text-[#132e15]/60 italic font-bold">
+                      <td colSpan={8} className="p-8 text-center text-[#132e15]/60 italic font-bold">
                         Aucun contact enregistré
                       </td>
                     </tr>
@@ -1301,41 +1836,84 @@ export const EnterpriseDetail: React.FC = () => {
 
             {/* Mobile Cards View */}
             <div className="block md:hidden space-y-4 max-w-7xl mx-auto w-full">
-              {enterprise.contacts && enterprise.contacts.length > 0 ? (
-                enterprise.contacts.map((contact: any, i: number) => (
-                  <div 
-                    key={i}
-                    onClick={() => setSelectedItemIndex(i)}
-                    className={`p-4 rounded-2xl border text-left transition-all ${
-                      selectedItemIndex === i 
-                        ? 'border-[#132e15] bg-[#132e15]/10 shadow-sm' 
-                        : 'border-gray-200 bg-white hover:bg-gray-55 hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="min-w-0">
-                        <h4 className="font-extrabold text-[#132e15] text-sm break-words">{contact.name}</h4>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Fonction : {contact.function || '-'}</p>
+              {contactsList && contactsList.length > 0 ? (
+                contactsList.map((contact: any, i: number) => {
+                  const isPrimary = contact.isPrimary === 'Oui';
+                  return (
+                    <div 
+                      key={i}
+                      onClick={() => setSelectedItemIndex(i)}
+                      className={`p-4 rounded-2xl border text-left transition-all ${
+                        selectedItemIndex === i 
+                          ? 'border-[#132e15] bg-[#132e15]/10 shadow-sm' 
+                          : 'border-gray-200 bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0 flex items-start gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-[#132e15]/10 text-[#132e15] flex items-center justify-center font-black text-xs shrink-0 border border-[#132e15]/20 mt-0.5">
+                            {contact.prenom ? contact.prenom.charAt(0).toUpperCase() : (contact.nom ? contact.nom.charAt(0).toUpperCase() : 'C')}
+                          </div>
+                          <div>
+                            <h4 className="font-black text-[#132e15] text-sm break-words">{contact.name || `${contact.prenom || ''} ${contact.nom || ''}`.trim()}</h4>
+                            <p className="text-[11px] text-gray-500 font-bold uppercase mt-0.5">{contact.function || 'Contact'}</p>
+                            {(contact.prenom || contact.nom) && (
+                              <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
+                                {contact.prenom && <span>Prénom : <b className="text-gray-700">{contact.prenom}</b> </span>}
+                                {contact.nom && <span>| Nom : <b className="text-gray-700">{contact.nom}</b></span>}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {isPrimary && (
+                          <span className="bg-[#E6C657]/25 text-[#6B5416] border border-[#E6C657]/50 text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0">
+                            Principal
+                          </span>
+                        )}
                       </div>
-                      {contact.isPrimary === 'Oui' && (
-                        <span className="bg-[#132e15]/10 text-cscm-green text-[9px] font-black uppercase px-2.5 py-1 rounded">
-                          Principal
-                        </span>
-                      )}
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-2 border-t border-[#132e15]/5 text-[11px] font-semibold text-gray-600">
+                        <div>
+                          <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Téléphone</span>
+                          {contact.phone ? (
+                            <a href={`tel:${contact.phone}`} className="text-emerald-800 font-bold hover:underline inline-flex items-center gap-1 mt-0.5">
+                              <Phone className="w-3 h-3 text-emerald-700" />
+                              {contact.phone}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 font-normal">—</span>
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Email</span>
+                          {contact.email ? (
+                            <a href={`mailto:${contact.email}`} className="text-blue-700 font-bold break-all hover:underline inline-flex items-center gap-1 mt-0.5">
+                              <Mail className="w-3 h-3 text-blue-600 shrink-0" />
+                              {contact.email}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 font-normal">—</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 mt-3 pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleEdit('Contacts', 'edit', i)}
+                          className="px-3 py-1 text-xs font-bold text-[#132e15] bg-[#132e15]/10 hover:bg-[#132e15]/20 rounded-lg inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Pencil className="w-3 h-3" /> Modifier
+                        </button>
+                        <button
+                          onClick={() => handleDeleteContact(i)}
+                          className="px-3 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" /> Supprimer
+                        </button>
+                      </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-2 border-t border-[#132e15]/5 text-[11px] font-semibold text-gray-600">
-                      <div>
-                        <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Téléphone</span>
-                        <span className="text-gray-800 font-bold">{contact.phone || '-'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 block font-bold uppercase tracking-wider text-[9px]">Email</span>
-                        <span className="text-gray-800 font-bold break-all">{contact.email || '-'}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="p-8 text-center bg-white rounded-2xl border border-gray-150 text-[#132e15]/60 italic font-bold">
                   Aucun contact enregistré
@@ -1344,6 +1922,7 @@ export const EnterpriseDetail: React.FC = () => {
             </div>
           </div>
         );
+      }
       case 'Cotisations': {
         const payments = getPaymentsList(enterprise);
         
@@ -1611,17 +2190,51 @@ export const EnterpriseDetail: React.FC = () => {
                       N° {enterprise.memberNo}
                     </span>
                   )}
-                  {(enterprise.ninea || enterprise.ice) && (enterprise.ninea !== 'N/A' || enterprise.ice !== 'N/A') && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black font-mono tracking-wider bg-amber-400/20 text-amber-200 border border-amber-300/30">
-                      ICE / NINEA : {enterprise.ninea && enterprise.ninea !== 'N/A' ? enterprise.ninea : enterprise.ice}
-                    </span>
-                  )}
+                  {(() => {
+                    const fid = getFiscalId(enterprise);
+                    if (!fid) return null;
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black font-mono tracking-wider bg-amber-400/20 text-amber-200 border border-amber-300/30">
+                        ICE / NINEA : {fid}
+                      </span>
+                    );
+                  })()}
+                  {(() => {
+                    const resp = getResponsableInfo(enterprise);
+                    if (!resp.name || resp.name === 'Non spécifié') return null;
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+                        Dirigeant : {resp.name} {resp.fonction ? `(${resp.fonction})` : ''}
+                      </span>
+                    );
+                  })()}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 mt-4 text-sm text-white/80 font-semibold">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-1.5 mt-4 text-sm text-white/80 font-semibold">
                   <p><span className="font-bold text-[#ebd078]/80">Date d'adhésion :</span> {enterprise.dateAdhesion || '—'}</p>
                   <p><span className="font-bold text-[#ebd078]/80">Secteur principal :</span> {enterprise.secteur || '—'}</p>
-                  <p><span className="font-bold text-[#ebd078]/80">Pays + ville :</span> {enterprise.pays} - {enterprise.ville}</p>
-                  <p><span className="font-bold text-[#ebd078]/80">Numéro membre :</span> {enterprise.memberNo || '—'}</p>
+                  <p><span className="font-bold text-[#ebd078]/80">ICE / NINEA :</span> {getFiscalId(enterprise) || '—'}</p>
+                  <p><span className="font-bold text-[#ebd078]/80">Responsable :</span> {getResponsableInfo(enterprise).name || '—'}</p>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center justify-center md:justify-start gap-2">
+                  <button
+                    onClick={() => setIsSummaryModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#ebd078] hover:bg-[#dfbe5c] text-[#132e15] font-black text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+                    title="Générer et télécharger la Fiche Technique Officielle au format PDF"
+                  >
+                    <FileText className="w-4 h-4 text-[#132e15]" />
+                    <span>Fiche Technique Officielle (PDF)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab('Fiche technique');
+                      setSelectedItemIndex(null);
+                    }}
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-all border border-white/20 active:scale-95 cursor-pointer"
+                    title="Consulter la fiche technique en ligne"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Voir la Fiche Technique</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1684,6 +2297,12 @@ export const EnterpriseDetail: React.FC = () => {
         enterprise={enterprise}
         onSave={handleSave}
         itemIndex={selectedItemIndex}
+      />
+
+      <EnterpriseSummaryModal
+        isOpen={isSummaryModalOpen}
+        onClose={() => setIsSummaryModalOpen(false)}
+        enterprise={enterprise}
       />
 
       {/* Certification Document Preview Modal */}
