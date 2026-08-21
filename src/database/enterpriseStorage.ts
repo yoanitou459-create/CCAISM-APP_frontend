@@ -15,6 +15,7 @@ export interface Enterprise {
   formeJuridique: string;
   numRC: string;
   ninea: string;
+  ice?: string;
   dateCreation: string;
   adresse: string;
   telephone: string;

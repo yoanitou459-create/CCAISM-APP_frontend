@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, CheckCircle2, FileSpreadsheet, ShieldAlert, ArrowRight, Table, AlertTriangle } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { getStoredEnterprises, saveStoredEnterprises } from '../../database/enterpriseStorage';
 import { ModalPortal } from './ModalPortal';
 
@@ -21,7 +22,8 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
     warnings: string[];
     duplicatesInFile: string[];
     duplicatesWithStored: string[];
-  }>({ errors: [], warnings: [], duplicatesInFile: [], duplicatesWithStored: [] });
+    iceCount: number;
+  }>({ errors: [], warnings: [], duplicatesInFile: [], duplicatesWithStored: [], iceCount: 0 });
   const [cleanParsedData, setCleanParsedData] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,30 +39,173 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
     }
   };
 
-  const processText = (text: string) => {
+  // Helper to normalize header names
+  const normalizeKey = (key: string): string => {
+    return key
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "");
+  };
+
+  // Map raw column name to canonical column name
+  const mapToCanonicalKey = (normalized: string): string => {
+    // ICE mapping (identifiant commun de l'entreprise)
+    if (
+      normalized === 'ice' ||
+      normalized === 'code_ice' ||
+      normalized === 'num_ice' ||
+      normalized === 'numero_ice' ||
+      normalized === 'n_ice' ||
+      normalized === 'no_ice' ||
+      normalized === 'identifiant_ice' ||
+      normalized === 'ice_maroc' ||
+      normalized === 'ice_code' ||
+      normalized === 'identifiant_commun_entreprise' ||
+      normalized === 'identifiant_commun_de_l_entreprise' ||
+      normalized === 'identifiant_commun' ||
+      normalized === 'i_c_e' ||
+      normalized === 'num_i_c_e' ||
+      normalized.includes('ice')
+    ) {
+      return 'ice';
+    }
+
+    // NINEA mapping
+    if (
+      normalized === 'ninea' ||
+      normalized === 'num_ninea' ||
+      normalized === 'numero_ninea' ||
+      normalized === 'n_ninea' ||
+      normalized === 'ninea_senegal' ||
+      normalized === 'code_ninea'
+    ) {
+      return 'ninea';
+    }
+
+    // RC mapping
+    if (
+      normalized === 'numero_rc' ||
+      normalized === 'num_rc' ||
+      normalized === 'rc' ||
+      normalized === 'registre_commerce' ||
+      normalized === 'registre_de_commerce' ||
+      normalized === 'n_rc' ||
+      normalized === 'registre'
+    ) {
+      return 'numero_rc';
+    }
+
+    // Member number
+    if (
+      normalized === 'numero_membre' ||
+      normalized === 'num_membre' ||
+      normalized === 'member_no' ||
+      normalized === 'member_number' ||
+      normalized === 'n_membre' ||
+      normalized === 'code_membre' ||
+      normalized === 'id_membre' ||
+      normalized === 'ref_membre' ||
+      normalized === 'no_membre'
+    ) {
+      return 'numero_membre';
+    }
+
+    // Raison sociale & nom
+    if (
+      normalized === 'raison_sociale' ||
+      normalized === 'nom_entreprise' ||
+      normalized === 'entreprise' ||
+      normalized === 'societe' ||
+      normalized === 'denomination' ||
+      normalized === 'denomination_sociale'
+    ) {
+      return 'raison_sociale';
+    }
+
+    if (
+      normalized === 'nom_commercial' ||
+      normalized === 'enseigne' ||
+      normalized === 'marque'
+    ) {
+      return 'nom_commercial';
+    }
+
+    // Forme juridique
+    if (
+      normalized === 'forme_juridique' ||
+      normalized === 'forme' ||
+      normalized === 'statut_juridique' ||
+      normalized === 'type_societe'
+    ) {
+      return 'forme_juridique';
+    }
+
+    // Secteur
+    if (
+      normalized === 'secteur' ||
+      normalized === 'secteur_activite' ||
+      normalized === 'domaine' ||
+      normalized === 'activite'
+    ) {
+      return 'secteur';
+    }
+
+    // Dates
+    if (normalized === 'date_creation' || normalized === 'creation' || normalized === 'annee_creation') return 'date_creation';
+    if (normalized === 'date_adhesion' || normalized === 'adhesion' || normalized === 'date_entree') return 'date_adhesion';
+    if (normalized === 'statut_adhesion' || normalized === 'statut' || normalized === 'statut_membre') return 'statut_adhesion';
+
+    // Geo
+    if (normalized === 'adresse_complete' || normalized === 'adresse') return 'adresse_complete';
+    if (normalized === 'code_postal' || normalized === 'cp') return 'code_postal';
+    if (normalized === 'pays') return 'pays';
+    if (normalized === 'ville') return 'ville';
+
+    // Contacts
+    if (normalized === 'telephone_principale' || normalized === 'telephone_principal' || normalized === 'telephone' || normalized === 'tel') return 'telephone_principale';
+    if (normalized === 'telephone_secondaire' || normalized === 'mobile' || normalized === 'portable') return 'telephone_secondaire';
+    if (normalized === 'email_principal' || normalized === 'email' || normalized === 'mail' || normalized === 'courriel') return 'email_principal';
+    if (normalized === 'site_web' || normalized === 'siteweb' || normalized === 'site_internet' || normalized === 'url') return 'site_web';
+
+    // Effectif & Description
+    if (normalized === 'effectif' || normalized === 'nombre_employes' || normalized === 'salaries') return 'effectif';
+    if (normalized === 'description_activite' || normalized === 'description' || normalized === 'presentation') return 'description_activite';
+
+    return normalized;
+  };
+
+  const processRows = (rawRows: any[]) => {
     try {
-      const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-      if (lines.length < 2) {
-        throw new Error("Le fichier doit contenir une ligne d'en-tête et au moins une ligne de données.");
+      if (!rawRows || rawRows.length === 0) {
+        throw new Error("Le fichier ne contient aucune donnée à importer.");
       }
 
-      // Detect separator (comma or semicolon)
-      const headerLine = lines[0];
-      const separator = headerLine.includes(';') ? ';' : ',';
+      // Extract all headers from the raw objects
+      const originalHeaderKeys = Object.keys(rawRows[0] || {});
+      const mappedHeaderMap: Record<string, string> = {};
       
-      const headers = headerLine.split(separator).map(h => h.replace(/^["']|["']$/g, '').trim().toLowerCase());
-      
+      originalHeaderKeys.forEach(k => {
+        const norm = normalizeKey(k);
+        const canon = mapToCanonicalKey(norm);
+        mappedHeaderMap[k] = canon;
+      });
+
+      const canonicalHeaders = Object.values(mappedHeaderMap);
+
       // Structural check
       const errors: string[] = [];
       const warnings: string[] = [];
       const duplicatesInFile: string[] = [];
       const duplicatesWithStored: string[] = [];
 
-      const required = ['numero_membre', 'raison_sociale'];
-      const missingRequired = required.filter(r => !headers.includes(r) && (r !== 'raison_sociale' || !headers.includes('nom_commercial')));
-      
-      if (missingRequired.length > 0) {
-        errors.push(`Erreur de structure : Les colonnes requises ne sont pas présentes : ${missingRequired.join(', ')}`);
+      const hasMemberNo = canonicalHeaders.includes('numero_membre');
+      const hasName = canonicalHeaders.includes('raison_sociale') || canonicalHeaders.includes('nom_commercial');
+
+      if (!hasName && !hasMemberNo) {
+        errors.push(`Erreur de structure : Le fichier doit contenir au minimum les colonnes 'raison_sociale' (ou nom d'entreprise) et 'numero_membre'.`);
       }
 
       const knownHeaders = [
@@ -75,39 +220,10 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
         'marches_cibles', 'clients_references', 'niveau_expertise', 'capacite_production'
       ];
 
-      headers.forEach(h => {
-        if (!knownHeaders.includes(h)) {
-          warnings.push(`Colonne insolite : "${h}" ne correspond à aucun champ connu (elle sera importée en tant que métadonnées libres).`);
+      canonicalHeaders.forEach(h => {
+        if (!knownHeaders.includes(h) && h !== '') {
+          warnings.push(`Colonne insolite : "${h}" importée en métadonnée libre.`);
         }
-      });
-
-      const rows = lines.slice(1).map((line) => {
-        // Simple but safe quote-aware splitter or custom split
-        let values: string[] = [];
-        if (line.includes('"')) {
-          let currentVal = '';
-          let insideQuotes = false;
-          for (let k = 0; k < line.length; k++) {
-            const char = line[k];
-            if (char === '"') {
-              insideQuotes = !insideQuotes;
-            } else if (char === separator && !insideQuotes) {
-              values.push(currentVal.trim());
-              currentVal = '';
-            } else {
-              currentVal += char;
-            }
-          }
-          values.push(currentVal.trim());
-        } else {
-          values = line.split(separator).map(v => v.trim());
-        }
-        
-        const rowData: any = {};
-        headers.forEach((header, index) => {
-          rowData[header] = (values[index] || '').replace(/^["']|["']$/g, '').trim();
-        });
-        return rowData;
       });
 
       const stored = getStoredEnterprises();
@@ -116,24 +232,48 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
 
       const mappedEnterprises: any[] = [];
       const cleanMapped: any[] = [];
+      let iceCount = 0;
 
-      rows.forEach((row, i) => {
+      rawRows.forEach((rawRow, i) => {
         const rowNum = i + 2;
+        
+        // Build normalized row
+        const row: Record<string, string> = {};
+        Object.entries(rawRow).forEach(([key, val]) => {
+          const canonKey = mappedHeaderMap[key] || normalizeKey(key);
+          const strVal = val !== null && val !== undefined ? String(val).trim() : '';
+          row[canonKey] = strVal;
+        });
+
         const name = row.nom_commercial || row.raison_sociale || `Entreprise Importée ${i + 1}`;
         const raisonSociale = row.raison_sociale || name;
         const memberNo = row.numero_membre || `M${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
         
+        // Clean ICE / NINEA number (ICE = NINEA)
+        const rawIce = (row.ice || '').trim();
+        const rawNinea = (row.ninea || '').trim();
+        const fiscalId = rawIce || rawNinea || '';
+
+        if (fiscalId && fiscalId !== 'N/A') {
+          iceCount++;
+        }
+
         // Handle standard sector merging
-        const appSectors = ['IT', 'BTP', 'Finance', 'Agriculture', 'Commerce', 'Services', 'Industrie', 'Santé', 'Éducation', 'Tourisme', 'Autre'];
+        const appSectors = ['IT', 'BTP', 'Finance', 'Agriculture', 'Commerce', 'Services', 'Industrie', 'Santé', 'Éducation', 'Tourisme', 'Agro', 'Transport et logistique', 'Autre'];
         let rawSecteur = (row.secteur || '').trim();
         let parsedSecteur = rawSecteur;
-        const matchingSec = appSectors.find(s => s.toLowerCase() === rawSecteur.toLowerCase());
-        if (matchingSec) {
-          parsedSecteur = matchingSec;
+        
+        if (/^transport/i.test(rawSecteur)) {
+          parsedSecteur = 'Transport et logistique';
         } else {
-          parsedSecteur = 'Autre';
-          if (rawSecteur) {
-            warnings.push(`Ligne ${rowNum} : Secteur "${rawSecteur}" non répertorié - classé automatiquement dans "Autre"`);
+          const matchingSec = appSectors.find(s => s.toLowerCase() === rawSecteur.toLowerCase());
+          if (matchingSec) {
+            parsedSecteur = matchingSec;
+          } else {
+            parsedSecteur = rawSecteur || 'Autre';
+            if (rawSecteur && !appSectors.includes(rawSecteur)) {
+              warnings.push(`Ligne ${rowNum} : Secteur "${rawSecteur}" conservé.`);
+            }
           }
         }
 
@@ -150,8 +290,8 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
           effectif: row.effectif || 'N/A',
           formeJuridique: row.forme_juridique || 'SARL',
           numRC: row.numero_rc || 'N/A',
-          ninea: row.ninea || 'N/A',
-          ice: row.ice || 'N/A',
+          ninea: fiscalId || 'N/A',
+          ice: fiscalId || 'N/A',
           dateCreation: row.date_creation || '2022-01-01',
           adresse: row.adresse_complete || 'N/A',
           telephone: row.telephone_principale || row.telephone_secondaire || 'N/A',
@@ -209,8 +349,6 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
 
         let isDup = false;
 
-        // Dynamic checks for Sector consistency are now handled in the parsing phase upper in the code
-
         // Dynamic checks for Expertise Level consistency
         const currentExpertise = row.niveau_expertise || '';
         if (currentExpertise && !['Débutant', 'Intermédiaire', 'Expert'].includes(currentExpertise)) {
@@ -260,7 +398,8 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
         errors,
         warnings,
         duplicatesInFile,
-        duplicatesWithStored
+        duplicatesWithStored,
+        iceCount
       });
 
       setParsedData(mappedEnterprises);
@@ -268,6 +407,87 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
       setStep(2);
     } catch (err: any) {
       setErrorMsg(err.message || 'Erreur lors de la lecture du fichier.');
+    }
+  };
+
+  const processFile = async (uploadedFile: File) => {
+    try {
+      setErrorMsg('');
+      const ext = uploadedFile.name.split('.').pop()?.toLowerCase();
+      
+      if (ext === 'xlsx' || ext === 'xls') {
+        const buffer = await uploadedFile.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        if (!firstSheetName) {
+          throw new Error("Le classeur Excel ne contient aucune feuille.");
+        }
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        if (jsonData.length === 0) {
+          throw new Error("La feuille Excel est vide.");
+        }
+        processRows(jsonData);
+      } else {
+        // Text / CSV reading
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const text = evt.target?.result as string;
+          processCsvText(text);
+        };
+        reader.readAsText(uploadedFile);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erreur lors du traitement du fichier.');
+    }
+  };
+
+  const processCsvText = (text: string) => {
+    try {
+      const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+      if (lines.length < 2) {
+        throw new Error("Le fichier CSV doit contenir une ligne d'en-tête et au moins une ligne de données.");
+      }
+
+      // Detect separator
+      const headerLine = lines[0];
+      let separator = ',';
+      if (headerLine.includes(';')) separator = ';';
+      else if (headerLine.includes('\t')) separator = '\t';
+      
+      const headers = headerLine.split(separator).map(h => h.replace(/^["']|["']$/g, '').trim());
+
+      const rawRows = lines.slice(1).map((line) => {
+        let values: string[] = [];
+        if (line.includes('"')) {
+          let currentVal = '';
+          let insideQuotes = false;
+          for (let k = 0; k < line.length; k++) {
+            const char = line[k];
+            if (char === '"') {
+              insideQuotes = !insideQuotes;
+            } else if (char === separator && !insideQuotes) {
+              values.push(currentVal.trim());
+              currentVal = '';
+            } else {
+              currentVal += char;
+            }
+          }
+          values.push(currentVal.trim());
+        } else {
+          values = line.split(separator).map(v => v.trim());
+        }
+        
+        const rowData: Record<string, string> = {};
+        headers.forEach((header, index) => {
+          rowData[header] = (values[index] || '').replace(/^["']|["']$/g, '').trim();
+        });
+        return rowData;
+      });
+
+      processRows(rawRows);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erreur lors de la lecture du fichier CSV.');
     }
   };
 
@@ -281,12 +501,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
       const ext = selectedFile.name.split('.').pop()?.toLowerCase();
       if (ext === 'csv' || ext === 'xlsx' || ext === 'xls') {
         setFile(selectedFile);
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          const text = evt.target?.result as string;
-          processText(text);
-        };
-        reader.readAsText(selectedFile);
+        processFile(selectedFile);
       } else {
         setErrorMsg('Veuillez déposer un fichier CSV ou Excel (.xlsx, .xls)');
       }
@@ -297,12 +512,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const text = evt.target?.result as string;
-        processText(text);
-      };
-      reader.readAsText(selectedFile);
+      processFile(selectedFile);
     }
   };
 
@@ -321,20 +531,20 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
     setStep(1);
     setParsedData([]);
     setCleanParsedData([]);
-    setValidationReport({ errors: [], warnings: [], duplicatesInFile: [], duplicatesWithStored: [] });
+    setValidationReport({ errors: [], warnings: [], duplicatesInFile: [], duplicatesWithStored: [], iceCount: 0 });
     setErrorMsg('');
     onClose();
   };
 
   const downloadTemplate = () => {
-    // Exact list of csv columns as requested by the user
+    // Official template containing ICE column prominently
     const headers = "numero_membre,raison_sociale,nom_commercial,type_membre,statut_adhesion,date_adhesion,date_creation,numero_rc,ninea,ice,secteur,forme_juridique,pays,ville,adresse_complete,code_postal,telephone_principale,telephone_secondaire,email_principal,site_web,effectif,description_activite,nom_adherent,prenom_adherent,cotisation_2023,cotisation_2024,cotisation_2025,chiffre_affaires_2023,chiffre_affaires_2024,ca_export_2023,ca_export_2024,ca_maroc_2023,ca_maroc_2024,ca_senegal_2023,ca_senegal_2024,resultat_net_2023,resultat_net_2024,total_actif_2023,total_actif_2024,capitaux_propres_2023,capitaux_propres_2024,endettement_2023,endettement_2024,produits_services,technologies_utilisees,marches_cibles,clients_references,niveau_expertise,capacite_production\n";
-    const sample = "M305,Innov Senegal SARL,Innov Senegal,Fondateur,Actif,2023-01-15,2022-01-01,RC-DKR-303,NINEA-309,ICE-409,IT,SARL,Sénégal,Dakar,Point E Rue 14,11000,+221338123456,+221776543210,contact@innov.sn,www.innov.sn,35,Développement informatique,Ndiaye,Amadou,250000,250000,250000,50000000,65000000,10000000,15000000,40000000,50000000,10000000,15000000,5000000,7500000,25000000,32000000,15000000,22500000,3000000,2000000,Logiciels ERP,React Node PostgreSQL,Sénégal FMCG,Orange Sonatel,Expert,Haute\n";
+    const sample = "M305,Innov Senegal Maroc SARL,Innov Tech,Fondateur,Actif,2023-01-15,2022-01-01,RC-DKR-303,00281923G3,001523456000089,IT,SARL,Maroc,Casablanca,Point E Rue 14,20000,+212522001122,+212661001122,contact@innov.ma,www.innov.ma,35,Développement informatique et solutions digitales,El Mansouri,Youssef,250000,250000,250000,50000000,65000000,10000000,15000000,40000000,50000000,10000000,15000000,5000000,7500000,25000000,32000000,15000000,22500000,3000000,2000000,Logiciels ERP,React Node PostgreSQL,Sénégal Maroc FMCG,Partenaires CSCM,Expert,Haute\n";
     const blob = new Blob([headers + sample], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "gabarit_importation_cscm.csv");
+    link.setAttribute("download", "gabarit_importation_cscm_avec_ice.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -386,7 +596,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                   <div>
                     <h4 className="text-xs font-bold text-cscm-green uppercase tracking-wider mb-1">Gabarit d'importation personnalisé</h4>
                     <p className="text-xs text-gray-500 leading-relaxed">
-                      Le gabarit d'importation inclut l'ensemble de la structure de vos colonnes requises : <strong>numero_membre, raison_sociale, cotisation_2023, cotisation_2024, ca_maroc, ca_senegal</strong>...
+                      Le gabarit d'importation inclut l'ensemble de la structure de vos colonnes requises : <strong>numero_membre, raison_sociale, ice (Maroc), ninea (Sénégal), numero_rc, cotisation_2024, ca_maroc, ca_senegal</strong>...
                     </p>
                     <button 
                       onClick={downloadTemplate}
@@ -508,22 +718,32 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                 )}
 
                 {/* Preview Table */}
-                <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-inner max-h-[200px] overflow-y-auto">
+                <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-inner max-h-[220px] overflow-y-auto">
                   <table className="w-full text-left text-xs text-gray-600">
-                    <thead className="bg-gray-50/80 font-bold uppercase tracking-wider text-gray-400 sticky top-0">
+                    <thead className="bg-gray-50/90 font-bold uppercase tracking-wider text-gray-500 sticky top-0 border-b border-gray-200/60">
                       <tr>
                         <th className="p-3">Numéro</th>
                         <th className="p-3">Raison Sociale</th>
+                        <th className="p-3">ICE / NINEA</th>
                         <th className="p-3">Secteur</th>
                         <th className="p-3">Cotisation 2024</th>
                         <th className="p-3">Ville</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 bg-white">
-                      {cleanParsedData.slice(0, 5).map((row, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50/50">
+                      {cleanParsedData.slice(0, 8).map((row, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50/60 transition-colors">
                           <td className="p-3 font-mono text-cscm-green font-bold">{row.memberNo}</td>
                           <td className="p-3 font-semibold text-cscm-dark">{row.raisonSociale}</td>
+                          <td className="p-3">
+                            {(row.ninea && row.ninea !== 'N/A') || (row.ice && row.ice !== 'N/A') ? (
+                              <span className="font-mono font-bold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[10px]">
+                                {row.ninea !== 'N/A' ? row.ninea : row.ice}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-[10px] italic">—</span>
+                            )}
+                          </td>
                           <td className="p-3">
                             <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full uppercase text-[9px] font-bold">
                               {row.secteur}
@@ -537,9 +757,9 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                       ))}
                     </tbody>
                   </table>
-                  {cleanParsedData.length > 5 && (
+                  {cleanParsedData.length > 8 && (
                     <div className="p-3 text-center text-xs text-gray-400 border-t border-gray-100 bg-gray-50/30 italic">
-                      Et {cleanParsedData.length - 5} autres lignes uniques...
+                      Et {cleanParsedData.length - 8} autres lignes uniques...
                     </div>
                   )}
                   {cleanParsedData.length === 0 && (
@@ -597,8 +817,13 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                 </div>
 
                 {/* success banner notification */}
-                <div className="bg-[#edf5ff] border border-[#dce9fe] text-[#2563eb] py-3.5 px-5 rounded-2xl text-xs font-semibold leading-relaxed shadow-xs flex items-center justify-between">
+                <div className="bg-[#edf5ff] border border-[#dce9fe] text-[#2563eb] py-3.5 px-5 rounded-2xl text-xs font-semibold leading-relaxed shadow-xs flex flex-wrap items-center justify-between gap-2">
                   <span>{cleanParsedData.length} entreprise(s) importée(s) avec succès</span>
+                  {validationReport.iceCount > 0 && (
+                    <span className="bg-amber-100/80 text-amber-900 border border-amber-300/60 px-2.5 py-0.5 rounded-full font-bold text-[11px]">
+                      {validationReport.iceCount} identifiant(s) ICE / NINEA intégrés
+                    </span>
+                  )}
                 </div>
 
                 {/* Warnings Collapsible or dynamic warnings reporting */}

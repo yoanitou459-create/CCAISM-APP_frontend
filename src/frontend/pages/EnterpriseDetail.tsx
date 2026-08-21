@@ -708,7 +708,7 @@ export const EnterpriseDetail: React.FC = () => {
                 { label: "Raison sociale", value: enterprise.raisonSociale || '' },
                 { label: "Forme Juridique", value: enterprise.formeJuridique || '' },
                 { label: "Numéro RC", value: enterprise.numRC || '' },
-                { label: "NINEA / ICE", value: enterprise.ninea || '' },
+                { label: "ICE / NINEA", value: enterprise.ninea || enterprise.ice || '' },
                 { label: "Date création", value: enterprise.dateCreation || '' },
                 { label: "Adresse", value: enterprise.adresse || '' },
                 { label: "Téléphone", value: enterprise.telephone || '' },
@@ -718,8 +718,8 @@ export const EnterpriseDetail: React.FC = () => {
                 { label: "Secteur d'activité", value: enterprise.secteur || '' },
               ].map((item) => (
                 <div key={item.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 border-b border-[#132e15]/5 pb-2 last:border-b-0 last:pb-0 text-left">
-                  <span className="font-extrabold text-[#132e15] sm:min-w-[150px] shrink-0">{item.label} :</span>
-                  <span className="font-semibold text-[#132e15]/90 break-words">{item.value || 'Non spécifié'}</span>
+                  <span className="font-extrabold text-[#132e15] sm:min-w-[190px] shrink-0">{item.label} :</span>
+                  <span className={`break-words ${item.label.includes('ICE') || item.label.includes('NINEA') ? 'font-mono font-bold text-amber-900 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200/50 inline-block w-fit' : 'font-semibold text-[#132e15]/90'}`}>{item.value || 'Non spécifié'}</span>
                 </div>
               ))}
             </div>
@@ -1609,6 +1609,11 @@ export const EnterpriseDetail: React.FC = () => {
                   {enterprise.memberNo && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/10 text-white/80 border border-white/15">
                       N° {enterprise.memberNo}
+                    </span>
+                  )}
+                  {(enterprise.ninea || enterprise.ice) && (enterprise.ninea !== 'N/A' || enterprise.ice !== 'N/A') && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black font-mono tracking-wider bg-amber-400/20 text-amber-200 border border-amber-300/30">
+                      ICE / NINEA : {enterprise.ninea && enterprise.ninea !== 'N/A' ? enterprise.ninea : enterprise.ice}
                     </span>
                   )}
                 </div>

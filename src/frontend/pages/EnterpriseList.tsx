@@ -166,9 +166,14 @@ export const EnterpriseList = () => {
   }, 0);
 
   const filteredEnterprises = enterprises.filter(ent => {
-    const matchesSearch = (ent.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (ent.memberNo || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (ent.raisonSociale || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch = !query ||
+                         (ent.name || '').toLowerCase().includes(query) ||
+                         (ent.memberNo || '').toLowerCase().includes(query) ||
+                         (ent.raisonSociale || '').toLowerCase().includes(query) ||
+                         (ent.ice || '').toLowerCase().includes(query) ||
+                         (ent.ninea || '').toLowerCase().includes(query) ||
+                         (ent.numRC || '').toLowerCase().includes(query);
     
     const matchesPays = !filters.pays || ent.pays === filters.pays;
     const matchesVille = !filters.ville || ent.ville === filters.ville;
@@ -579,6 +584,11 @@ export const EnterpriseList = () => {
                       <span className="font-mono text-[10px] font-black text-cscm-green bg-cscm-green/10 px-2 py-0.5 rounded-md border border-cscm-green/15">
                         {ent.memberNo || '—'}
                       </span>
+                      {((ent.ninea && ent.ninea !== 'N/A') || (ent.ice && ent.ice !== 'N/A')) && (
+                        <span className="font-mono text-[9px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200" title="Identifiant ICE / NINEA">
+                          ICE / NINEA: {ent.ninea && ent.ninea !== 'N/A' ? ent.ninea : ent.ice}
+                        </span>
+                      )}
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black ${
                         ent.statutMembre === 'Actif'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
@@ -697,7 +707,14 @@ export const EnterpriseList = () => {
                         </div>
                         <div>
                           <div className="font-extrabold group-hover:text-cscm-green transition-colors leading-tight text-[15px]">{ent.raisonSociale || ent.name}</div>
-                          <div className="text-[10px] text-[#1A3D18]/60 font-bold uppercase tracking-wider mt-0.5">{ent.formeJuridique}</div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-[#1A3D18]/60 font-bold uppercase tracking-wider">{ent.formeJuridique || '—'}</span>
+                            {((ent.ninea && ent.ninea !== 'N/A') || (ent.ice && ent.ice !== 'N/A')) && (
+                              <span className="font-mono text-[9px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200" title="Identifiant ICE / NINEA">
+                                ICE/NINEA: {ent.ninea && ent.ninea !== 'N/A' ? ent.ninea : ent.ice}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>

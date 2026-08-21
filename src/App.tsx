@@ -10,7 +10,7 @@ import { SidebarLayout } from './frontend/components/SidebarLayout';
 import { getStoredEnterprises, saveStoredEnterprises } from './database/enterpriseStorage';
 import { getStoredUsers, saveStoredUsers } from './database/userStorage';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { db, handleFirestoreError, OperationType, auth } from './database/firebase';
 
 import { Cotisations } from './frontend/pages/Cotisations';
@@ -769,17 +769,11 @@ export default function App() {
 
     unsubCotisationRules = setupCotisationRulesListener();
 
-    // Ensure the user is signed in to Firebase (at least anonymously if supported)
+    // Track Firebase Auth state changes
     let unsubscribeAuth: (() => void) | null = null;
-    unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+    unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         console.log("Authenticated with Firebase UID:", user.uid);
-      } else {
-        try {
-          await signInAnonymously(auth);
-        } catch (err) {
-          console.warn("Silent Firebase Anonymous Auth skipped/failed (app continues working normally):", err);
-        }
       }
     });
 

@@ -62,7 +62,7 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
       { label: "Forme Juridique :", val: enterprise.formeJuridique || 'Société à Responsabilité Limitée' },
       { label: "Date de création :", val: enterprise.dateCreation || 'N/A' },
       { label: "N° Registre Commerce :", val: enterprise.numRC || 'Non Spécifié' },
-      { label: "Ninea / ICE :", val: enterprise.ninea || 'Non disponible' },
+      { label: "ICE / NINEA :", val: enterprise.ninea || enterprise.ice || 'Non disponible' },
       { label: "Secteur d'activité :", val: enterprise.secteur || 'Non disponible' },
       { label: "Effectif :", val: `${enterprise.effectif || 'N/A'} personnes` }
     ];
@@ -265,9 +265,9 @@ export const EnterpriseSummaryModal: React.FC<EnterpriseSummaryModalProps> = ({ 
                   <span className="text-xs font-mono font-bold text-[#1A3D18] mt-1.5 leading-tight">{enterprise.numRC || 'Non Spécifié'}</span>
                 </div>
 
-                <div className="bg-white/70 backdrop-blur-md border border-white/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-[#2E4D31]/60">Ninea / ICE</span>
-                  <span className="text-xs font-mono font-bold text-[#1A3D18] mt-1.5 leading-tight">{enterprise.ninea || 'Non disponible'}</span>
+                <div className="bg-amber-50/70 backdrop-blur-md border border-amber-200/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-900/70">ICE / NINEA</span>
+                  <span className="text-xs font-mono font-black text-amber-900 mt-1.5 leading-tight">{enterprise.ninea || enterprise.ice || 'Non disponible'}</span>
                 </div>
               </div>
             </div>

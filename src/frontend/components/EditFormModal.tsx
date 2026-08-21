@@ -112,7 +112,7 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
               { label: "Raison sociale", key: 'raisonSociale', placeholder: "Ex: SARL Sénégal-Maroc Import" },
               { label: "Forme juridique", key: 'formeJuridique', type: 'select', options: ['SARL', 'SA', 'SNC', 'Auto-entrepreneur'] },
               { label: "Numéro RC", key: 'numRC', placeholder: "Saisir numéro d'inscription RC" },
-              { label: "NINEA / ICE", key: 'ninea', placeholder: "Saisir NINEA ou code ICE" },
+              { label: "ICE / NINEA", key: 'ninea', placeholder: "Ex: 001523456000089 ou 0028192-3G3" },
               { label: "Date création", key: 'dateCreation', type: 'date' },
               { label: "Pays", key: 'pays', placeholder: "Ex: Maroc" },
               { label: "Ville", key: 'ville', placeholder: "Ex: Casablanca" },
@@ -137,8 +137,12 @@ export const EditFormModal: React.FC<EditFormModalProps> = ({ isOpen, onClose, t
                 ) : (
                   <input 
                     type={field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : 'text'} 
-                    value={formData[field.key!] || ''}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, [field.key!]: e.target.value }))}
+                    value={formData[field.key!] || (field.key === 'ninea' ? formData.ice : '') || ''}
+                    onChange={(e) => setFormData((prev: any) => ({ 
+                      ...prev, 
+                      [field.key!]: e.target.value,
+                      ...(field.key === 'ninea' ? { ice: e.target.value } : {})
+                    }))}
                     placeholder={field.placeholder}
                     className="field-input flex-1"
                   />

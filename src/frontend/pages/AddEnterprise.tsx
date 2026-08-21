@@ -39,6 +39,7 @@ export const AddEnterprise: React.FC = () => {
     statutMembre: 'Actif',
     numRC: '',
     ninea: '',
+    ice: '',
     dateCreation: '',
     dateAdhesion: new Date().toISOString().split('T')[0],
     statutAdhesion: 'Actif',
@@ -70,6 +71,9 @@ export const AddEnterprise: React.FC = () => {
       const updated = { ...prev, [name]: value };
       if (name === 'raisonSociale') {
         updated.name = value;
+      }
+      if (name === 'ninea') {
+        updated.ice = value;
       }
       return updated;
     });
@@ -334,16 +338,16 @@ export const AddEnterprise: React.FC = () => {
                   />
                 </div>
 
-                {/* NINEA / ICE */}
+                {/* Identifiant ICE / NINEA */}
                 <div>
-                  <label className="field-label"><Fingerprint />NINEA / ICE</label>
+                  <label className="field-label"><Fingerprint />ICE / NINEA</label>
                   <input 
                     type="text" 
                     name="ninea"
-                    value={formData.ninea}
+                    value={formData.ninea || formData.ice}
                     onChange={handleInputChange}
-                    placeholder="Saisissez le numéro NINEA (Ex: 0028192-3G3)" 
-                    className="field-input" 
+                    placeholder="Ex: 001523456000089 ou 0028192-3G3" 
+                    className="field-input font-mono" 
                   />
                 </div>
 
