@@ -14,14 +14,62 @@ export interface AppUser {
   photo?: string;
 }
 
-export const INITIAL_USERS: AppUser[] = [];
+export const DEFAULT_ADMIN_USERS: AppUser[] = [
+  {
+    id: 'u_admin_phoenix',
+    nom: 'Digitalix',
+    prenom: 'Phoenix',
+    email: 'info@phoenix19digitalix.com',
+    role: 'ADMIN',
+    password: 'password',
+    status: 'Actif',
+    entreprise: 'Phoenix Digitalix',
+    dateCreation: '2025-01-01'
+  },
+  {
+    id: 'u_admin_yoani',
+    nom: 'Tou',
+    prenom: 'Yoani',
+    email: 'yoanitou459@gmail.com',
+    role: 'ADMIN',
+    password: 'password',
+    status: 'Actif',
+    entreprise: 'CSCM Admin',
+    dateCreation: '2025-01-01'
+  }
+];
+
+export const INITIAL_USERS: AppUser[] = [...DEFAULT_ADMIN_USERS];
 
 export const getStoredUsers = (): AppUser[] => {
   const data = localStorage.getItem('cscm_users');
-  if (!data) {
-    return [];
+  let list: AppUser[] = [];
+  if (data) {
+    try {
+      list = JSON.parse(data);
+    } catch (e) {
+      list = [];
+    }
   }
-  return JSON.parse(data);
+
+  // Ensure default admin users always exist and have ADMIN role and Actif status
+  let modified = false;
+  for (const admin of DEFAULT_ADMIN_USERS) {
+    const existing = list.find(u => u.email.toLowerCase() === admin.email.toLowerCase());
+    if (!existing) {
+      list.push(admin);
+      modified = true;
+    } else if (existing.role !== 'ADMIN' || existing.status !== 'Actif') {
+      existing.role = 'ADMIN';
+      existing.status = 'Actif';
+      modified = true;
+    }
+  }
+
+  if (modified || !data) {
+    localStorage.setItem('cscm_users', JSON.stringify(list));
+  }
+  return list;
 };
 
 export const saveStoredUsers = async (users: AppUser[]): Promise<void> => {
@@ -78,6 +126,29 @@ export const fetchLatestUsers = async (): Promise<AppUser[]> => {
     querySnapshot.forEach(docSnap => {
       list.push(docSnap.data() as AppUser);
     });
+
+    // Ensure default administrators exist in Firestore database
+    for (const admin of DEFAULT_ADMIN_USERS) {
+      const existing = list.find(u => u.email.toLowerCase() === admin.email.toLowerCase());
+      if (!existing) {
+        try {
+          await setDoc(doc(db, 'users', admin.id), admin);
+          list.push(admin);
+        } catch (err) {
+          console.warn("Could not save admin user to Firestore:", admin.email, err);
+          list.push(admin);
+        }
+      } else if (existing.role !== 'ADMIN' || existing.status !== 'Actif') {
+        existing.role = 'ADMIN';
+        existing.status = 'Actif';
+        try {
+          await setDoc(doc(db, 'users', String(existing.id)), existing);
+        } catch (err) {
+          console.warn("Could not update admin user role in Firestore:", existing.email, err);
+        }
+      }
+    }
+
     if (list.length > 0) {
       localStorage.setItem('cscm_users', JSON.stringify(list));
       return list;

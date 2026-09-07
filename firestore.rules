@@ -2,24 +2,46 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Helper function to check if user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is an authorized admin
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email.lower() == 'info@phoenix19digitalix.com' ||
+        request.auth.token.email.lower() == 'yoanitou459@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
+      );
+    }
+
     // 1. Global Safety Net: default deny all undefined paths
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // 3. Rules for enterprises collection
+    // 2. Rules for enterprises collection
     match /enterprises/{enterpriseId} {
       allow read, write: if true;
     }
 
-    // 4. Rules for users collection
+    // 3. Rules for users collection
     match /users/{userId} {
       allow read, write: if true;
     }
 
-    // 5. Rules for settings collection
+    // 4. Rules for settings collection
     match /settings/{settingId} {
       allow read, write: if true;
+    }
+
+    // 5. Rules for admins collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

@@ -114,6 +114,10 @@ export const UserManagement: React.FC = () => {
       triggerToast("Impossible de supprimer votre propre compte.");
       return;
     }
+    if (user.email.toLowerCase() === 'info@phoenix19digitalix.com' || user.email.toLowerCase() === 'yoanitou459@gmail.com') {
+      triggerToast("Ce compte administrateur principal ne peut pas être supprimé.");
+      return;
+    }
     setDeleteTargetUser(user);
   };
 

@@ -49,9 +49,15 @@ function persistSession(matchedUser: AppUser) {
   window.dispatchEvent(new Event('user_profile_updated'));
 }
 
+export const ADMIN_EMAILS = [
+  'info@phoenix19digitalix.com',
+  'yoanitou459@gmail.com'
+];
+
 /**
  * Après le choix du compte Google :
  * - si le compte est reconnu en base → connexion automatique
+ * - si c'est un compte admin prédéfini (ex: info@phoenix19digitalix.com) → connexion directe avec rôle ADMIN
  * - sinon, selon allowCreate, création ou refus
  */
 export async function establishAppSessionFromGoogle(
@@ -64,30 +70,35 @@ export async function establishAppSessionFromGoogle(
 > {
   const { allowCreate = false, companyName } = options;
   const email = userEmail.trim().toLowerCase();
+  const isAdminEmail = ADMIN_EMAILS.some(ae => ae.toLowerCase() === email);
   const users = await fetchLatestUsers();
   let matchedUser = users.find(u => u.email.toLowerCase() === email);
   let created = false;
 
   if (!matchedUser) {
-    if (!allowCreate) {
+    if (!allowCreate && !isAdminEmail) {
       return { ok: false, reason: 'not_found' };
     }
     const names = displayName ? displayName.trim().split(/\s+/) : [];
-    const prenom = names[0] || 'Utilisateur';
-    const nom = names.slice(1).join(' ') || 'Google';
+    const prenom = names[0] || (isAdminEmail ? 'Phoenix' : 'Utilisateur');
+    const nom = names.slice(1).join(' ') || (isAdminEmail ? 'Digitalix' : 'Google');
     const newUser: AppUser = {
       id: 'u_' + Date.now(),
       nom,
       prenom,
       email,
-      role: users.length === 0 ? 'ADMIN' : 'MEMBRE',
-      entreprise: companyName || 'Compte Google',
+      role: isAdminEmail ? 'ADMIN' : (users.length === 0 ? 'ADMIN' : 'MEMBRE'),
+      entreprise: companyName || (isAdminEmail ? 'Phoenix Digitalix' : 'Compte Google'),
       status: 'Actif',
       dateCreation: new Date().toISOString().split('T')[0],
     };
     await saveStoredUsers([...users, newUser]);
     matchedUser = newUser;
     created = true;
+  } else if (isAdminEmail && (matchedUser.role !== 'ADMIN' || matchedUser.status !== 'Actif')) {
+    matchedUser.role = 'ADMIN';
+    matchedUser.status = 'Actif';
+    await saveStoredUsers(users.map(u => u.id === matchedUser!.id ? matchedUser! : u));
   }
 
   if (matchedUser.status === 'Inactif') {
